@@ -1,0 +1,44 @@
+#!./.venv/bin/python
+
+"""
+Author            : Nohavye
+Author's Email    : noha.poncelet@gmail.com
+Repository        : https://github.com/vixen-shell/vixen-shell.git
+Description       : vxm executable.
+License           : GPL3
+"""
+
+import os, argparse
+
+os.environ["GDK_BACKEND"] = "wayland"
+from vx_library import init_vxm
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description=f"""
+        Vixen Manager.
+    """
+    )
+
+    parser.add_argument("--update", action="store_true", help="Update Vixen Shell.")
+    parser.add_argument("--remove", action="store_true", help="Remove Vixen Shell.")
+    parser.add_argument(
+        "--shell", type=str, choices=["open", "close"], help="Vixen Shell Controls."
+    )
+
+    args = parser.parse_args()
+
+    if args.update:
+        # vxm.setup("update", args.install)
+        pass
+
+    if args.remove:
+        # vxm.setup("remove", args.install)
+        pass
+
+    if args.shell:
+        if args.shell == "open":
+            init_vxm().open_api()
+
+        if args.shell == "close":
+            init_vxm().close_api()
