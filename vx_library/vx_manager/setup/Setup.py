@@ -47,9 +47,13 @@ class SetupTask:
         return True
 
     def exec(self) -> bool:
-        Logger.log("INFO", self.purpose)
+        Logger.log(
+            "INFO",
+            self.purpose + " ...",
+        )
 
         if not self.check_requirements():
+            Logger.log("WARNING", self.purpose, "FAILED")
             return False
 
         self.set_spinner(True)

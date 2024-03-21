@@ -12,7 +12,7 @@ Setup(
     purpose="Setup Vixen Shell",
     tasks=[
         SetupTask(
-            purpose="Create Vixen evironment",
+            purpose="Create Vixen environment",
             command=Commands.create_env(VX_ENV_PATH),
             undo_command=Commands.remove_folder(VX_ENV_PATH),
             requirements=[
@@ -28,7 +28,7 @@ Setup(
             command=Commands.install_dependencies(VX_ENV_PATH, CURRENT_PATH),
         ),
         SetupTask(
-            purpose="Install Vixen Shell Library",
+            purpose="Install Vixen Shell library",
             command=Commands.install_package(VX_ENV_PATH, CURRENT_PATH),
             undo_command=Commands.remove_package(VX_ENV_PATH, "vx_library"),
         ),
