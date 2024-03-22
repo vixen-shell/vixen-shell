@@ -10,8 +10,7 @@ License           : GPL3
 def init_setup():
     from .vx_manager import init_setup
 
-    Setup, SetupTask, Commands = init_setup()
-    return Setup, SetupTask, Commands
+    return init_setup()
 
 
 def init_vxm():

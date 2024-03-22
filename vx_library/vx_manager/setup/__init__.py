@@ -1,1 +1,2 @@
-from .Setup import Setup, SetupTask, Commands
+# from .Setup import Setup, SetupTask, Commands
+from .routines import *

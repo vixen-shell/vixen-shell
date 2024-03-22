@@ -64,6 +64,17 @@ class Logger:
             if level == "CRITICAL":
                 logger.critical(message)
 
+    @staticmethod
+    def validate(level: LogLevel, question: str) -> Literal["yes", "no"]:
+        Logger.log(level, f"{question}")
+        while True:
+            reponse = input("(yes/no): ").strip().lower()
+
+            if reponse in ["yes", "no"]:
+                return reponse
+            else:
+                Logger.log("INFO", "Please answer with 'yes' or 'no'.")
+
     class Spinner:
         def __init__(self):
             self.is_running = False

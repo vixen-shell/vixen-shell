@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from .log import Logger
 
-origins = ["http://localhost:5173"]
+origins = ["http://localhost:5173", "http://localhost:6492"]
 
 
 from .globals import DevMode, get_front_url

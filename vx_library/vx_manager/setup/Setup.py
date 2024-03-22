@@ -1,13 +1,19 @@
 import os
-from typing import TypedDict, List, Callable
-from ..utils import exec
+from typing import TypedDict, List, Callable, Optional
+from .utils import exec
 from ..log import Logger
+
+
+class Issue(TypedDict):
+    purpose: str
+    command: str
 
 
 class Requirement(TypedDict):
     purpose: str
     callback: Callable[[], bool]
     failure_message: str
+    issue: Optional[Issue]
 
 
 class SetupTask:
@@ -39,8 +45,18 @@ class SetupTask:
 
             for requirement in self.requirements:
                 if not requirement["callback"]():
-                    Logger.log("ERROR", requirement["failure_message"])
-                    return False
+                    if not requirement.get("issue"):
+                        Logger.log("ERROR", requirement["failure_message"])
+                        return False
+                    else:
+                        Logger.log("WARNING", requirement["failure_message"])
+                        issue = requirement["issue"]
+
+                        if exec(issue["command"]):
+                            Logger.log("WARNING", issue["purpose"], "ISSUE")
+                        else:
+                            Logger.log("ERROR", "Unable to apply issue", "ISSUE")
+                            return False
 
                 Logger.log("INFO", requirement["purpose"], "OK")
 
@@ -76,8 +92,7 @@ class SetupTask:
 
     def undo(self) -> bool:
         if not self.undo_command:
-            Logger.log("WARNING", self.purpose, "NO UNDO COMMAND")
-            return False
+            return True
 
         result = True
         status = "NOT DONE"
@@ -86,7 +101,7 @@ class SetupTask:
         if self.is_done:
             result = exec(self.undo_command)
             status = "UNDO" if result else "UNDO FAILED"
-            level = "INFO" if result else "ERROR"
+            level = "WARNING" if result else "ERROR"
 
         Logger.log(level, self.purpose, status)
         self.is_done = not result
@@ -99,6 +114,7 @@ class Setup:
         self.tasks = tasks
 
     def run(self):
+        print()
         Logger.log("INFO", self.purpose)
 
         def undo():
@@ -120,6 +136,14 @@ class Setup:
 class Commands:
     class Checkers:
         @staticmethod
+        def folder(path: str, exists: bool):
+            return (
+                (lambda: os.path.isdir(path))
+                if exists
+                else (lambda: not os.path.isdir(path))
+            )
+
+        @staticmethod
         def folder_exists(path: str):
             return lambda: os.path.isdir(path)
 
@@ -127,38 +151,74 @@ class Commands:
         def folder_not_exists(path: str):
             return lambda: not os.path.isdir(path)
 
+    # ---------------------------------------------- - - -
+    # User
     @staticmethod
-    def create_env(path: str) -> str:
-        return f"python -m venv {path}"
+    def user(command: str):
+        return f"sudo -u {os.getlogin()} {command}"
+
+    # ---------------------------------------------- - - -
+    # Environment
+    @staticmethod
+    def env_create(env_dir: str) -> str:
+        return f"python -m venv {env_dir}"
 
     @staticmethod
-    def remove_folder(path: str) -> str:
-        return f"rm -r {path}"
+    def env_dependencies(env_dir: str, requirements_dir: str):
+        return f"source {env_dir}/bin/activate && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r {requirements_dir}/requirements.txt"
 
     @staticmethod
-    def install_dependencies(env_path: str, path: str):
-        return f"source {env_path}/bin/activate && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r {path}/requirements.txt"
+    def env_install(env_dir: str, package_dir: str) -> str:
+        return f"source {env_dir}/bin/activate && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir {package_dir}"
 
     @staticmethod
-    def install_package(env_path: str, package_path: str) -> str:
-        return f"source {env_path}/bin/activate && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir {package_path}"
+    def env_remove(env_dir: str, package_name: str) -> str:
+        return f"source {env_dir}/bin/activate && pip install --no-cache-dir --upgrade pip && pip uninstall --no-cache-dir {package_name}"
 
     @staticmethod
-    def remove_package(env_path: str, package_name: str) -> str:
-        return f"source {env_path}/bin/activate && pip install --no-cache-dir --upgrade pip && pip uninstall --no-cache-dir {package_name}"
+    def env_path_executable(env_dir: str, file: str):
+        return f'sed -i "1s|.*|#!{env_dir}/bin/python3|" {file}'
 
     @staticmethod
-    def remove_build_folder(path: str) -> str:
-        return f"rm -r {path}/build && rm -r {path}/vx_library.egg-info"
+    def folder_remove_build(package_dir: str) -> str:
+        return f"rm -r {package_dir}/build && rm -r {package_dir}/vx_library.egg-info"
+
+    # ---------------------------------------------- - - -
+    # Folders
+    @staticmethod
+    def folder_create(dir: str) -> str:
+        return f"mkdir -p {dir}"
 
     @staticmethod
-    def copy_file(file_path: str, destination: str, force: bool = False):
-        return f"cp {'-f' if force else ''} {file_path} {destination}"
+    def folder_remove(dir: str) -> str:
+        return f"rm -r {dir}"
 
     @staticmethod
-    def remove_file(file_path: str):
-        return f"rm {file_path}"
+    def folder_copy(source: str, destination: str, force: bool = False):
+        return f"cp -r{'f' if force else ''} {source} {destination}"
+
+    # ---------------------------------------------- - - -
+    # Files
+    @staticmethod
+    def file_copy(source: str, destination: str, force: bool = False):
+        return f"cp {'-f' if force else ''} {source} {destination}"
 
     @staticmethod
-    def path_executable_env(env_path: str, file_path: str):
-        return f'sed -i "1s|.*|#!{env_path}/bin/python3|" {file_path}'
+    def file_remove(file: str):
+        return f"rm {file}"
+
+    # ---------------------------------------------- - - -
+    # Git
+    @staticmethod
+    def git_get_archive(url: str, destination: str):
+        return f"curl -s -L {url} -o /tmp/vx-git-archive.zip && unzip -o /tmp/vx-git-archive.zip -d {destination} && rm /tmp/vx-git-archive.zip"
+
+    # ---------------------------------------------- - - -
+    # Yarn
+    @staticmethod
+    def yarn_install(package_dir: str):
+        return f"cd {package_dir} && yarn install"
+
+    @staticmethod
+    def yarn_build(package_dir: str):
+        return f"cd {package_dir} && yarn build"

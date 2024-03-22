@@ -20,21 +20,18 @@ if __name__ == "__main__":
     """
     )
 
-    parser.add_argument("--update", action="store_true", help="Update Vixen Shell.")
-    parser.add_argument("--remove", action="store_true", help="Remove Vixen Shell.")
     parser.add_argument(
-        "--shell", type=str, choices=["open", "close"], help="Vixen Shell Controls."
+        "--setup", type=str, choices=["update", "remove"], help="Vixen Shell setup."
+    )
+    parser.add_argument(
+        "--shell", type=str, choices=["open", "close"], help="Vixen Shell controls."
     )
 
     args = parser.parse_args()
 
-    if args.update:
-        # vxm.setup("update", args.install)
-        pass
-
-    if args.remove:
-        # vxm.setup("remove", args.install)
-        pass
+    if args.setup:
+        if args.setup == "remove":
+            init_vxm().remove()
 
     if args.shell:
         if args.shell == "open":

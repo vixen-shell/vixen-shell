@@ -7,6 +7,7 @@ from .Feature import Feature
 from .parameters import FeatureParams
 from ..globals import FEATURE_SETTINGS_DIRECTORY
 from ..log import Logger
+from ...vx_front import run_front_server
 
 
 class Features:
@@ -41,6 +42,7 @@ class Features:
 
     @staticmethod
     def init():
+        run_front_server()
         Gtk_main_loop.run()
 
         params_list = Features.get_params_list()
