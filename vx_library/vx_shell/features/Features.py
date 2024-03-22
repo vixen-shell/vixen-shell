@@ -1,17 +1,24 @@
-import os
+import os, json
 from typing import List, Dict
 from fastapi import WebSocket
 from pydantic import ValidationError
 from .Gtk_main_loop import Gtk_main_loop
 from .Feature import Feature
 from .parameters import FeatureParams
-from ..globals import FEATURE_SETTINGS_DIRECTORY
+from ..globals import FEATURE_SETTINGS_DIRECTORY, STARTUP_SETTING_FILE
 from ..log import Logger
-from ...vx_front import run_front_server
 
 
 class Features:
     _features: Dict[str, Feature] = {}
+
+    @staticmethod
+    def startup():
+        with open(STARTUP_SETTING_FILE, "r", encoding="utf-8") as file:
+            startup_list = json.load(file)
+
+        for feature_name in startup_list:
+            Features._features[feature_name].start()
 
     @staticmethod
     def get_params_list() -> List[FeatureParams] | None:
@@ -42,7 +49,6 @@ class Features:
 
     @staticmethod
     def init():
-        run_front_server()
         Gtk_main_loop.run()
 
         params_list = Features.get_params_list()

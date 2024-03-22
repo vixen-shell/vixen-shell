@@ -4,7 +4,7 @@
 Author            : Nohavye
 Author's Email    : noha.poncelet@gmail.com
 Repository        : https://github.com/vixen-shell/vixen-shell.git
-Description       : vxm executable.
+Description       : Vixen manager executable.
 License           : GPL3
 """
 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     if args.shell:
         if args.shell == "open":
-            init_vxm().open_api()
+            init_vxm().shell_open()
 
         if args.shell == "close":
-            init_vxm().close_api()
+            init_vxm().shell_close()

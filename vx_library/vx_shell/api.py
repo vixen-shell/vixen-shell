@@ -3,16 +3,15 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from .log import Logger
+from .globals import DevMode, get_front_url
+from .features import Features
 
 origins = ["http://localhost:5173", "http://localhost:6492"]
 
 
-from .globals import DevMode, get_front_url
-from .features import Features
-
-
 @asynccontextmanager
 async def lifespan(api: FastAPI):
+    Features.startup()
     yield
     await Features.cleanup()
 
