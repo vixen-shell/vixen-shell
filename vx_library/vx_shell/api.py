@@ -1,10 +1,11 @@
-import uvicorn
+import uvicorn, multiprocessing
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from .log import Logger
 from .globals import DevMode, get_front_url
 from .features import Features
+from .front import FrontServer
 
 origins = ["http://localhost:5173", "http://localhost:6492"]
 
@@ -14,6 +15,7 @@ async def lifespan(api: FastAPI):
     Features.startup()
     yield
     await Features.cleanup()
+    FrontServer.stop()
 
 
 api = FastAPI(lifespan=lifespan)
@@ -59,6 +61,7 @@ def run(dev_mode: bool = False):
         DevMode.set(True)
         Logger.log("INFO", f"Front URL: {get_front_url()} (dev mode)")
     if Features.init():
+        FrontServer.run()
         server.run()
 
 
