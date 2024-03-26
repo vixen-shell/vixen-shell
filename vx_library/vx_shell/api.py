@@ -1,13 +1,13 @@
-import uvicorn, multiprocessing
+import uvicorn
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from .log import Logger
-from .globals import DevMode, get_front_url
+from .globals import API_PORT, FRONT_PORT, FRONT_DEV_PORT
 from .features import Features
 from .front import FrontServer
 
-origins = ["http://localhost:5173", "http://localhost:6492"]
+api_server: uvicorn.Server = None
 
 
 @asynccontextmanager
@@ -20,17 +20,6 @@ async def lifespan(api: FastAPI):
 
 api = FastAPI(lifespan=lifespan)
 
-api.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-config = uvicorn.Config(api, host="localhost", port=6481)
-server = uvicorn.Server(config)
-
 
 @api.get("/ping", description="Test API availability")
 async def ping():
@@ -39,7 +28,7 @@ async def ping():
 
 @api.get("/shutdown", description="Close API")
 async def close():
-    server.should_exit = True
+    api_server.should_exit = True
     return
 
 
@@ -52,17 +41,26 @@ from . import frames_endpoints
 from . import features_websockets
 from . import hypr_websockets
 
-# LOGGER
-Logger.init()
 
+def run():
+    global api_server
+    api_server = uvicorn.Server(uvicorn.Config(api, host="localhost", port=API_PORT))
 
-def run(dev_mode: bool = False):
-    if dev_mode:
-        DevMode.set(True)
-        Logger.log("INFO", f"Front URL: {get_front_url()} (dev mode)")
+    api.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            f"http://localhost:{FRONT_PORT}",
+            f"http://localhost:{FRONT_DEV_PORT}",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     if Features.init():
+        Logger.init()
         FrontServer.run()
-        server.run()
+        api_server.run()
 
 
 # from . import static_endpoints

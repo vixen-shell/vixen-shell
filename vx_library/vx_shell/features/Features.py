@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from .Gtk_main_loop import Gtk_main_loop
 from .Feature import Feature
 from .parameters import FeatureParams
-from ..globals import FEATURE_SETTINGS_DIRECTORY, STARTUP_SETTING_FILE
+from ..globals import USER_CONFIG_DIRECTORY
 from ..log import Logger
 
 
@@ -14,7 +14,9 @@ class Features:
 
     @staticmethod
     def startup():
-        with open(STARTUP_SETTING_FILE, "r", encoding="utf-8") as file:
+        with open(
+            f"{USER_CONFIG_DIRECTORY}/startup.json", "r", encoding="utf-8"
+        ) as file:
             startup_list = json.load(file)
 
         for feature_name in startup_list:
@@ -23,11 +25,12 @@ class Features:
     @staticmethod
     def get_params_list() -> List[FeatureParams] | None:
         params: List[FeatureParams] = []
+        params_dir = f"{USER_CONFIG_DIRECTORY}/features"
 
         try:
-            for file_name in os.listdir(FEATURE_SETTINGS_DIRECTORY):
+            for file_name in os.listdir(params_dir):
                 if file_name.endswith(".json"):
-                    path = os.path.join(FEATURE_SETTINGS_DIRECTORY, file_name)
+                    path = os.path.join(params_dir, file_name)
 
                     if os.path.isfile(path):
                         try:

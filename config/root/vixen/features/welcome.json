@@ -1,0 +1,18 @@
+{
+    "name": "welcome",
+    "frames": {
+        "main": {
+            "name": "Welcome to Vixen Shell",
+            "route": "main",
+            "layer_frame": null,
+            "multi_frame": false
+        },
+        "about": {
+            "name": "About Vixen Shell",
+            "route": "about",
+            "layer_frame": null,
+            "multi_frame": false
+        }
+    },
+    "state": null
+}

@@ -4,17 +4,8 @@ from .Setup import Setup, SetupTask, Commands
 # ---------------------------------------------- - - -
 # Constants
 
-VX_ENV_DIR = "/opt/vixen-env"
-VX_LIB_NAME = "vx_library"
-VXM_EXEC_NAME = "vxm"
-VXM_EXEC_DEST = "/usr/bin"
-VXM_EXEC_PATH = f"{VXM_EXEC_DEST}/{VXM_EXEC_NAME}"
-VAR_OPT = "/var/opt"
-VX_FRONT_DIR = f"{VAR_OPT}/vx-front-main"
-VX_USER_CONFIG_SOURCE = f"{VX_FRONT_DIR}/user_config/vixen"
-VX_USER_CONFIG_DEST = f"/home/{os.getlogin()}/.config"
+VX_ENV = "/opt/vixen-env"
 
-# Git
 VX_FRONT_ARCHIVE_URL = (
     "https://github.com/vixen-shell/vx-front/archive/refs/heads/main.zip"
 )
@@ -33,23 +24,23 @@ def vx_setup(library_path: str):
             #
             SetupTask(
                 purpose="Create Vixen environment",
-                command=Commands.env_create(VX_ENV_DIR),
-                undo_command=Commands.folder_remove(VX_ENV_DIR),
+                command=Commands.env_create(VX_ENV),
+                undo_command=Commands.folder_remove(VX_ENV),
                 requirements=[
                     {
                         "purpose": "Check an existing environment folder",
-                        "callback": Commands.Checkers.folder(VX_ENV_DIR, False),
+                        "callback": Commands.Checkers.folder(VX_ENV, False),
                         "failure_message": f"Environment folder already exists",
                     }
                 ],
             ),
             SetupTask(
                 purpose="Install dependencies",
-                command=Commands.env_dependencies(VX_ENV_DIR, library_path),
+                command=Commands.env_dependencies(VX_ENV, library_path),
             ),
             SetupTask(
                 purpose="Install Vixen Shell library",
-                command=Commands.env_install(VX_ENV_DIR, library_path),
+                command=Commands.env_install(VX_ENV, library_path),
             ),
             SetupTask(
                 purpose="Remove build folders",
@@ -57,30 +48,39 @@ def vx_setup(library_path: str):
             ),
             SetupTask(
                 purpose="Install Vixen Manager executable",
-                command=Commands.file_copy(
-                    f"{library_path}/{VXM_EXEC_NAME}", VXM_EXEC_DEST, True
-                ),
-                undo_command=Commands.file_remove(VXM_EXEC_PATH),
+                command=Commands.file_copy(f"{library_path}/vxm", "/usr/bin/vxm", True),
+                undo_command=Commands.file_remove("/usr/bin/vxm"),
             ),
             SetupTask(
                 purpose="Patch Vixen Manager executable",
-                command=Commands.env_path_executable(VX_ENV_DIR, VXM_EXEC_PATH),
+                command=Commands.env_path_executable(VX_ENV, "/usr/bin/vxm"),
             ),
             # ---------------------------------------------- - - -
             # Vixen front-end
             #
             SetupTask(
                 purpose="Download Vixen Shell front-end",
-                command=Commands.git_get_archive(VX_FRONT_ARCHIVE_URL, VAR_OPT),
-                undo_command=Commands.folder_remove(VX_FRONT_DIR),
+                command=Commands.git_get_archive(VX_FRONT_ARCHIVE_URL, "/var/opt"),
+                undo_command=Commands.folder_remove("/var/opt/vx-front-main"),
             ),
             SetupTask(
                 purpose="Install Vixen Shell front-end dependencies",
-                command=Commands.yarn_install(VX_FRONT_DIR),
+                command=Commands.yarn_install("/var/opt/vx-front-main"),
             ),
             SetupTask(
                 purpose="Build Vixen Shell front-end",
-                command=Commands.yarn_build(VX_FRONT_DIR),
+                command=Commands.yarn_build("/var/opt/vx-front-main"),
+            ),
+            # ---------------------------------------------- - - -
+            # Root config
+            #
+            SetupTask(
+                purpose="Setup root config",
+                command=Commands.folder_copy(
+                    f"{library_path}/config/root/vixen",
+                    f"/usr/share",
+                ),
+                undo_command=Commands.folder_remove(f"/usr/share/vixen"),
             ),
             # ---------------------------------------------- - - -
             # User config
@@ -88,24 +88,14 @@ def vx_setup(library_path: str):
             SetupTask(
                 purpose="Setup user config",
                 command=Commands.user(
-                    Commands.folder_copy(VX_USER_CONFIG_SOURCE, VX_USER_CONFIG_DEST)
+                    Commands.folder_copy(
+                        f"{library_path}/config/user/vixen",
+                        f"/home/{os.getlogin()}/.config",
+                    )
                 ),
-                undo_command=Commands.folder_remove(f"{VX_USER_CONFIG_DEST}/vixen"),
-                requirements=[
-                    {
-                        "purpose": "Check an existing user config folder",
-                        "callback": Commands.Checkers.folder(
-                            f"{VX_USER_CONFIG_DEST}/vixen", False
-                        ),
-                        "failure_message": "User config folder already exists",
-                        "issue": {
-                            "purpose": "Remove existing user config folder",
-                            "command": Commands.folder_remove(
-                                f"{VX_USER_CONFIG_DEST}/vixen"
-                            ),
-                        },
-                    }
-                ],
+                undo_command=Commands.folder_remove(
+                    f"/home/{os.getlogin()}/.config/vixen"
+                ),
             ),
         ],
     ).run()
@@ -120,20 +110,24 @@ def vx_remove():
         purpose="Remove Vixen Shell",
         tasks=[
             SetupTask(
+                purpose="Remove root config",
+                command=Commands.folder_remove(f"/usr/share/vixen"),
+            ),
+            SetupTask(
                 purpose="Remove user config",
-                command=Commands.folder_remove(f"{VX_USER_CONFIG_DEST}/vixen"),
+                command=Commands.folder_remove(f"/home/{os.getlogin()}/.config/vixen"),
             ),
             SetupTask(
                 purpose="Remove Vixen Manager executable",
-                command=Commands.file_remove(VXM_EXEC_PATH),
+                command=Commands.file_remove("/usr/bin/vxm"),
             ),
             SetupTask(
                 purpose="Remove Vixen Shell front-end",
-                command=Commands.folder_remove(VX_FRONT_DIR),
+                command=Commands.folder_remove("/var/opt/vx-front-main"),
             ),
             SetupTask(
                 purpose="Remove Vixen Shell environment",
-                command=Commands.folder_remove(VX_ENV_DIR),
+                command=Commands.folder_remove(VX_ENV),
             ),
         ],
     ).run()
