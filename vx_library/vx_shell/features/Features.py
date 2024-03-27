@@ -4,7 +4,7 @@ from fastapi import WebSocket
 from pydantic import ValidationError
 from .Gtk_main_loop import Gtk_main_loop
 from .Feature import Feature
-from .parameters import FeatureParams
+from .parameters import FeatureParams, Parameters
 from ..globals import USER_CONFIG_DIRECTORY
 from ..log import Logger
 
@@ -14,53 +14,21 @@ class Features:
 
     @staticmethod
     def startup():
-        with open(
-            f"{USER_CONFIG_DIRECTORY}/startup.json", "r", encoding="utf-8"
-        ) as file:
-            startup_list = json.load(file)
-
-        for feature_name in startup_list:
+        for feature_name in Parameters.get_startup_list():
             Features._features[feature_name].start()
-
-    @staticmethod
-    def get_params_list() -> List[FeatureParams] | None:
-        params: List[FeatureParams] = []
-        params_dir = f"{USER_CONFIG_DIRECTORY}/features"
-
-        try:
-            for file_name in os.listdir(params_dir):
-                if file_name.endswith(".json"):
-                    path = os.path.join(params_dir, file_name)
-
-                    if os.path.isfile(path):
-                        try:
-                            params.append(FeatureParams.create(path))
-                        except ValidationError as e:
-                            error = e.errors()[0]
-                            Logger.log("WARNING", f"File: '{path}'")
-                            Logger.log(
-                                "WARNING",
-                                f"{error['type']}: {error['loc']}, {error['msg']}",
-                            )
-                            Logger.log("ERROR", "Feature not initialized!")
-                            return
-        except FileNotFoundError as e:
-            Logger.log("ERROR", e)
-            return
-
-        return params
 
     @staticmethod
     def init():
         Gtk_main_loop.run()
 
-        params_list = Features.get_params_list()
+        parameter_list = Parameters.get_feature_parameter_list()
 
-        if not params_list:
+        if not parameter_list:
+            Logger.log("ERROR", "Unable to load Vixen Shell config")
             Gtk_main_loop.quit()
             return False
 
-        for params in params_list:
+        for params in parameter_list:
             feature = Feature(params)
             Features._features[feature.params.name] = feature
 
