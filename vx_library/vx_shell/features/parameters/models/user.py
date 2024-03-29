@@ -26,6 +26,7 @@ class UserLayerFrameParams(BaseModel):
 
 
 class UserFrameParams(BaseModel):
+    template: Optional[str] = None
     show_on_startup: Optional[bool] = None
     layer_frame: Optional[UserLayerFrameParams] = None
 
@@ -33,3 +34,37 @@ class UserFrameParams(BaseModel):
 class UserFeatureParams(BaseModel):
     frames: Optional[Dict[str, UserFrameParams]] = None
     state: Optional[Dict[str, None | str | int | float | bool]] = None
+
+
+# ---------------------------------------------- - - -
+# MODELS
+
+
+class UserMarginParamsDict(TypedDict):
+    top: Optional[int]
+    right: Optional[int]
+    bottom: Optional[int]
+    left: Optional[int]
+
+
+class UserLayerFrameParamsDict(TypedDict):
+    monitor_id: Optional[int]
+    auto_exclusive_zone: Optional[bool]
+    exclusive_zone: Optional[int]
+    level: Optional[LevelKeys]
+    anchor_edge: Optional[AnchorEdgeKeys]
+    alignment: Optional[AlignmentKeys]
+    margins: Optional[UserMarginParamsDict]
+    width: Optional[int]
+    height: Optional[int]
+
+
+class UserFrameParamsDict(TypedDict):
+    template: Optional[str]
+    show_on_startup: Optional[bool]
+    layer_frame: Optional[UserLayerFrameParamsDict]
+
+
+class UserFeatureParamsDict(TypedDict):
+    frames: Optional[Dict[str, UserFrameParamsDict]]
+    state: Optional[Dict[str, None | str | int | float | bool]]

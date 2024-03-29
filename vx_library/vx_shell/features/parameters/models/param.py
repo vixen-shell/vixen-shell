@@ -28,5 +28,44 @@ class LayerFrameParams(BaseModel):
 class FrameParams(BaseModel):
     name: str
     route: str
+    template: Optional[str] = None
     show_on_startup: Optional[bool] = None
     layer_frame: Optional[LayerFrameParams] = None
+
+
+# ---------------------------------------------- - - -
+# DICT
+
+
+class MarginParamsDict(TypedDict):
+    top: Optional[int]
+    right: Optional[int]
+    bottom: Optional[int]
+    left: Optional[int]
+
+
+class LayerFrameParamsDict(TypedDict):
+    monitor_id: Optional[int]
+    auto_exclusive_zone: Optional[bool]
+    exclusive_zone: Optional[int]
+    level: Optional[LevelKeys]
+    anchor_edge: Optional[AnchorEdgeKeys]
+    alignment: Optional[AlignmentKeys]
+    margins: Optional[MarginParamsDict]
+    width: Optional[int]
+    height: Optional[int]
+
+
+class FrameParamsDict(TypedDict):
+    name: str
+    route: str
+    template: Optional[str]
+    show_on_startup: Optional[bool]
+    layer_frame: Optional[LayerFrameParamsDict]
+
+
+class FeatureParamsDict(TypedDict):
+    path: str
+    name: str
+    frames: Dict[str, FrameParamsDict]
+    state: Optional[Dict[str, None | str | int | float | bool]]

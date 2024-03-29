@@ -35,4 +35,42 @@ class RootFrameParams(BaseModel):
 class RootFeatureParams(BaseModel):
     name: str
     frames: Dict[str, RootFrameParams]
+    templates: Optional[Dict[str, RootFrameParams]] = None
     state: Optional[Dict[str, None | str | int | float | bool] | Disable] = None
+
+
+# ---------------------------------------------- - - -
+# DICT
+
+
+class RootMarginParamsDict(TypedDict):
+    top: Optional[int | Disable]
+    right: Optional[int | Disable]
+    bottom: Optional[int | Disable]
+    left: Optional[int | Disable]
+
+
+class RootLayerFrameParamsDict(TypedDict):
+    monitor_id: Optional[int | Disable]
+    auto_exclusive_zone: Optional[bool | Disable]
+    exclusive_zone: Optional[int | Disable]
+    level: Optional[LevelKeys | Disable]
+    anchor_edge: Optional[AnchorEdgeKeys | Disable]
+    alignment: Optional[AlignmentKeys | Disable]
+    margins: Optional[RootMarginParamsDict | Disable]
+    width: Optional[int | Disable]
+    height: Optional[int | Disable]
+
+
+class RootFrameParamsDict(TypedDict):
+    name: str
+    route: str
+    show_on_startup: Optional[bool | Disable]
+    layer_frame: Optional[RootLayerFrameParamsDict | Disable]
+
+
+class RootFeatureParamsDict(TypedDict):
+    name: str
+    frames: Dict[str, RootFrameParamsDict]
+    templates: Optional[Dict[str, RootFrameParamsDict]]
+    state: Optional[Dict[str, None | str | int | float | bool] | Disable]
