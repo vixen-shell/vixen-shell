@@ -63,15 +63,14 @@ class FeatureParams(BaseModel):
                         "show_on_startup"
                     ] = show_on_startup
 
-                multi_frame = root_validator(root_frame_item["multi_frame"])
-                if multi_frame != "__user__":
-                    params["frames"][root_frame_key]["multi_frame"] = multi_frame
-
                 layer_frame = root_validator(root_frame_item["layer_frame"])
                 if layer_frame != "__user__":
                     if layer_frame is None:
                         params["frames"][root_frame_key]["layer_frame"] = None
                     else:
+                        if not params["frames"][root_frame_key].get("layer_frame"):
+                            params["frames"][root_frame_key]["layer_frame"] = {}
+
                         for layer_frame_key, layer_frame_item in root_frame_item[
                             "layer_frame"
                         ].items():
@@ -123,13 +122,3 @@ class FeatureParams(BaseModel):
         data["frames"] = frames
 
         write_json(self.path, data)
-
-    @property
-    def single_frames(self) -> Dict[str, FrameParams]:
-        return {
-            key: frame for key, frame in self.frames.items() if not frame.multi_frame
-        }
-
-    @property
-    def multi_frames(self) -> Dict[str, FrameParams]:
-        return {key: frame for key, frame in self.frames.items() if frame.multi_frame}

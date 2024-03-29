@@ -1,6 +1,21 @@
 import threading
-from .Gtk_imports import Gtk
+from .Gtk_imports import Gdk, Gtk
 from ..log import Logger
+
+
+def init_style_context():
+    stylesheet = b"""
+    window {
+        background-color: transparent;
+    }
+    """
+    style_provider = Gtk.CssProvider()
+    style_provider.load_from_data(stylesheet)
+    Gtk.StyleContext.add_provider_for_screen(
+        Gdk.Screen.get_default(),
+        style_provider,
+        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+    )
 
 
 class Gtk_main_loop:
@@ -9,6 +24,7 @@ class Gtk_main_loop:
     @staticmethod
     def run():
         Gtk_main_loop._thread.start()
+        init_style_context()
         Logger.log("INFO", "Gtk main loop is started.")
 
     @staticmethod

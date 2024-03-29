@@ -30,11 +30,3 @@ class FrameParams(BaseModel):
     route: str
     show_on_startup: Optional[bool] = None
     layer_frame: Optional[LayerFrameParams] = None
-    multi_frame: Optional[bool] = None
-
-    @validator("multi_frame", pre=True)
-    def validate_multi_frame(cls, v, values):
-        if values.get("layer_frame") is not None:
-            if v == True:
-                raise ValueError("A layer frame cannot be a multi frame")
-        return v

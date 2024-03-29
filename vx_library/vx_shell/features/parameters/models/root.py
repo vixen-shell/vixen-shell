@@ -30,7 +30,6 @@ class RootFrameParams(BaseModel):
     route: str
     show_on_startup: Optional[bool | Disable] = None
     layer_frame: Optional[RootLayerFrameParams | Disable] = None
-    multi_frame: Optional[bool | Disable] = None
 
 
 class RootFeatureParams(BaseModel):

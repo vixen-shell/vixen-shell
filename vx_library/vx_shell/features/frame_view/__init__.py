@@ -6,4 +6,4 @@ Description       : vixen shell api frame view library.
 License           : GPL3
 """
 
-from .FrameView import create_frame
+from .FrameView import FrameView

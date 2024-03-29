@@ -35,6 +35,7 @@ class Feature(FeatureState, FeaturePipe):
         if self.is_started:
             if self.listen_logs:
                 self.listen_logs = False
+
             await self.close_pipe()
             self.frames.cleanup()
             self.is_started = False

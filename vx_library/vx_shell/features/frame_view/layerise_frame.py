@@ -25,21 +25,6 @@ anchor_key_values = {
 }
 
 
-def init_style_context():
-    stylesheet = b"""
-    window {
-        background-color: transparent;
-    }
-    """
-    style_provider = Gtk.CssProvider()
-    style_provider.load_from_data(stylesheet)
-    Gtk.StyleContext.add_provider_for_screen(
-        Gdk.Screen.get_default(),
-        style_provider,
-        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-    )
-
-
 def set_level(level_key: LevelKeys | None):
     try:
         return getattr(Levels, level_key)
@@ -73,7 +58,6 @@ def layerise_frame(
     frame: Gtk.Window, namespace: str, layer_frame_params: LayerFrameParams
 ):
     frame.set_app_paintable(True)
-    init_style_context()
 
     frame.set_size_request(
         layer_frame_params.width or -1, layer_frame_params.height or -1
