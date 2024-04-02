@@ -5,8 +5,11 @@ from ..log import Logger
 
 def init_style_context():
     stylesheet = b"""
-    window {
+    #layer_frame {
         background-color: transparent;
+    }
+    #window_frame {
+        background-color: #242424;
     }
     """
     style_provider = Gtk.CssProvider()

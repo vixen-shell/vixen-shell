@@ -48,7 +48,7 @@ class FrameView:
         )
 
         def process():
-            self.frame = Gtk.Window(title=frame_params.name)
+            self.frame = Gtk.Window()
             self.frame.set_app_paintable(True)
             self.frame.add(webview(self.frame_uri, self.dev_mode))
             self.frame.connect(
@@ -56,7 +56,11 @@ class FrameView:
             )
 
             if bool(frame_params.layer_frame):
+                self.frame.set_name("layer_frame")
                 layerise_frame(self.frame, frame_params.name, frame_params.layer_frame)
+            else:
+                self.frame.set_title(frame_params.name)
+                self.frame.set_name("window_frame")
 
             self.frame.realize()
 
