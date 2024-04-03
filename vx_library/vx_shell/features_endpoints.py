@@ -1,4 +1,4 @@
-from fastapi import Response, Path
+from fastapi import Response, Path, Body
 from .api import api
 from .globals import ModelResponses, Models
 from .features import Features
@@ -14,6 +14,48 @@ names_responses = ModelResponses({200: Models.Features.Names})
 )
 async def feature_names(response: Response):
     return names_responses(response, 200)(names=Features.keys())
+
+
+# INIT DEV FEATURE
+init_dev_responses = ModelResponses(
+    {200: Models.Features.Base, 409: Models.Commons.Error}
+)
+
+
+@api.post(
+    "/feature/dev/init",
+    description="Start feature in development mode",
+    responses=init_dev_responses.responses,
+)
+async def init_dev_feature(
+    response: Response, dev_dir: str = Body(description="Development directory")
+):
+    feature_name, error = Features.init_dev_feature(dev_dir)
+
+    if error:
+        return init_dev_responses(response, 409)(message=error)
+
+    return init_dev_responses(response, 200)(name=feature_name)
+
+
+# STOP DEV FEATURE
+stop_dev_responses = ModelResponses(
+    {200: Models.Features.Base, 409: Models.Commons.Error}
+)
+
+
+@api.get(
+    "/feature/dev/stop",
+    description="Stop feature in development mode",
+    responses=stop_dev_responses.responses,
+)
+async def stop_dev_feature(response: Response):
+    feature_name, error = await Features.remove_dev_feature()
+
+    if error:
+        return stop_dev_responses(response, 409)(message=error)
+
+    return stop_dev_responses(response, 200)(name=feature_name)
 
 
 # START FEATURE

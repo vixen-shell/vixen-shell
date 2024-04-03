@@ -12,8 +12,8 @@ class FeatureParams(BaseModel):
     state: Optional[Dict[str, None | str | int | float | bool]] = None
 
     @staticmethod
-    def create(file_name: str):
-        builder = ParmetersBuilder(file_name)
+    def create(root_file_path: str, user_file_path: str):
+        builder = ParmetersBuilder(root_file_path, user_file_path)
         return FeatureParams(**builder.build())
 
     def save(self):

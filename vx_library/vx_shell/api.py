@@ -42,7 +42,7 @@ from . import features_websockets
 from . import hypr_websockets
 
 
-def run():
+def run_api():
     global api_server
     api_server = uvicorn.Server(uvicorn.Config(api, host="localhost", port=API_PORT))
 

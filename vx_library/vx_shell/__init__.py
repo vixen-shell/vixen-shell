@@ -6,4 +6,4 @@ Description       : vixen shell api library.
 License           : GPL3
 """
 
-from . import api
+from .api import run_api

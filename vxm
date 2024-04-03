@@ -26,6 +26,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--shell", type=str, choices=["open", "close"], help="Vixen Shell controls."
     )
+    parser.add_argument(
+        "--dev", action="store_true", help="Run feature development mode."
+    )
 
     args = parser.parse_args()
 
@@ -39,3 +42,6 @@ if __name__ == "__main__":
 
         if args.shell == "close":
             init_vxm().shell_close()
+
+    if args.dev:
+        init_vxm().dev_mode(os.getcwd())

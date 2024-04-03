@@ -8,10 +8,11 @@ from ..log import Logger, Log
 
 
 class Feature(FeatureState, FeaturePipe):
-    def __init__(self, params: FeatureParams):
+    def __init__(self, params: FeatureParams, dev_mode: bool = False):
         FeatureState.__init__(self, params)
         FeaturePipe.__init__(self)
 
+        self.dev_mode = dev_mode
         self.is_started = False
         self.params = params
         self.frames = FrameHandler(self.params)
@@ -28,7 +29,7 @@ class Feature(FeatureState, FeaturePipe):
     def start(self):
         if not self.is_started:
             self.open_pipe()
-            self.frames.init()
+            self.frames.init(self.dev_mode)
             self.is_started = True
 
     async def stop(self):

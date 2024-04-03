@@ -5,7 +5,7 @@ from typing import Dict, List, Literal, Any, Optional
 # COMMONS MODELS
 class Commons_Error(BaseModel):
     message: str
-    details: Any
+    details: Optional[Any] = None
 
 
 class Commons_KeyError(BaseModel):

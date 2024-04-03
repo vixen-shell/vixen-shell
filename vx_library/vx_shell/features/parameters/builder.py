@@ -1,5 +1,7 @@
 from typing import Any, Literal
+from pydantic import ValidationError
 from .utils import read_json
+
 from .models import (
     RootFeatureParams,
     RootFeatureParamsDict,
@@ -11,24 +13,49 @@ from .models import (
     FeatureParamsDict,
 )
 
-from ...globals import ROOT_CONFIG_DIRECTORY, USER_CONFIG_DIRECTORY
+from ...log import Logger
 
-ROOT_PARAMS_DIRECTORY = f"{ROOT_CONFIG_DIRECTORY}/features"
-USER_PARAMS_DIRECTORY = f"{USER_CONFIG_DIRECTORY}/features"
+
+class ParameterError(Exception):
+    def __init__(self, file_path: str, validation_error: ValidationError):
+        error = validation_error.errors()[0]
+
+        super().__init__(
+            f"{error['msg']}: {error['type']} {list(error['loc'])} on '{file_path}' configuration file"
+        )
+
+
+class MissingFileError(Exception):
+    def __init__(self, file_path: str):
+        super().__init__(f"Root configuration file '{file_path}' not found")
 
 
 class ParmetersBuilder:
-    def __init__(self, file_name: str):
-        self.root_path = f"{ROOT_PARAMS_DIRECTORY}/{file_name}"
-        self.user_path = f"{USER_PARAMS_DIRECTORY}/{file_name}"
+    def __init__(self, root_file_path: str, user_file_path: str):
+        self.user_file_path = user_file_path
 
-        self.root_data: RootFeatureParamsDict = RootFeatureParams(
-            **read_json(self.root_path)
-        ).model_dump()
+        try:
+            root_dict = read_json(root_file_path)
 
-        self.data: FeatureParamsDict = self.init_data(
-            UserFeatureParams(**read_json(self.user_path)).model_dump()
-        )
+            if not root_dict:
+                raise MissingFileError(root_file_path)
+
+            self.root_data: RootFeatureParamsDict = RootFeatureParams(
+                **read_json(root_file_path) or {}
+            ).model_dump()
+
+        except ValidationError as e:
+            raise ParameterError(root_file_path, e)
+
+        except MissingFileError as e:
+            raise e
+
+        try:
+            self.data: FeatureParamsDict = self.init_data(
+                UserFeatureParams(**read_json(user_file_path) or {}).model_dump()
+            )
+        except ValidationError as e:
+            raise ParameterError(user_file_path, e)
 
     def init_data(self, user_data: UserFeatureParamsDict):
         if self.root_data.get("templates"):
@@ -56,7 +83,7 @@ class ParmetersBuilder:
             return "__user__"
 
     def build(self):
-        self.data["path"] = self.user_path
+        self.data["path"] = self.user_file_path
         self.data["name"] = self.root_data["name"]
 
         if not "frames" in self.data:
