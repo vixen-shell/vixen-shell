@@ -1,5 +1,5 @@
 import logging, sys, time, threading
-from typing import Literal
+from typing import Literal, TypedDict, List
 
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
@@ -12,6 +12,11 @@ COLORS = {
     "CRITICAL": "\033[91m",  # Bright Red
     "RESET": "\033[0m",  # Reset to default color
 }
+
+
+class ExcludeAnswers(TypedDict):
+    answers: list
+    reason: str
 
 
 class Logger:
@@ -67,13 +72,59 @@ class Logger:
     @staticmethod
     def validate(level: LogLevel, question: str) -> Literal["yes", "no"]:
         Logger.log(level, f"{question}")
-        while True:
-            reponse = input("(yes/no): ").strip().lower()
 
-            if reponse in ["yes", "no"]:
-                return reponse
-            else:
-                Logger.log("INFO", "Please answer with 'yes' or 'no'.")
+        try:
+            while True:
+                response = input("(yes/no or [ctrl + C]): ").strip().lower()
+
+                if response in ["yes", "no"]:
+                    return response
+                else:
+                    Logger.log("INFO", "Please answer with 'yes' or 'no'.")
+        except KeyboardInterrupt:
+            print()
+            return "no"
+
+    @staticmethod
+    def question(
+        level: LogLevel,
+        question: str,
+        exclude_answers: List[ExcludeAnswers] = [],
+    ) -> str | None:
+        def check_exclude_reasons(response: str):
+            for exclude in exclude_answers:
+                if response in exclude["answers"]:
+                    reason = exclude.get("reason")
+                    if reason:
+                        Logger.log("WARNING", reason)
+
+        def check_validity(response: str) -> bool:
+            for exclude in exclude_answers:
+                if response in exclude["answers"]:
+                    Logger.log("WARNING", f"'{response}' is not a valid answer")
+                    return False
+            return True
+
+        Logger.log(level, f"{question}")
+
+        try:
+            while True:
+                response = (
+                    input("(type or [ctrl + C]): ").strip().lower().replace(" ", "")
+                )
+
+                validity = check_validity(response)
+
+                if response and validity:
+                    return response
+                else:
+                    if response:
+                        check_exclude_reasons(response)
+                    Logger.log("INFO", "Please type your answer.")
+
+        except KeyboardInterrupt:
+            print()
+            return
 
     class Spinner:
         def __init__(self):

@@ -208,6 +208,12 @@ class Commands:
         return f"rm {file}"
 
     # ---------------------------------------------- - - -
+    # Files and folder
+    @staticmethod
+    def rename(source: str, destination: str):
+        return f"mv {source} {destination}"
+
+    # ---------------------------------------------- - - -
     # Git
     @staticmethod
     def git_get_archive(url: str, destination: str):
@@ -222,3 +228,11 @@ class Commands:
     @staticmethod
     def yarn_build(package_dir: str):
         return f"cd {package_dir} && yarn build"
+
+    # ---------------------------------------------- - - -
+    # JSON
+    @staticmethod
+    def json_patch_feature_name_property(file: str, name: str):
+        old_field = '"name": "feature"'
+        new_field = f'"name": "{name}"'
+        return f"sed -i 's/{old_field}/{new_field}/' {file}"

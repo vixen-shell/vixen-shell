@@ -52,10 +52,12 @@ class Features:
         if not package:
             return None, f"Unable to found 'package.json' file in '{dev_dir}' directory"
 
-        feature_name = package.get("name")
+        feature_name: str = package.get("name")
 
         if not feature_name:
             return None, "Unable to found 'name' property in 'package.json' file"
+
+        feature_name = feature_name.replace("vx-feature-", "")
 
         if Features.key_exists(feature_name):
             return None, f"A feature called '{feature_name}' already exists"

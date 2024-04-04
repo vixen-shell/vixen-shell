@@ -1,5 +1,5 @@
 import os, requests, time, subprocess, multiprocessing
-from .setup import vx_remove
+from .setup import vx_remove, vx_new_feature
 from .log import Logger
 from ..vx_shell import run_api
 
@@ -52,7 +52,7 @@ def init_dev_mode(dev_dir: str) -> str | None:
         return
 
 
-def start_dev_feature(feature_name: str) -> bool:
+def start_feature(feature_name: str) -> bool:
     try:
         response = requests.get(f"http://localhost:6481/feature/{feature_name}/start")
 
@@ -79,6 +79,22 @@ def stop_dev_mode() -> bool:
         else:
             Logger.log("ERROR", response.json()["message"])
             return False
+
+    except requests.RequestException as error:
+        Logger.log("ERROR", error.strerror)
+        return False
+
+
+def get_feature_names() -> list | None:
+    try:
+        response = requests.get("http://localhost:6481/features/names")
+
+        if response.status_code == 200:
+            data = response.json()
+            return data["names"]
+        else:
+            Logger.log("ERROR", "Unable to get names of existing features")
+            return
 
     except requests.RequestException as error:
         Logger.log("ERROR", error.strerror)
@@ -147,7 +163,7 @@ class vxm:
             vite.start()
             time.sleep(0.5)
 
-            start_dev_feature(feature_name)
+            start_feature(feature_name)
 
             try:
                 vite.join()
@@ -155,3 +171,54 @@ class vxm:
                 vite.terminate()
 
             stop_dev_mode()
+
+    @staticmethod
+    def create_feature(parent_dir: str):
+        if sudo_is_used():
+            Logger.log("WARNING", "Cannot use this command with 'sudo'")
+            return
+
+        if api_is_running():
+            Logger.log(
+                "WARNING",
+                "You are about to create a new development project",
+            )
+
+            name_list = get_feature_names()
+            folder_list = [
+                folder_name
+                for folder_name in os.listdir(parent_dir)
+                if os.path.isdir(os.path.join(parent_dir, folder_name))
+            ]
+
+            feature_name = Logger.question(
+                level="INFO",
+                question="Please enter the name of the new feature",
+                exclude_answers=[
+                    {
+                        "answers": name_list,
+                        "reason": "A feature with this name already exists in Vixen Shell",
+                    },
+                    {
+                        "answers": folder_list,
+                        "reason": "A folder with this name already exists in the current folder",
+                    },
+                ],
+            )
+
+            if feature_name:
+                response = Logger.validate(
+                    "WARNING",
+                    f"Are you sure you want to create '{feature_name}' project?",
+                )
+
+                if response == "yes":
+                    if vx_new_feature(parent_dir, feature_name):
+                        print(
+                            "\nThe project was created successfully.\nType 'yarn dev' in the project folder to launch the dev server."
+                        )
+
+                if response == "no":
+                    Logger.log("WARNING", "Operation avorted")
+        else:
+            Logger.log("WARNING", "Vixen Shell Api is not running")

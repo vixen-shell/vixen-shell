@@ -9,6 +9,9 @@ VX_ENV = "/opt/vixen-env"
 VX_FRONT_ARCHIVE_URL = (
     "https://github.com/vixen-shell/vx-front/archive/refs/heads/main.zip"
 )
+VX_FEATURE_TEMPLATE_URL = (
+    "https://github.com/vixen-shell/vx-feature-template/archive/refs/heads/main.zip"
+)
 
 
 # ---------------------------------------------- - - -
@@ -128,6 +131,75 @@ def vx_remove():
             SetupTask(
                 purpose="Remove Vixen Shell environment",
                 command=Commands.folder_remove(VX_ENV),
+            ),
+        ],
+    ).run()
+
+
+# ---------------------------------------------- - - -
+# Create new feature
+
+
+def vx_new_feature(path: str, project_name: str):
+    return Setup(
+        purpose="Create new feature",
+        tasks=[
+            SetupTask(
+                purpose="Download feature template",
+                command=Commands.git_get_archive(VX_FEATURE_TEMPLATE_URL, "/tmp"),
+            ),
+            SetupTask(
+                purpose="Setup project folder",
+                command=Commands.rename(
+                    "/tmp/vx-feature-template-main", f"/tmp/{project_name}"
+                ),
+                undo_command=Commands.folder_remove(f"/tmp/{project_name}"),
+            ),
+            SetupTask(
+                purpose="Patch package file",
+                command=Commands.json_patch_feature_name_property(
+                    f"/tmp/{project_name}/package.json", f"vx-feature-{project_name}"
+                ),
+            ),
+            SetupTask(
+                purpose="Setup feature source",
+                command=Commands.rename(
+                    f"/tmp/{project_name}/src/feature",
+                    f"/tmp/{project_name}/src/{project_name}",
+                ),
+            ),
+            SetupTask(
+                purpose="Setup root config file",
+                command=Commands.rename(
+                    f"/tmp/{project_name}/config/root/feature.json",
+                    f"/tmp/{project_name}/config/root/{project_name}.json",
+                ),
+            ),
+            SetupTask(
+                purpose="Patch root config file",
+                command=Commands.json_patch_feature_name_property(
+                    f"/tmp/{project_name}/config/root/{project_name}.json", project_name
+                ),
+            ),
+            SetupTask(
+                purpose="Setup user config file",
+                command=Commands.rename(
+                    f"/tmp/{project_name}/config/user/feature.json",
+                    f"/tmp/{project_name}/config/user/{project_name}.json",
+                ),
+            ),
+            SetupTask(
+                purpose="Install project dependencies",
+                command=Commands.yarn_install(f"/tmp/{project_name}"),
+            ),
+            SetupTask(
+                purpose="Finalize feature project",
+                command=Commands.folder_copy(f"/tmp/{project_name}", path),
+                undo_command=Commands.folder_remove(f"{path}/{project_name}"),
+            ),
+            SetupTask(
+                purpose="Clean temporary files",
+                command=Commands.folder_remove(f"/tmp/{project_name}"),
             ),
         ],
     ).run()
