@@ -9,5 +9,8 @@ def init_setup():
 
 def init_vxm():
     from .vxm import vxm
+    from .log import Logger
+
+    Logger.init()
 
     return vxm

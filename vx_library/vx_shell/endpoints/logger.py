@@ -1,8 +1,8 @@
 from fastapi import Response, Body
-from typing import Literal, Optional, Dict
-from .api import api
-from .globals import ModelResponses, Models
-from .log import Logger
+from typing import Literal, Optional
+from ..api import api
+from ..globals import ModelResponses, Models
+from ..log import Logger
 
 # GET LOGS
 logs_responses = ModelResponses({200: Models.Log.Logs})

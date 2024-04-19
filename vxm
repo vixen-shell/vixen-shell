@@ -46,6 +46,6 @@ if __name__ == "__main__":
 
     elif args.dev:
         if args.dev == "run":
-            init_vxm().dev_mode(os.getcwd())
+            init_vxm().dev_run(os.getcwd())
         if args.dev == "new":
             init_vxm().create_feature(os.getcwd())

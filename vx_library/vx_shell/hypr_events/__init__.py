@@ -6,5 +6,4 @@ Description       : vixen shell api hype events feature.
 License           : GPL3
 """
 
-from .hypr_events import HYPR_SOCKET_PATH, HyprSocketDataHandler
-from .unix_socket import UnixSocket
+from .HyprEventsListener import HyprEventsListener

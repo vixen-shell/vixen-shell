@@ -1,6 +1,6 @@
 from fastapi import WebSocket
-from .api import api
-from .features import Features
+from ..api import api
+from ..features import Features
 
 
 @api.websocket("/feature/{feature_name}/pipe/{client_id}")

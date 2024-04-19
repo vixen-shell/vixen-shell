@@ -1,111 +1,22 @@
-import os, requests, time, subprocess, multiprocessing
+import os
+from .utils import sudo_is_used, get_vite_process
 from .setup import vx_remove, vx_new_feature
 from .log import Logger
-from ..vx_shell import run_api
-
-Logger.init()
-
-
-def sudo_is_used() -> bool:
-    return os.geteuid() == 0
-
-
-def api_is_running() -> bool:
-    try:
-        response = requests.get("http://localhost:6481/ping")
-
-        if response.status_code == 200:
-            return True
-        else:
-            return False
-
-    except requests.RequestException:
-        return False
-
-
-def close_api() -> bool:
-    try:
-        response = requests.get("http://localhost:6481/shutdown")
-
-        if response.status_code == 200:
-            return True
-        else:
-            return False
-
-    except requests.RequestException:
-        return False
-
-
-def init_dev_mode(dev_dir: str) -> str | None:
-    try:
-        response = requests.post("http://localhost:6481/feature/dev/init", json=dev_dir)
-
-        if response.status_code == 200:
-            feature_name = response.json()["name"]
-            return feature_name
-        else:
-            Logger.log("ERROR", response.json()["message"])
-            return
-
-    except requests.RequestException as error:
-        Logger.log("ERROR", error.strerror)
-        return
-
-
-def start_feature(feature_name: str) -> bool:
-    try:
-        response = requests.get(f"http://localhost:6481/feature/{feature_name}/start")
-
-        if response.status_code == 200:
-            print(
-                f"  \033[92m➜\033[0m  Vixen: start feature '{response.json()['name']}'"
-            )
-            return True
-        else:
-            print(f"  \033[91m➜\033[0m  Vixen: {response.json()['message']}")
-            return False
-
-    except requests.RequestException as error:
-        print(f"  \033[91m➜\033[0m  Vixen: {error.strerror}")
-        return False
-
-
-def stop_dev_mode() -> bool:
-    try:
-        response = requests.get("http://localhost:6481/feature/dev/stop")
-
-        if response.status_code == 200:
-            return True
-        else:
-            Logger.log("ERROR", response.json()["message"])
-            return False
-
-    except requests.RequestException as error:
-        Logger.log("ERROR", error.strerror)
-        return False
-
-
-def get_feature_names() -> list | None:
-    try:
-        response = requests.get("http://localhost:6481/features/names")
-
-        if response.status_code == 200:
-            data = response.json()
-            return data["names"]
-        else:
-            Logger.log("ERROR", "Unable to get names of existing features")
-            return
-
-    except requests.RequestException as error:
-        Logger.log("ERROR", error.strerror)
-        return False
+from ..vx_shell import Shell
 
 
 class vxm:
     @staticmethod
     def remove():
         if not sudo_is_used():
-            Logger.log("WARNING", "This command must be used with 'sudo'")
+            Logger.log("WARNING", "This damn command must be used with 'sudo'")
+            return
+
+        if Shell.is_open():
+            Logger.log(
+                "WARNING",
+                "Vixen Shell is running. Close it and try the damn command again.",
+            )
             return
 
         response = Logger.validate(
@@ -113,8 +24,6 @@ class vxm:
         )
 
         if response == "yes":
-            if api_is_running():
-                vxm.shell_close()
             vx_remove()
 
         if response == "no":
@@ -122,55 +31,42 @@ class vxm:
 
     @staticmethod
     def shell_open():
-        if not api_is_running():
-            run_api()
-        else:
-            Logger.log("WARNING", "Vixen Shell Api is already running")
+        try:
+            Shell.open()
+        except Exception as exception:
+            Logger.log("WARNING", exception)
 
     @staticmethod
     def shell_close():
-        if api_is_running():
-            if close_api():
-                Logger.log("INFO", "Exit Vixen Shell successfull")
-            else:
-                Logger.log("ERROR", "Unable to exit Vixen Shell")
-        else:
-            Logger.log("WARNING", "Vixen Shell Api is not running")
+        try:
+            Shell.close()
+            Logger.log("INFO", "Exit Vixen Shell successfull")
+        except Exception as exception:
+            Logger.log("WARNING", exception)
 
     @staticmethod
-    def dev_mode(dev_dir: str):
-        def vite_process():
-            process = subprocess.Popen("./node_modules/.bin/vite", shell=True)
-            process.wait()
-
-        vite = multiprocessing.Process(target=vite_process)
-
-        if not os.path.exists(f"{dev_dir}/node_modules"):
-            Logger.log(
-                "WARNING",
-                "The development project dependencies are not installed",
-            )
-            Logger.log("ERROR", "Node modules not found")
+    def dev_run(dev_dir: str):
+        try:
+            vite_process = get_vite_process(dev_dir)
+            dev_feature = Shell.init_dev_feature(dev_dir)
+        except Exception as exception:
+            Logger.log("ERROR", exception)
             return
 
-        if not api_is_running():
-            Logger.log("WARNING", "Vixen Shell Api is not running")
-            return
+        vite_process.start()
 
-        feature_name = init_dev_mode(dev_dir)
+        try:
+            dev_feature.start()
+            print(f"  \033[92m➜\033[0m  Vixen: start feature '{dev_feature.name}'")
+        except Exception as exception:
+            f"  \033[91m➜\033[0m  Vixen: {exception}"
 
-        if feature_name:
-            vite.start()
-            time.sleep(0.5)
+        vite_process.join()
 
-            start_feature(feature_name)
-
-            try:
-                vite.join()
-            except KeyboardInterrupt:
-                vite.terminate()
-
-            stop_dev_mode()
+        try:
+            Shell.stop_dev_feature()
+        except Exception as exception:
+            Logger.log("WARNING", exception)
 
     @staticmethod
     def create_feature(parent_dir: str):
@@ -178,13 +74,14 @@ class vxm:
             Logger.log("WARNING", "Cannot use this command with 'sudo'")
             return
 
-        if api_is_running():
+        if Shell.is_open():
             Logger.log(
                 "WARNING",
                 "You are about to create a new development project",
             )
 
-            name_list = get_feature_names()
+            name_list = Shell.feature_names()
+
             folder_list = [
                 folder_name
                 for folder_name in os.listdir(parent_dir)
@@ -221,4 +118,4 @@ class vxm:
                 if response == "no":
                     Logger.log("WARNING", "Operation avorted")
         else:
-            Logger.log("WARNING", "Vixen Shell Api is not running")
+            Logger.log("WARNING", "Vixen Shell is not running")
