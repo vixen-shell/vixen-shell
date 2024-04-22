@@ -8,13 +8,13 @@ License           : GPL3
 
 
 def init_setup():
-    from .vx_manager import init_setup
+    from .manager import init_setup
 
     return init_setup()
 
 
 def init_vxm():
-    from .vx_manager import init_vxm
+    from .manager import init_vxm
 
     vxm = init_vxm()
     return vxm

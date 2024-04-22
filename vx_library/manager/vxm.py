@@ -2,7 +2,7 @@ import os
 from .utils import sudo_is_used, get_vite_process
 from .setup import vx_remove, vx_new_feature
 from .log import Logger
-from ..vx_shell import Shell
+from ..shell import Shell
 
 
 class vxm:
