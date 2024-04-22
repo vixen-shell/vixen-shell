@@ -1,16 +1,27 @@
-def init_setup():
-    from .setup import vx_setup
-    from .log import Logger
+class Manager:
 
-    Logger.init()
+    @staticmethod
+    def init():
+        from .vxm import vxm
+        from .log import Logger
 
-    return vx_setup
+        Logger.init()
+        return vxm
 
+    @staticmethod
+    def setup():
+        from .setup import vx_setup
+        from .log import Logger
 
-def init_vxm():
-    from .vxm import vxm
-    from .log import Logger
+        Logger.init()
 
-    Logger.init()
+        class SetupManager:
+            @staticmethod
+            def run(library_path: str):
+                vx_setup(library_path)
 
-    return vxm
+            @staticmethod
+            def warn(message: str):
+                Logger.log("WARNING", message)
+
+        return SetupManager

@@ -11,7 +11,28 @@ License           : GPL3
 import os, argparse
 
 os.environ["GDK_BACKEND"] = "wayland"
-from vx_library import init_vxm
+from vx_library import Manager
+
+
+def handle_args(args):
+    manager = Manager.init()
+
+    if args.setup:
+        if args.setup == "remove":
+            manager.remove()
+
+    elif args.shell:
+        if args.shell == "open":
+            manager.shell_open()
+        if args.shell == "close":
+            manager.shell_close()
+
+    elif args.dev:
+        if args.dev == "run":
+            manager.dev_run(os.getcwd())
+        if args.dev == "new":
+            manager.create_feature(os.getcwd())
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -32,20 +53,4 @@ if __name__ == "__main__":
         "--dev", type=str, choices=["run", "new"], help="Vixen Shell devs controls."
     )
 
-    args = parser.parse_args()
-
-    if args.setup:
-        if args.setup == "remove":
-            init_vxm().remove()
-
-    elif args.shell:
-        if args.shell == "open":
-            init_vxm().shell_open()
-        if args.shell == "close":
-            init_vxm().shell_close()
-
-    elif args.dev:
-        if args.dev == "run":
-            init_vxm().dev_run(os.getcwd())
-        if args.dev == "new":
-            init_vxm().create_feature(os.getcwd())
+    handle_args(parser.parse_args())

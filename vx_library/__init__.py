@@ -6,15 +6,8 @@ Description       : vixen shell library.
 License           : GPL3
 """
 
+from .errorHandling import ErrorHandling
 
-def init_setup():
-    from .manager import init_setup
+ErrorHandling.init("vx_library")
 
-    return init_setup()
-
-
-def init_vxm():
-    from .manager import init_vxm
-
-    vxm = init_vxm()
-    return vxm
+from .manager import Manager
