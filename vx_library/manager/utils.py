@@ -13,6 +13,10 @@ def get_vite_process(dev_dir: str):
         def __init__(self):
             self.process = multiprocessing.Process(target=vite_process)
 
+        @property
+        def is_alive(self) -> bool:
+            return self.process.is_alive()
+
         def start(self):
             self.process.start()
             time.sleep(1)
@@ -22,6 +26,9 @@ def get_vite_process(dev_dir: str):
                 self.process.join()
             except KeyboardInterrupt:
                 self.process.terminate()
+
+        def terminate(self):
+            self.process.terminate()
 
     return ProcessReference()
 

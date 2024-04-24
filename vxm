@@ -15,23 +15,24 @@ from vx_library import Manager
 
 
 def handle_args(args):
-    manager = Manager.init()
 
     if args.setup:
         if args.setup == "remove":
-            manager.remove()
+            Manager.Setup.remove()
 
     elif args.shell:
         if args.shell == "open":
-            manager.shell_open()
+            Manager.Shell.open()
+
         if args.shell == "close":
-            manager.shell_close()
+            Manager.Shell.close()
 
     elif args.dev:
         if args.dev == "run":
-            manager.dev_run(os.getcwd())
+            Manager.Shell.dev(os.getcwd())
+
         if args.dev == "new":
-            manager.create_feature(os.getcwd())
+            Manager.Setup.create_feature(os.getcwd())
 
 
 if __name__ == "__main__":

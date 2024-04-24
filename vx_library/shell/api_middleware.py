@@ -2,6 +2,7 @@ from .api import api
 from fastapi.middleware.cors import CORSMiddleware
 from .globals import FRONT_PORT, FRONT_DEV_PORT
 
+
 api.add_middleware(
     CORSMiddleware,
     allow_origins=[

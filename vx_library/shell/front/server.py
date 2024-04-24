@@ -1,7 +1,7 @@
 import logging, multiprocessing
 from flask import Flask, send_from_directory
 from gunicorn.app.base import BaseApplication
-from ..log import Logger
+from ..logger import Logger
 
 
 class FlaskApp(BaseApplication):
@@ -63,7 +63,7 @@ logging_config = {
 def run_server():
     class LogHandler(logging.Handler):
         def emit(self, record: logging.LogRecord) -> None:
-            Logger.log(record.levelname, f"Front-end: {record.getMessage()}")
+            Logger.log(f"Front-end: {record.getMessage()}", record.levelname)
 
     logger = logging.getLogger("gunicorn")
     logger.addHandler(LogHandler())

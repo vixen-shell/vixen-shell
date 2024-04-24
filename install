@@ -3,9 +3,4 @@
 import os
 from vx_library import Manager
 
-setup = Manager.setup()
-
-if not os.geteuid() == 0:
-    setup.warn("This command must be used with 'sudo'")
-else:
-    setup.run(os.path.dirname(os.path.abspath(__file__)))
+Manager.Setup.run(os.path.dirname(os.path.abspath(__file__)))

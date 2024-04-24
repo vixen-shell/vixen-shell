@@ -10,6 +10,10 @@ License           : GPL3
 class Shell:
     from .requests import ApiRequests as Requests
 
+    class ShellException(Exception):
+        def __init__(self, message: str):
+            super().__init__(message)
+
     @staticmethod
     def is_open():
         return Shell.Requests.ping()
@@ -17,24 +21,24 @@ class Shell:
     @staticmethod
     def open():
         if Shell.is_open():
-            raise Exception("Vixen Shell is already running")
+            raise Shell.ShellException("Vixen Shell is already running")
 
         from .api import api
-        from .ApiServer import ApiServer
+        from .server import ApiServer
 
         ApiServer.run(api)
 
     @staticmethod
     def close():
         if not Shell.is_open():
-            raise Exception("Vixen Shell is not running")
+            raise Shell.ShellException("Vixen Shell is not running")
 
         Shell.Requests.close()
 
     @staticmethod
     def init_dev_feature(dev_dir: str):
         if not Shell.is_open():
-            raise Exception("Vixen Shell is not running")
+            raise Shell.ShellException("Vixen Shell is not running")
 
         try:
 
@@ -45,18 +49,18 @@ class Shell:
                 def start(self):
                     try:
                         Shell.Requests.start_feature(self.name)
-                    except Exception as exception:
-                        raise exception
+                    except Exception:
+                        raise
 
             return FeatureReference(Shell.Requests.init_dev_feature(dev_dir))
 
-        except Exception as exception:
-            raise exception
+        except Exception:
+            raise
 
     @staticmethod
     def stop_dev_feature():
         if not Shell.is_open():
-            raise Exception("Vixen Shell is not running")
+            raise Shell.ShellException("Vixen Shell is not running")
 
         try:
             Shell.Requests.stop_dev_feature()
@@ -66,6 +70,6 @@ class Shell:
     @staticmethod
     def feature_names() -> list[str]:
         if not Shell.is_open():
-            raise Exception("Vixen Shell is not running")
+            raise Shell.ShellException("Vixen Shell is not running")
 
         return Shell.Requests.feature_names()

@@ -13,8 +13,6 @@ from .models import (
     FeatureParamsDict,
 )
 
-from ...log import Logger
-
 
 class ParameterError(Exception):
     def __init__(self, file_path: str, validation_error: ValidationError):

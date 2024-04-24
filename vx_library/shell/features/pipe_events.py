@@ -1,5 +1,5 @@
 from typing import TypedDict, Optional, Literal
-from ..log import LogLevel, LogData
+from ..logger import LogLevel
 
 
 class EventData:
@@ -9,8 +9,7 @@ class EventData:
 
     class Log(TypedDict):
         level: LogLevel
-        purpose: str
-        data: Optional[LogData]
+        message: str
 
 
 class InputEvent(TypedDict):

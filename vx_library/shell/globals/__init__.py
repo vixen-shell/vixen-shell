@@ -27,6 +27,5 @@ class Models:
         from .models import Frames_Properties as Properties
 
     class Log:
-        from .models import Log_LogData as LogData
         from .models import Log_Log as Log
         from .models import Log_Logs as Logs

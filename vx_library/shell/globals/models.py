@@ -14,16 +14,9 @@ class Commons_KeyError(BaseModel):
 
 
 # LOG MODELS
-class Log_LogData(BaseModel):
-    type: Literal["TEXT", "DATA"]
-    content: str | Dict[str, str | int | float | bool]
-    asset: Optional[str] = None
-
-
 class Log_Log(BaseModel):
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-    purpose: str
-    data: Optional[Log_LogData] = None
+    message: str
 
 
 class Log_Logs(BaseModel):

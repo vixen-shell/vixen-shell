@@ -1,6 +1,6 @@
 import threading
 from .Gtk_imports import Gdk, Gtk
-from ..log import Logger
+from ..logger import Logger
 
 
 def init_style_context():
@@ -28,10 +28,10 @@ class Gtk_main_loop:
     def run():
         Gtk_main_loop._thread.start()
         init_style_context()
-        Logger.log("INFO", "Gtk main loop is started.")
+        Logger.log("Gtk main loop is started")
 
     @staticmethod
     def quit():
         Gtk.main_quit()
         Gtk_main_loop._thread.join()
-        Logger.log("INFO", "Gtk main loop is stopped.")
+        Logger.log("Gtk main loop is stopped")

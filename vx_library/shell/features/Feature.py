@@ -4,7 +4,7 @@ from .FrameHandler import FrameHandler
 from .FeaturePipe import FeaturePipe
 from .pipe_events import InputEvent
 from .FeatureState import FeatureState
-from ..log import Logger, Log
+from ..logger import Log, Logger
 
 
 class Feature(FeatureState, FeaturePipe):
@@ -63,9 +63,9 @@ class Feature(FeatureState, FeaturePipe):
             self._listen_logs = value
 
             if value:
-                Logger.add_log_listener(self._dispatch_log)
+                Logger.add_listener(self._dispatch_log)
             else:
-                Logger.remove_log_listener(self._dispatch_log)
+                Logger.remove_listener(self._dispatch_log)
 
     async def handle_pipe_events(self, event: InputEvent, client_id: str):
         if self.pipe_is_opened:
@@ -80,8 +80,7 @@ class Feature(FeatureState, FeaturePipe):
 
             if event_data:
                 level = event_data.get("level") or "INFO"
-                purpose = event_data.get("purpose")
-                data = event_data.get("data")
+                message = event_data.get("message")
 
-                if purpose:
-                    Logger.log(level, purpose, data)
+                if message:
+                    Logger.log(message, level)

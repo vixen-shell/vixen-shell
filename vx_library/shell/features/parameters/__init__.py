@@ -18,7 +18,7 @@ from .models import (
     MarginParams,
 )
 
-from ...log import Logger
+from ...logger import Logger
 
 
 class Parameters:
@@ -37,14 +37,13 @@ class Parameters:
 
     @staticmethod
     def get_startup_list() -> List[str]:
-
         list: List[str] = []
 
         try:
             list.extend(Parameters.read(Parameters.ROOT_STARTUP_FILE_PATH))
             list.extend(Parameters.read(Parameters.USER_STARTUP_FILE_PATH))
-        except Exception as e:
-            Logger.log("ERROR", e)
+        except Exception as exception:
+            Logger.log(exception, "ERROR")
 
         return list
 
@@ -54,8 +53,8 @@ class Parameters:
     ) -> FeatureParams | None:
         try:
             return FeatureParams.create(root_file_path, user_file_path)
-        except Exception as e:
-            Logger.log("WARNING", str(e))
+        except Exception as exception:
+            Logger.log(exception, "WARNING")
             return
 
     @staticmethod
@@ -71,8 +70,8 @@ class Parameters:
                         f"{Parameters.ROOT_PARAMS_DIR}/{file_name}"
                     ) and file_name.endswith(".json"):
                         list.append(file_name)
-            except FileNotFoundError as e:
-                Logger.log("WARNING", f"{e.strerror}: {e.filename}")
+            except FileNotFoundError as exception:
+                Logger.log(f"{exception.strerror}: {exception.filename}", "WARNING")
 
             return list
 

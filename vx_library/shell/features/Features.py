@@ -3,7 +3,7 @@ from fastapi import WebSocket
 from .Gtk_main_loop import Gtk_main_loop
 from .Feature import Feature
 from .parameters import Parameters
-from ..log import Logger
+from ..logger import Logger
 
 
 class Features:
@@ -22,7 +22,7 @@ class Features:
         parameter_list = Parameters.get_feature_parameter_list()
 
         if not parameter_list:
-            Logger.log("ERROR", "Unable to load Vixen Shell config")
+            Logger.log("Unable to load Vixen Shell config", "ERROR")
             Gtk_main_loop.quit()
             return False
 

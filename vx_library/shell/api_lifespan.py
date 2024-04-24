@@ -9,9 +9,7 @@ from .hypr_events import HyprEventsListener
 async def lifespan(api: FastAPI):
     HyprEventsListener.start()
     Features.startup()
-
     yield
-
     await Features.cleanup()
     HyprEventsListener.stop()
     FrontServer.stop()

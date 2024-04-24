@@ -2,7 +2,7 @@ import os, asyncio
 from fastapi import WebSocket
 from typing import List
 from .hypr_events import EventData
-from ..log import Logger
+from ..logger import Logger
 
 HYPR_SOCKET_PATH = "/tmp/hypr/{}/.socket2.sock".format(
     os.getenv("HYPRLAND_INSTANCE_SIGNATURE")
@@ -30,14 +30,14 @@ class HyprEventsListener:
     @staticmethod
     def start():
         if not HyprEventsListener._task:
-            Logger.log("INFO", "Start Hyprland event listener")
+            Logger.log("Start Hyprland event listener")
             HyprEventsListener._task = asyncio.create_task(
                 HyprEventsListener.listener_task()
             )
 
     @staticmethod
     def stop():
-        Logger.log("INFO", "Stop Hyprland event listener")
+        Logger.log("Stop Hyprland event listener")
         HyprEventsListener._task.cancel()
 
     @staticmethod

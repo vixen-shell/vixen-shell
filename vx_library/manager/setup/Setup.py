@@ -1,7 +1,8 @@
 import os
 from typing import TypedDict, List, Callable, Optional
-from .utils import exec
-from ..log import Logger
+
+from ..logger import Logger
+from ...cli import Cli
 
 
 class Issue(TypedDict):
@@ -30,46 +31,43 @@ class SetupTask:
         self.command = command
         self.undo_command = undo_command
         self.requirements = requirements
-        self.log_spinner = Logger.Spinner() if spinner else None
+        self.spinner = Cli.Spinner() if spinner else None
 
     def set_spinner(self, is_running: bool):
-        if self.log_spinner:
+        if self.spinner:
             if is_running:
-                self.log_spinner.run()
+                self.spinner.run()
             else:
-                self.log_spinner.stop()
+                self.spinner.stop()
 
     def check_requirements(self) -> bool:
         if self.requirements:
-            Logger.log("INFO", self.purpose, "CHECKS")
+            Logger.log(self.purpose, suffix="CHECKS")
 
             for requirement in self.requirements:
                 if not requirement["callback"]():
                     if not requirement.get("issue"):
-                        Logger.log("ERROR", requirement["failure_message"])
+                        Logger.log(requirement["failure_message"], "ERROR")
                         return False
                     else:
-                        Logger.log("WARNING", requirement["failure_message"])
+                        Logger.log(requirement["failure_message"], "WARNING")
                         issue = requirement["issue"]
 
-                        if exec(issue["command"]):
-                            Logger.log("WARNING", issue["purpose"], "ISSUE")
+                        if Cli.exec(issue["command"]):
+                            Logger.log(issue["purpose"], "WARNING", "ISSUE")
                         else:
-                            Logger.log("ERROR", "Unable to apply issue", "ISSUE")
+                            Logger.log("Unable to apply issue", "ERROR", "ISSUE")
                             return False
 
-                Logger.log("INFO", requirement["purpose"], "OK")
+                Logger.log(requirement["purpose"], suffix="OK")
 
         return True
 
     def exec(self) -> bool:
-        Logger.log(
-            "INFO",
-            self.purpose + " ...",
-        )
+        Logger.log(self.purpose + " ...")
 
         if not self.check_requirements():
-            Logger.log("WARNING", self.purpose, "FAILED")
+            Logger.log(self.purpose, "WARNING", "FAILED")
             return False
 
         self.set_spinner(True)
@@ -79,13 +77,13 @@ class SetupTask:
         level = "WARNING"
 
         if not self.is_done:
-            result = exec(self.command)
+            result = Cli.exec(self.command)
             status = "DONE" if result else "FAILED"
             level = "INFO" if result else "ERROR"
 
         self.set_spinner(False)
 
-        Logger.log(level, self.purpose, status)
+        Logger.log(self.purpose, level, status)
         self.is_done = result
 
         return result
@@ -99,11 +97,11 @@ class SetupTask:
         level = "WARNING"
 
         if self.is_done:
-            result = exec(self.undo_command)
+            result = Cli.exec(self.undo_command)
             status = "UNDO" if result else "UNDO FAILED"
             level = "WARNING" if result else "ERROR"
 
-        Logger.log(level, self.purpose, status)
+        Logger.log(self.purpose, level, status)
         self.is_done = not result
         return result
 
@@ -115,21 +113,23 @@ class Setup:
 
     def run(self):
         print()
-        Logger.log("INFO", self.purpose)
+        Logger.log(self.purpose)
 
         def undo():
             for task in reversed(self.tasks):
                 if task.is_done:
                     task.undo()
 
-            Logger.log("WARNING", self.purpose, "FAILED")
+            Logger.log(self.purpose, "WARNING", "FAILED")
+            print()
             return False
 
         for task in self.tasks:
             if not task.exec():
                 return undo()
 
-        Logger.log("INFO", self.purpose, "DONE")
+        Logger.log(self.purpose, suffix="DONE")
+        print()
         return True
 
 

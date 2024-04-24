@@ -2,7 +2,7 @@ from fastapi import WebSocket
 from websockets import ConnectionClosedError
 from typing import Dict
 from .pipe_events import OutputEvent
-from ..log import Logger
+from ..logger import Logger
 
 
 class FeaturePipe:
@@ -59,8 +59,8 @@ class FeaturePipe:
                 await self.client_websockets[id].send_json(event)
             except ConnectionClosedError:
                 Logger.log(
-                    "WARNING",
                     f"Aborting sending '{event['id']}' event: WebSocket client '{id}' closed.",
+                    "WARNING",
                 )
-            except Exception as e:
-                Logger.log("ERROR", e)
+            except Exception as exception:
+                Logger.log(exception, "ERROR")

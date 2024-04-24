@@ -5,6 +5,7 @@ from .ErrorSummary import ErrorSummary
 
 class ErrorHandling:
     is_init: bool = False
+    excepthook = None
 
     @staticmethod
     def check_init(value: bool):
@@ -30,4 +31,5 @@ class ErrorHandling:
             ErrorSummary(exc_type, exc_value, exc_traceback).print(path_filter)
 
         sys.excepthook = custom_excepthook
+        ErrorHandling.excepthook = custom_excepthook
         ErrorHandling.is_init = True
