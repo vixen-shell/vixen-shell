@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from .features import Features
-from .front import FrontServer
+from .servers import FrontServer
 from .hypr_events import HyprEventsListener
 
 

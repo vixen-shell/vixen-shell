@@ -7,7 +7,7 @@ License           : GPL3
 """
 
 from .constants import *
-from .ModelResponses import *
+from .ModelResponses import ModelResponses
 
 
 class Models:

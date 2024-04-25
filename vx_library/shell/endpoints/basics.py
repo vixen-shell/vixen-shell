@@ -1,5 +1,5 @@
 from ..api import api
-from ..server import ApiServer
+from ..servers import ApiServer
 
 
 @api.get("/ping", description="Test API availability")

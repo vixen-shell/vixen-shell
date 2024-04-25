@@ -3,7 +3,7 @@ from ...features import Features
 from ...logger import Logger
 
 
-def init_requirements():
+def init_api_requirements():
     if not HyprEventsListener.check_hypr_socket():
         Logger.log("Hyprland socket not found", "WARNING")
         Logger.log("Sorry, Vixen Shell only starts with Hyprland")

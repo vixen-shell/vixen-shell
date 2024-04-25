@@ -24,7 +24,7 @@ class Shell:
             raise Shell.ShellException("Vixen Shell is already running")
 
         from .api import api
-        from .server import ApiServer
+        from .servers import ApiServer
 
         ApiServer.run(api)
 
