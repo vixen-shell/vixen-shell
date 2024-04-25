@@ -1,1 +1,1 @@
-from .classes.Logger import Logger
+from .classes import Logger

@@ -1,2 +1,2 @@
-from .classes.Logger import Logger
-from .utils.logger import Log, LogLevel, LogListener
+from .classes import Logger
+from .utils import Log, LogLevel, LogListener

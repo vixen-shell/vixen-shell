@@ -1,7 +1,6 @@
 import logging
 from .Formatter import Formatter
-from ..utils.logger import Log, LogLevel, LogListener
-from ....cli import Cli
+from ..utils import Cli, Log, LogLevel, LogListener
 
 
 class Logger:
@@ -43,12 +42,6 @@ class Logger:
 
                 for listener in Logger.log_listeners:
                     listener(log)
-
-                if (
-                    record.levelno == logging.ERROR
-                    and record.getMessage() == "Application startup failed. Exiting."
-                ):
-                    Cli.exec("killall --signal KILL vxm")
 
         formatter_handler = logging.StreamHandler()
         formatter_handler.setFormatter(Formatter())

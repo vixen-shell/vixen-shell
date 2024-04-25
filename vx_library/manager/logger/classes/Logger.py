@@ -1,7 +1,7 @@
 import logging
 
 from .Formatter import Formatter
-from ..utils.logger import LogLevel
+from ..utils import LogLevel
 
 
 class Logger:

@@ -1,11 +1,9 @@
 import uvicorn
 from fastapi import FastAPI
-from ..utils.logger import logging_config
-from ..utils.init import init_requirements
+from ..utils import logging_config, init_requirements
 from ...globals import API_PORT
-from ...logger import Logger, Log
+from ...logger import Logger
 from ...front import FrontServer
-from ....cli import Cli
 
 
 class ApiServer:

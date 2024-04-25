@@ -1,5 +1,5 @@
 import logging, re
-from ..utils.logger import Cli
+from ..utils import Cli
 
 
 class Formatter(logging.Formatter):

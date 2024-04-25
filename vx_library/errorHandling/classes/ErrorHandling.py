@@ -1,6 +1,7 @@
 import sys
 
 from .ErrorSummary import ErrorSummary
+from ...cli import Cli
 
 
 class ErrorHandling:
@@ -29,6 +30,7 @@ class ErrorHandling:
     def init(path_filter: str = None):
         def custom_excepthook(exc_type, exc_value, exc_traceback):
             ErrorSummary(exc_type, exc_value, exc_traceback).print(path_filter)
+            Cli.exec("killall --signal KILL vxm")
 
         sys.excepthook = custom_excepthook
         ErrorHandling.excepthook = custom_excepthook

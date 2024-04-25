@@ -1,13 +1,12 @@
 import logging, sys
-from ....errorHandling import ErrorHandling
-from ....cli import Cli
+from ..utils import Cli, ErrorHandling
 
 
 class Formatter(logging.Formatter):
     def format(self, record):
         if record.levelno == logging.ERROR and "Traceback" in record.getMessage():
             ErrorHandling.excepthook(*sys.exc_info())
-            return ""
+            return str()
 
         levelname = Cli.String.level(record.levelname, record.levelname)
         levelname += ":" + Cli.String.spaces(9 - len(record.levelname))

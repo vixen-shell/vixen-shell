@@ -1,1 +1,1 @@
-from .classes.ErrorHandling import ErrorHandling
+from .classes import ErrorHandling
