@@ -1,7 +1,7 @@
 from fastapi import Response, Path, Body
 from ..api import api
-from ..globals import ModelResponses, Models
-from ..features import Features
+from ...globals import ModelResponses, Models
+from ...features import Features
 
 # FEATURE NAMES
 names_responses = ModelResponses({200: Models.Features.Names})

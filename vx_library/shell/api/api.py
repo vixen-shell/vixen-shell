@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from .api_lifespan import lifespan
+from .lifespan import lifespan
 
 
 api = FastAPI(lifespan=lifespan)
 
-from . import api_middleware
+from . import middlewares
 from .endpoints import *
 from .websocket import *

@@ -1,7 +1,7 @@
 from fastapi import Response, Path
 from ..api import api
-from ..globals import ModelResponses, Models
-from ..features import Features, FrameParams
+from ...globals import ModelResponses, Models
+from ...features import Features, FrameParams
 
 # Frame IDs
 ids_responses = ModelResponses(

@@ -1,12 +1,10 @@
 import logging
 from .Formatter import Formatter
-from ..utils import Cli, Log, LogLevel, LogListener
+from ..utils import Log, LogLevel, LogListener
 
 
 class Logger:
     logger = None
-    cache_size = 512
-    log_cache: list[Log] = []
     log_listeners: list[LogListener] = []
 
     @staticmethod
@@ -34,11 +32,6 @@ class Logger:
         class LogHandler(logging.StreamHandler):
             def emit(self, record: logging.LogRecord) -> None:
                 log = Log(level=record.levelname, message=record.getMessage())
-
-                if len(Logger.log_cache) == Logger.cache_size:
-                    Logger.log_cache.pop(0)
-
-                Logger.log_cache.append(log)
 
                 for listener in Logger.log_listeners:
                     listener(log)

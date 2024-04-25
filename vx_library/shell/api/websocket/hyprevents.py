@@ -1,6 +1,6 @@
 from fastapi import WebSocket
 from ..api import api
-from ..hypr_events import HyprEventsListener
+from ...hypr_events import HyprEventsListener
 
 
 @api.websocket("/hypr/events")
