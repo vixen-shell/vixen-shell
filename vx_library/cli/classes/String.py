@@ -1,3 +1,4 @@
+import re
 from ..utils.levels import Level, LEVEL_COLORS
 
 
@@ -12,6 +13,28 @@ class String:
             return string
 
         return f"{LEVEL_COLORS[level]}{string}{LEVEL_COLORS['DEFAULT']}"
+
+    @staticmethod
+    def level_brackets(string: str, level: Level):
+        def p(s: str, l: Level, h: bool = False):
+            motif = r"\[(.*?)\]" if h else r"\((.*?)\)"
+            brackets_into = re.findall(motif, s)
+
+            start_bracket = "[" if h else "("
+            end_bracket = "]" if h else ")"
+
+            for element in brackets_into:
+                s = s.replace(
+                    f"{start_bracket}{element}{end_bracket}",
+                    String.level(f"{start_bracket}{element}{end_bracket}", l),
+                )
+
+            return s
+
+        string = p(string, level, True)
+        string = p(string, level)
+
+        return string
 
     @staticmethod
     def format(

@@ -10,5 +10,6 @@ class Formatter(logging.Formatter):
 
         levelname = Cli.String.level(record.levelname, record.levelname)
         levelname += ":" + Cli.String.spaces(9 - len(record.levelname))
+        message = Cli.String.level_brackets(record.getMessage(), "DEBUG")
 
-        return levelname + record.getMessage()
+        return levelname + message
