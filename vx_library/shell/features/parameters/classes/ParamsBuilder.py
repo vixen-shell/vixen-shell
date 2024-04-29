@@ -1,8 +1,8 @@
 from typing import Any, Literal
 from pydantic import ValidationError
-from .utils import read_json
+from ..utils import read_json
 
-from .models import (
+from ..models import (
     RootFeatureParams,
     RootFeatureParamsDict,
     RootFrameParamsDict,
@@ -28,7 +28,7 @@ class MissingFileError(Exception):
         super().__init__(f"Root configuration file '{file_path}' not found")
 
 
-class ParmetersBuilder:
+class ParamsBuilder:
     def __init__(self, root_file_path: str, user_file_path: str):
         self.user_file_path = user_file_path
 
@@ -42,18 +42,18 @@ class ParmetersBuilder:
                 **read_json(root_file_path) or {}
             ).model_dump()
 
-        except ValidationError as e:
-            raise ParameterError(root_file_path, e)
+        except ValidationError as error:
+            raise ParameterError(root_file_path, error)
 
-        except MissingFileError as e:
-            raise e
+        except MissingFileError as error:
+            raise error
 
         try:
             self.data: FeatureParamsDict = self.init_data(
                 UserFeatureParams(**read_json(user_file_path) or {}).model_dump()
             )
-        except ValidationError as e:
-            raise ParameterError(user_file_path, e)
+        except ValidationError as error:
+            raise ParameterError(user_file_path, error)
 
     def init_data(self, user_data: UserFeatureParamsDict):
         if self.root_data.get("templates"):
@@ -83,6 +83,10 @@ class ParmetersBuilder:
     def build(self):
         self.data["path"] = self.user_file_path
         self.data["name"] = self.root_data["name"]
+
+        start = self.root_validator(self.root_data["start"])
+        if start != "__user__":
+            self.data["start"] = start
 
         if not "frames" in self.data:
             self.data["frames"] = {}

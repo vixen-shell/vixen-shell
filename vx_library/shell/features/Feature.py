@@ -1,5 +1,5 @@
 import asyncio
-from .parameters import FeatureParams
+from .parameters import ParamsFiles, FeatureParams
 from .FrameHandler import FrameHandler
 from .FeaturePipe import FeaturePipe
 from .pipe_events import InputEvent
@@ -8,15 +8,29 @@ from ..logger import Log, Logger
 
 
 class Feature(FeatureState, FeaturePipe):
-    def __init__(self, params: FeatureParams, dev_mode: bool = False):
+    def __init__(self, name: str, params: FeatureParams):
         FeatureState.__init__(self, params)
         FeaturePipe.__init__(self)
 
-        self.dev_mode = dev_mode
-        self.is_started = False
+        self.name = name
         self.params = params
         self.frames = FrameHandler(self.params)
+
+        self.is_started = False
         self._listen_logs = False
+
+        if self.params.start:
+            self.start()
+
+    @staticmethod
+    def from_name(name: str):
+        params = ParamsFiles.get_params_from_feature_name(name)
+        return Feature(name, params)
+
+    @staticmethod
+    def from_dev_directory(directory: str):
+        name, params = ParamsFiles.get_params_from_dev_directory(directory)
+        return Feature(name, params)
 
     @property
     def frame_ids(self):
@@ -29,7 +43,7 @@ class Feature(FeatureState, FeaturePipe):
     def start(self):
         if not self.is_started:
             self.open_pipe()
-            self.frames.init(self.dev_mode)
+            self.frames.init(self.params.dev)
             self.is_started = True
 
     async def stop(self):

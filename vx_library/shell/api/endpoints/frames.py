@@ -18,7 +18,7 @@ async def frame_ids(
     response: Response,
     feature_name: str = Path(description="Feature name"),
 ):
-    if not Features.key_exists(feature_name):
+    if not Features.exists(feature_name):
         return ids_responses(response, 404)(
             message=f"Feature '{feature_name}' not found",
             details=Models.Commons.KeyError(key=feature_name),
@@ -57,7 +57,7 @@ async def toggle_frame(
     feature_name: str = Path(description="Feature name"),
     frame_id: str = Path(description="Frame id"),
 ):
-    if not Features.key_exists(feature_name):
+    if not Features.exists(feature_name):
         return toggle_responses(response, 404)(
             message=f"Feature '{feature_name}' not found",
             details=Models.Commons.KeyError(key=feature_name),
@@ -110,7 +110,7 @@ async def open_frame(
     feature_name: str = Path(description="Feature name"),
     frame_id: str = Path(description="Frame id"),
 ):
-    if not Features.key_exists(feature_name):
+    if not Features.exists(feature_name):
         return open_responses(response, 404)(
             message=f"Feature '{feature_name}' not found",
             details=Models.Commons.KeyError(key=feature_name),
@@ -165,7 +165,7 @@ async def close_frame(
     feature_name: str = Path(description="Feature name"),
     frame_id: str = Path(description="Frame id"),
 ):
-    if not Features.key_exists(feature_name):
+    if not Features.exists(feature_name):
         return close_responses(response, 404)(
             message=f"Feature '{feature_name}' not found",
             details=Models.Commons.KeyError(key=feature_name),
@@ -210,7 +210,7 @@ async def frame_parameters(
     feature_name: str = Path(description="Feature name"),
     frame_id: str = Path(description="Frame id"),
 ):
-    if not Features.key_exists(feature_name):
+    if not Features.exists(feature_name):
         return params_responses(response, 404)(
             message=f"Feature '{feature_name}' not found",
             details=Models.Commons.KeyError(key=feature_name),

@@ -1,5 +1,5 @@
 import os
-from .utils import sudo_is_used
+from .utils import sudo_is_used, read_json
 from .logger import Logger
 from ..cli import Cli
 
@@ -56,7 +56,7 @@ class SetupManager:
 
         Logger.log("You are about to create a new development project", "WARNING")
 
-        name_list = Shell.feature_names()
+        feature_names = Shell.feature_names()
 
         folder_list = [
             folder_name
@@ -70,7 +70,7 @@ class SetupManager:
             [
                 Cli.Input.Filter(
                     type="exclude",
-                    values=name_list,
+                    values=feature_names,
                     reason="A feature with this name already exists in Vixen Shell",
                 ),
                 Cli.Input.Filter(
@@ -91,5 +91,101 @@ class SetupManager:
                     Logger.log(
                         "Type 'yarn dev' in the project folder to launch the dev server"
                     )
+            else:
+                Logger.log("Operation avorted", "WARNING")
+
+    @staticmethod
+    def add_feature(dev_dir: str):
+        from .setup import vx_add_feature
+        from ..shell import Shell
+
+        if not sudo_is_used():
+            Logger.log("This command must be used with 'sudo'", "WARNING")
+            return
+
+        if not Shell.is_open():
+            Logger.log("Vixen Shell is not running", "WARNING")
+            return
+
+        package = read_json(f"{dev_dir}/package.json")
+        if not package:
+            Logger.log(
+                f"Unable to found 'package.json' file in '{dev_dir}' directory", "ERROR"
+            )
+            return
+
+        feature_name: str = package.get("name")
+        if not feature_name:
+            Logger.log(
+                "Unable to found 'name' property in 'package.json' file", "ERROR"
+            )
+            return
+
+        feature_name = feature_name.replace("vx-feature-", "")
+        feature_names = Shell.feature_names()
+
+        if feature_name in feature_names:
+            Logger.log(
+                f"A feature called '{feature_name}' already exists in Vixen Shell",
+                "ERROR",
+            )
+            return
+
+        Logger.log(
+            f"You to add '{feature_name}' feature to Vixen Shell. Do you want it?",
+            "WARNING",
+        )
+
+        if Cli.Input.get_confirm():
+            if vx_add_feature(dev_dir, feature_name):
+                # Restart Front Server !!!
+                # Reload Features !!!
+
+                print()
+                Logger.log(f"'{feature_name}' feature added successfully")
+        else:
+            Logger.log("Operation avorted", "WARNING")
+
+    @staticmethod
+    def remove_feature():
+        from .setup import vx_remove_feature
+        from ..shell import Shell
+
+        if not sudo_is_used():
+            Logger.log("This command must be used with 'sudo'", "WARNING")
+            return
+
+        if not Shell.is_open():
+            Logger.log("Vixen Shell is not running", "WARNING")
+            return
+
+        feature_names = Shell.feature_names()
+
+        Logger.log("Please type the name of the feature you want to remove")
+
+        feature_name = Cli.Input.get_answer(
+            [
+                Cli.Input.Filter(
+                    type="include",
+                    values=feature_names,
+                    reason="You must type the name of an existing feature in Vixen Shell",
+                )
+            ]
+        )
+
+        if feature_name:
+            Logger.log(
+                f"Are you sure you want to remove '{feature_name}' feature?", "WARNING"
+            )
+
+            if Cli.Input.get_confirm():
+                # Close feature if is open
+
+                if vx_remove_feature(feature_name):
+                    # Restart Front Server !!!
+                    # Reload Features !!!
+
+                    print()
+                    Logger.log(f"'{feature_name}' feature removed successfully")
             else:
                 Logger.log("Operation avorted", "WARNING")

@@ -7,13 +7,18 @@ from ...features import Features
 async def feature_pipe_websocket(
     websocket: WebSocket, feature_name: str, client_id: str
 ):
-    feature = await Features.connect_client(feature_name, client_id, websocket)
+    feature = Features.get(feature_name)
 
-    if feature:
-        try:
-            while True:
-                await feature.handle_pipe_events(
-                    await websocket.receive_json(), client_id
-                )
-        except:
-            feature.remove_client(client_id)
+    if not feature:
+        await websocket.close(reason=f"Feature '{feature_name}' not found")
+
+    if not feature.pipe_is_opened:
+        await websocket.close(reason=f"'{feature_name}' feature pipe is closed")
+
+    await feature.connect_client(client_id, websocket)
+
+    try:
+        while True:
+            await feature.handle_pipe_events(await websocket.receive_json(), client_id)
+    except:
+        feature.remove_client(client_id)

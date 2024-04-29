@@ -1,4 +1,4 @@
-import os, time, subprocess, multiprocessing
+import os, time, subprocess, multiprocessing, json
 
 
 def get_vite_process(dev_dir: str):
@@ -35,3 +35,9 @@ def get_vite_process(dev_dir: str):
 
 def sudo_is_used() -> bool:
     return os.geteuid() == 0
+
+
+def read_json(file_path: str) -> dict | None:
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as file:
+            return json.load(file)

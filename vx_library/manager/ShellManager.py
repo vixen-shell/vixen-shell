@@ -57,3 +57,14 @@ class ShellManager:
             Logger.log(exception, "WARNING")
         except Exception:
             raise
+
+    @staticmethod
+    def feature_names():
+        from ..shell import Shell
+
+        try:
+            print(Shell.feature_names())
+        except Shell.ShellException as exception:
+            Logger.log(exception, "WARNING")
+        except Exception:
+            raise

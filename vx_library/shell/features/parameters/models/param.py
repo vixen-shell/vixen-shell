@@ -1,5 +1,5 @@
 from typing import Optional, Dict, TypedDict
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict
 from .types import *
 
 # ---------------------------------------------- - - -
@@ -7,6 +7,8 @@ from .types import *
 
 
 class MarginParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     top: Optional[int] = None
     right: Optional[int] = None
     bottom: Optional[int] = None
@@ -14,6 +16,8 @@ class MarginParams(BaseModel):
 
 
 class LayerFrameParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     monitor_id: Optional[int] = None
     auto_exclusive_zone: Optional[bool] = None
     exclusive_zone: Optional[int] = None
@@ -26,6 +30,8 @@ class LayerFrameParams(BaseModel):
 
 
 class FrameParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     route: str
     template: Optional[str] = None
@@ -67,5 +73,6 @@ class FrameParamsDict(TypedDict):
 class FeatureParamsDict(TypedDict):
     path: str
     name: str
+    start: Optional[bool]
     frames: Dict[str, FrameParamsDict]
     state: Optional[Dict[str, None | str | int | float | bool]]

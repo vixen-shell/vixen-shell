@@ -26,7 +26,7 @@ class Shell:
         from .api import api
         from .servers import ApiServer
 
-        ApiServer.run(api)
+        ApiServer.start(api)
 
     @staticmethod
     def close():

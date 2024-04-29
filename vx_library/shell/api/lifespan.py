@@ -8,8 +8,8 @@ from ..hypr_events import HyprEventsListener
 @asynccontextmanager
 async def lifespan(api: FastAPI):
     HyprEventsListener.start()
-    Features.startup()
+    Features.init()
     yield
-    await Features.cleanup()
+    await Features.stop()
     HyprEventsListener.stop()
     FrontServer.stop()

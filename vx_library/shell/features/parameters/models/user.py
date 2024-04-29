@@ -1,5 +1,5 @@
 from typing import Optional, Dict, TypedDict
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict
 from .types import *
 
 # ---------------------------------------------- - - -
@@ -7,6 +7,8 @@ from .types import *
 
 
 class UserMarginParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     top: Optional[int] = None
     right: Optional[int] = None
     bottom: Optional[int] = None
@@ -14,6 +16,8 @@ class UserMarginParams(BaseModel):
 
 
 class UserLayerFrameParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     monitor_id: Optional[int] = None
     auto_exclusive_zone: Optional[bool] = None
     exclusive_zone: Optional[int] = None
@@ -26,12 +30,17 @@ class UserLayerFrameParams(BaseModel):
 
 
 class UserFrameParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     template: Optional[str] = None
     show_on_startup: Optional[bool] = None
     layer_frame: Optional[UserLayerFrameParams] = None
 
 
 class UserFeatureParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    start: Optional[bool] = None
     frames: Optional[Dict[str, UserFrameParams]] = None
     state: Optional[Dict[str, None | str | int | float | bool]] = None
 
@@ -66,5 +75,6 @@ class UserFrameParamsDict(TypedDict):
 
 
 class UserFeatureParamsDict(TypedDict):
+    start: Optional[bool]
     frames: Optional[Dict[str, UserFrameParamsDict]]
     state: Optional[Dict[str, None | str | int | float | bool]]

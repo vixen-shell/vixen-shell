@@ -34,6 +34,16 @@ def handle_args(args):
         if args.dev == "new":
             Manager.Setup.create_feature(os.getcwd())
 
+    elif args.feature:
+        if args.feature == "names":
+            Manager.Shell.feature_names()
+
+        if args.feature == "add":
+            Manager.Setup.add_feature(os.getcwd())
+
+        if args.feature == "remove":
+            Manager.Setup.remove_feature()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -52,6 +62,12 @@ if __name__ == "__main__":
     )
     root_args.add_argument(
         "--dev", type=str, choices=["run", "new"], help="Vixen Shell devs controls."
+    )
+    root_args.add_argument(
+        "--feature",
+        type=str,
+        choices=["names", "add", "remove"],
+        help="Vixen Shell features controls.",
     )
 
     handle_args(parser.parse_args())

@@ -1,20 +1,26 @@
 from typing import Optional, Dict
-from pydantic import BaseModel
-from .models import FrameParams
-from .builder import ParmetersBuilder
-from .utils import write_json
+from pydantic import BaseModel, ConfigDict
+from .ParamsBuilder import ParamsBuilder
+from ..models import FrameParams
+from ..utils import write_json
 
 
 class FeatureParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     path: str
     name: str
+    start: Optional[bool] = None
     frames: Dict[str, FrameParams]
     state: Optional[Dict[str, None | str | int | float | bool]] = None
+    dev: Optional[bool] = False
 
     @staticmethod
-    def create(root_file_path: str, user_file_path: str):
-        builder = ParmetersBuilder(root_file_path, user_file_path)
-        return FeatureParams(**builder.build())
+    def create(root_file_path: str, user_file_path: str, dev: bool = False):
+        builder = ParamsBuilder(root_file_path, user_file_path)
+        params_dict = builder.build()
+        params_dict["dev"] = dev
+        return FeatureParams(**params_dict)
 
     def save(self):
         frames = {}

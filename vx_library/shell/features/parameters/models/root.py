@@ -1,5 +1,5 @@
 from typing import Optional, Dict, TypedDict
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from .types import *
 
 # ---------------------------------------------- - - -
@@ -7,6 +7,8 @@ from .types import *
 
 
 class RootMarginParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     top: Optional[int | Disable] = None
     right: Optional[int | Disable] = None
     bottom: Optional[int | Disable] = None
@@ -14,6 +16,8 @@ class RootMarginParams(BaseModel):
 
 
 class RootLayerFrameParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     monitor_id: Optional[int | Disable] = None
     auto_exclusive_zone: Optional[bool | Disable] = None
     exclusive_zone: Optional[int | Disable] = None
@@ -26,6 +30,8 @@ class RootLayerFrameParams(BaseModel):
 
 
 class RootFrameParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     route: str
     show_on_startup: Optional[bool | Disable] = None
@@ -33,7 +39,10 @@ class RootFrameParams(BaseModel):
 
 
 class RootFeatureParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
+    start: Optional[bool | Disable] = None
     frames: Dict[str, RootFrameParams]
     templates: Optional[Dict[str, RootFrameParams]] = None
     state: Optional[Dict[str, None | str | int | float | bool] | Disable] = None
@@ -71,6 +80,7 @@ class RootFrameParamsDict(TypedDict):
 
 class RootFeatureParamsDict(TypedDict):
     name: str
+    start: Optional[bool | Disable]
     frames: Dict[str, RootFrameParamsDict]
     templates: Optional[Dict[str, RootFrameParamsDict]]
     state: Optional[Dict[str, None | str | int | float | bool] | Disable]
