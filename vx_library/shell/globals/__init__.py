@@ -13,7 +13,6 @@ from .ModelResponses import ModelResponses
 class Models:
     class Commons:
         from .models import Commons_Error as Error
-        from .models import Commons_KeyError as KeyError
 
     class Features:
         from .models import Features_Base as Base

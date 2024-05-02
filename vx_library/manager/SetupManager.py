@@ -1,17 +1,14 @@
 import os
-from .utils import sudo_is_used, read_json
+from .utils import use_sudo, get_dev_feature_name
 from .logger import Logger
 from ..cli import Cli
 
 
 class SetupManager:
     @staticmethod
+    @use_sudo(True)
     def run(library_path: str):
         from .setup import vx_setup
-
-        if not sudo_is_used():
-            Logger.log("This command must be used with 'sudo'", "WARNING")
-            return
 
         Logger.log("You are about to install Vixen Shell. Confirm your choice.")
 
@@ -19,15 +16,12 @@ class SetupManager:
             vx_setup(library_path)
 
     @staticmethod
+    @use_sudo(True)
     def remove():
         from .setup import vx_remove
-        from ..shell import Shell
+        from .requests import ShellRequests
 
-        if not sudo_is_used():
-            Logger.log("This damn command must be used with 'sudo'", "WARNING")
-            return
-
-        if Shell.is_open():
+        if ShellRequests.ping():
             Logger.log(
                 "Vixen Shell is running. Close it and try this damn command again.",
                 "WARNING",
@@ -42,21 +36,16 @@ class SetupManager:
             Logger.log("You made the right choice.")
 
     @staticmethod
+    @use_sudo(False)
     def create_feature(parent_dir: str):
         from .setup import vx_new_feature
-        from ..shell import Shell
+        from .requests import ShellRequests
 
-        if sudo_is_used():
-            Logger.log("Cannot use this command with 'sudo'", "WARNING")
-            return
-
-        if not Shell.is_open():
-            Logger.log("Vixen Shell is not running", "WARNING")
+        feature_names = ShellRequests.feature_names()
+        if not feature_names:
             return
 
         Logger.log("You are about to create a new development project", "WARNING")
-
-        feature_names = Shell.feature_names()
 
         folder_list = [
             folder_name
@@ -95,34 +84,18 @@ class SetupManager:
                 Logger.log("Operation avorted", "WARNING")
 
     @staticmethod
+    @use_sudo(True)
     def add_feature(dev_dir: str):
         from .setup import vx_add_feature
-        from ..shell import Shell
+        from .requests import ShellRequests
 
-        if not sudo_is_used():
-            Logger.log("This command must be used with 'sudo'", "WARNING")
+        feature_names = ShellRequests.feature_names()
+        if not feature_names:
             return
 
-        if not Shell.is_open():
-            Logger.log("Vixen Shell is not running", "WARNING")
-            return
-
-        package = read_json(f"{dev_dir}/package.json")
-        if not package:
-            Logger.log(
-                f"Unable to found 'package.json' file in '{dev_dir}' directory", "ERROR"
-            )
-            return
-
-        feature_name: str = package.get("name")
+        feature_name = get_dev_feature_name(dev_dir)
         if not feature_name:
-            Logger.log(
-                "Unable to found 'name' property in 'package.json' file", "ERROR"
-            )
             return
-
-        feature_name = feature_name.replace("vx-feature-", "")
-        feature_names = Shell.feature_names()
 
         if feature_name in feature_names:
             Logger.log(
@@ -132,14 +105,13 @@ class SetupManager:
             return
 
         Logger.log(
-            f"You to add '{feature_name}' feature to Vixen Shell. Do you want it?",
+            f"You are about to add '{feature_name}' feature to Vixen Shell. Do you want it?",
             "WARNING",
         )
 
         if Cli.Input.get_confirm():
             if vx_add_feature(dev_dir, feature_name):
-                # Restart Front Server !!!
-                # Reload Features !!!
+                ShellRequests.load_feature(feature_name)
 
                 print()
                 Logger.log(f"'{feature_name}' feature added successfully")
@@ -147,19 +119,14 @@ class SetupManager:
             Logger.log("Operation avorted", "WARNING")
 
     @staticmethod
+    @use_sudo(True)
     def remove_feature():
         from .setup import vx_remove_feature
-        from ..shell import Shell
+        from .requests import ShellRequests
 
-        if not sudo_is_used():
-            Logger.log("This command must be used with 'sudo'", "WARNING")
+        feature_names = ShellRequests.feature_names()
+        if not feature_names:
             return
-
-        if not Shell.is_open():
-            Logger.log("Vixen Shell is not running", "WARNING")
-            return
-
-        feature_names = Shell.feature_names()
 
         Logger.log("Please type the name of the feature you want to remove")
 
@@ -179,12 +146,9 @@ class SetupManager:
             )
 
             if Cli.Input.get_confirm():
-                # Close feature if is open
+                ShellRequests.unload_feature(feature_name)
 
                 if vx_remove_feature(feature_name):
-                    # Restart Front Server !!!
-                    # Reload Features !!!
-
                     print()
                     Logger.log(f"'{feature_name}' feature removed successfully")
             else:

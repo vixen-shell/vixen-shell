@@ -14,7 +14,12 @@ os.environ["GDK_BACKEND"] = "wayland"
 from vx_library import Manager
 
 
+def handle_path(args):
+    return args.path or os.getcwd()
+
+
 def handle_args(args):
+    path = handle_path(args)
 
     if args.setup:
         if args.setup == "remove":
@@ -29,17 +34,17 @@ def handle_args(args):
 
     elif args.dev:
         if args.dev == "run":
-            Manager.Shell.dev(os.getcwd())
+            Manager.Shell.dev(path)
 
         if args.dev == "new":
-            Manager.Setup.create_feature(os.getcwd())
+            Manager.Setup.create_feature(path)
 
     elif args.feature:
         if args.feature == "names":
             Manager.Shell.feature_names()
 
         if args.feature == "add":
-            Manager.Setup.add_feature(os.getcwd())
+            Manager.Setup.add_feature(path)
 
         if args.feature == "remove":
             Manager.Setup.remove_feature()
@@ -69,5 +74,7 @@ if __name__ == "__main__":
         choices=["names", "add", "remove"],
         help="Vixen Shell features controls.",
     )
+
+    parser.add_argument("--path", type=str, default="", help="Optional path")
 
     handle_args(parser.parse_args())

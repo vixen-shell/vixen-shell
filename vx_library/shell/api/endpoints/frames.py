@@ -20,16 +20,14 @@ async def frame_ids(
 ):
     if not Features.exists(feature_name):
         return ids_responses(response, 404)(
-            message=f"Feature '{feature_name}' not found",
-            details=Models.Commons.KeyError(key=feature_name),
+            message=f"Feature '{feature_name}' not found"
         )
 
     feature = Features.get(feature_name)
 
     if not feature.is_started:
         return ids_responses(response, 409)(
-            message=f"Feature '{feature_name}' is not started",
-            details=Models.Features.Base(name=feature_name, is_started=False),
+            message=f"Feature '{feature_name}' is not started"
         )
 
     return ids_responses(response, 200)(
@@ -59,16 +57,14 @@ async def toggle_frame(
 ):
     if not Features.exists(feature_name):
         return toggle_responses(response, 404)(
-            message=f"Feature '{feature_name}' not found",
-            details=Models.Commons.KeyError(key=feature_name),
+            message=f"Feature '{feature_name}' not found"
         )
 
     feature = Features.get(feature_name)
 
     if not feature.is_started:
         return toggle_responses(response, 409)(
-            message=f"Feature '{feature_name}' is not started",
-            details=Models.Features.Base(name=feature_name, is_started=False),
+            message=f"Feature '{feature_name}' is not started"
         )
 
     if frame_id in feature.active_frame_ids:
@@ -79,8 +75,7 @@ async def toggle_frame(
         frame_opened = True
     else:
         return toggle_responses(response, 404)(
-            message=f"Frame ID '{frame_id}' does not exist",
-            details=Models.Commons.KeyError(key=frame_id),
+            message=f"Frame ID '{frame_id}' does not exist"
         )
 
     return toggle_responses(response, 200)(
@@ -112,30 +107,24 @@ async def open_frame(
 ):
     if not Features.exists(feature_name):
         return open_responses(response, 404)(
-            message=f"Feature '{feature_name}' not found",
-            details=Models.Commons.KeyError(key=feature_name),
+            message=f"Feature '{feature_name}' not found"
         )
 
     feature = Features.get(feature_name)
 
     if not feature.is_started:
         return open_responses(response, 409)(
-            message=f"Feature '{feature_name}' is not started",
-            details=Models.Features.Base(name=feature_name, is_started=False),
+            message=f"Feature '{feature_name}' is not started"
         )
 
     if frame_id in feature.active_frame_ids:
         return open_responses(response, 409)(
-            message=f"Frame '{frame_id}' is already open",
-            details=Models.Frames.Properties(
-                id=frame_id, feature=Models.Features.Base(name=feature_name)
-            ),
+            message=f"Frame '{frame_id}' is already open"
         )
 
     if not frame_id in feature.frame_ids:
         return open_responses(response, 404)(
-            message=f"Frame ID '{frame_id}' does not exist",
-            details=Models.Commons.KeyError(key=frame_id),
+            message=f"Frame ID '{frame_id}' does not exist"
         )
 
     frame_id = feature.open_frame(frame_id)
@@ -167,27 +156,18 @@ async def close_frame(
 ):
     if not Features.exists(feature_name):
         return close_responses(response, 404)(
-            message=f"Feature '{feature_name}' not found",
-            details=Models.Commons.KeyError(key=feature_name),
+            message=f"Feature '{feature_name}' not found"
         )
 
     feature = Features.get(feature_name)
 
     if not feature.is_started:
         return close_responses(response, 409)(
-            message=f"Feature '{feature_name}' is not started",
-            details=Models.Features.Base(name=feature_name, is_started=False),
+            message=f"Feature '{feature_name}' is not started"
         )
 
     if not frame_id in feature.active_frame_ids:
-        return close_responses(response, 409)(
-            message=f"Frame '{frame_id}' is not open",
-            details=Models.Frames.Properties(
-                id=frame_id,
-                is_opened=False,
-                feature=Models.Features.Base(name=feature_name),
-            ),
-        )
+        return close_responses(response, 409)(message=f"Frame '{frame_id}' is not open")
 
     feature.close_frame(frame_id)
 
@@ -212,16 +192,14 @@ async def frame_parameters(
 ):
     if not Features.exists(feature_name):
         return params_responses(response, 404)(
-            message=f"Feature '{feature_name}' not found",
-            details=Models.Commons.KeyError(key=feature_name),
+            message=f"Feature '{feature_name}' not found"
         )
 
     feature = Features.get(feature_name)
 
     if not frame_id in feature.frame_ids:
         return params_responses(response, 404)(
-            message=f"Frame ID '{frame_id}' does not exist",
-            details=Models.Commons.KeyError(key=frame_id),
+            message=f"Frame ID '{frame_id}' does not exist"
         )
 
     return params_responses(response, 200)(

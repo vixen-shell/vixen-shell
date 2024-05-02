@@ -176,12 +176,6 @@ def vx_new_feature(path: str, project_name: str):
                 ),
             ),
             RoutineTask(
-                purpose="Patch root config file",
-                command=Commands.json_patch_feature_name_property(
-                    f"/tmp/{project_name}/config/root/{project_name}.json", project_name
-                ),
-            ),
-            RoutineTask(
                 purpose="Setup user config file",
                 command=Commands.rename(
                     f"/tmp/{project_name}/config/user/feature.json",
@@ -225,10 +219,11 @@ def vx_add_feature(dev_dir: str, feature_name: str):
             RoutineTask(
                 purpose="Setup root config file",
                 command=Commands.file_copy(
-                    f"{dev_dir}/config/root/{feature_name}.json", "/usr/share/features"
+                    f"{dev_dir}/config/root/{feature_name}.json",
+                    "/usr/share/vixen/features",
                 ),
                 undo_command=Commands.file_remove(
-                    f"/usr/share/features/{feature_name}.json"
+                    f"/usr/share/vixen/features/{feature_name}.json"
                 ),
             ),
             RoutineTask(
@@ -266,7 +261,7 @@ def vx_remove_feature(feature_name: str):
             RoutineTask(
                 purpose="Remove root config file",
                 command=Commands.file_remove(
-                    f"/usr/share/features/{feature_name}.json"
+                    f"/usr/share/vixen/features/{feature_name}.json"
                 ),
             ),
             RoutineTask(
@@ -280,4 +275,4 @@ def vx_remove_feature(feature_name: str):
                 command=Commands.yarn_build("/var/opt/vx-front-main"),
             ),
         ],
-    )
+    ).run()

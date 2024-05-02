@@ -5,14 +5,13 @@ from ...cli import Cli
 
 
 class ErrorHandling:
-    is_init: bool = False
-    excepthook = None
+    get_excepthook = None
 
     @staticmethod
     def check_init(value: bool):
         def decorator(func):
             def wrapper(*args, **kwargs):
-                if ErrorHandling.is_init == value:
+                if bool(ErrorHandling.get_excepthook) == value:
                     return func(*args, **kwargs)
                 else:
                     raise ValueError(
@@ -28,10 +27,24 @@ class ErrorHandling:
     @staticmethod
     @check_init(False)
     def init(path_filter: str = None):
-        def custom_excepthook(exc_type, exc_value, exc_traceback):
-            ErrorSummary(exc_type, exc_value, exc_traceback).print(path_filter)
-            Cli.exec("killall --signal KILL vxm")
+        def get_excepthook(sys_exit):
+            def hook(exc_type, exc_value, exc_traceback):
+                ErrorSummary(exc_type, exc_value, exc_traceback).print(path_filter)
 
-        sys.excepthook = custom_excepthook
-        ErrorHandling.excepthook = custom_excepthook
-        ErrorHandling.is_init = True
+                if sys_exit:
+                    ErrorHandling.sys_exit()
+
+            return hook
+
+        sys.excepthook = get_excepthook(False)
+        ErrorHandling.get_excepthook = get_excepthook
+
+    @staticmethod
+    @check_init(True)
+    def print_error(sys_exit: bool = False):
+        ErrorHandling.get_excepthook(sys_exit)(*sys.exc_info())
+
+    @staticmethod
+    @check_init(True)
+    def sys_exit():
+        Cli.exec("killall --signal KILL vxm")

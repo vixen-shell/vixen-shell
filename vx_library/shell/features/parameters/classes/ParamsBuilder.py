@@ -82,7 +82,6 @@ class ParamsBuilder:
 
     def build(self):
         self.data["path"] = self.user_file_path
-        self.data["name"] = self.root_data["name"]
 
         start = self.root_validator(self.root_data["start"])
         if start != "__user__":

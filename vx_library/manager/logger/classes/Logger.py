@@ -12,7 +12,8 @@ class Logger:
         def decorator(func):
             def wrapper(*args, **kwargs):
                 if bool(Logger.logger) == value:
-                    return func(*args, **kwargs)  # @errorHandling exclude
+                    # @errorHandling exclude
+                    return func(*args, **kwargs)
                 else:
                     raise ValueError(
                         f"{Logger.__name__} not initialized"

@@ -6,7 +6,7 @@ Description       : vixen shell api features parameters library.
 License           : GPL3
 """
 
-from .classes import ParamsFiles, FeatureParams
+from .classes import Parameters, FeatureParams
 
 from .models import (
     LevelKeys,

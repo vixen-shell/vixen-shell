@@ -41,11 +41,10 @@ class RootFrameParams(BaseModel):
 class RootFeatureParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str
-    start: Optional[bool | Disable] = None
     frames: Dict[str, RootFrameParams]
     templates: Optional[Dict[str, RootFrameParams]] = None
     state: Optional[Dict[str, None | str | int | float | bool] | Disable] = None
+    start: Optional[bool | Disable] = None
 
 
 # ---------------------------------------------- - - -
@@ -79,8 +78,7 @@ class RootFrameParamsDict(TypedDict):
 
 
 class RootFeatureParamsDict(TypedDict):
-    name: str
-    start: Optional[bool | Disable]
     frames: Dict[str, RootFrameParamsDict]
     templates: Optional[Dict[str, RootFrameParamsDict]]
     state: Optional[Dict[str, None | str | int | float | bool] | Disable]
+    start: Optional[bool | Disable]

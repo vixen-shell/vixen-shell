@@ -9,7 +9,6 @@ class FeatureParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     path: str
-    name: str
     start: Optional[bool] = None
     frames: Dict[str, FrameParams]
     state: Optional[Dict[str, None | str | int | float | bool]] = None
@@ -18,6 +17,7 @@ class FeatureParams(BaseModel):
     @staticmethod
     def create(root_file_path: str, user_file_path: str, dev: bool = False):
         builder = ParamsBuilder(root_file_path, user_file_path)
+
         params_dict = builder.build()
         params_dict["dev"] = dev
         return FeatureParams(**params_dict)

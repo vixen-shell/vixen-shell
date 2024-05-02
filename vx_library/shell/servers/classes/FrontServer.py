@@ -72,10 +72,3 @@ class FrontServer:
 
         FrontServer.process.terminate()
         FrontServer.log_handler.join()
-
-        FrontServer.process = None
-        FrontServer.log_handler = None
-
-    def restart():
-        FrontServer.stop()
-        FrontServer.start()

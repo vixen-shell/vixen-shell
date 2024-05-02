@@ -1,11 +1,12 @@
-import time
-from fastapi import Response, Path, Body
+from fastapi import Response, Body
 from ..api import api
 from ...globals import ModelResponses, Models
 from ...features import Features
-from ...servers import FrontServer
 
+# ---------------------------------------------- - - -
 # FEATURE NAMES
+#
+
 names_responses = ModelResponses({200: Models.Features.Names})
 
 
@@ -18,25 +19,55 @@ async def feature_names(response: Response):
     return names_responses(response, 200)(names=Features.names())
 
 
-# RELOAD FEATURES
-reload_responses = ModelResponses(
-    {200: Models.Features.Names, 409: Models.Commons.Error}
+# ---------------------------------------------- - - -
+# LOAD FEATURE
+#
+
+load_feature_responses = ModelResponses(
+    {200: Models.Features.Base, 409: Models.Commons.Error}
 )
 
 
-@api.get(
-    "/features/reload",
-    description="Reload features",
-    responses=names_responses.responses,
+@api.post(
+    "/features/load",
+    description="Load a feature",
+    responses=load_feature_responses.responses,
 )
-async def feature_names(response: Response):
-    await Features.stop()
-    FrontServer.restart()
+async def load_dev_feature(
+    response: Response,
+    entry: str = Body(description="Feature name or feature development directory"),
+):
+    try:
+        name, is_started = Features.load(entry)
+        return load_feature_responses(response, 200)(name=name, is_started=is_started)
+    except KeyError as error:
+        return load_feature_responses(response, 409)(message=str(error))
+    except ValueError as error:
+        return load_feature_responses(response, 409)(message=str(error))
 
-    time.sleep(5)
 
-    if not Features.init():
-        return reload_responses(response, 409)(message="Unable to reload features")
+# ---------------------------------------------- - - -
+# UNLOAD FEATURE
+#
 
-    Features.startup()
-    return names_responses(response, 200)(names=Features.names())
+unload_feature_responses = ModelResponses(
+    {200: Models.Features.Base, 404: Models.Commons.Error}
+)
+
+
+@api.post(
+    "/features/unload",
+    description="Unload a feature",
+    responses=unload_feature_responses.responses,
+)
+async def load_dev_feature(
+    response: Response,
+    feature_name: str = Body(description="Feature name"),
+):
+    try:
+        await Features.unload(feature_name)
+        return unload_feature_responses(response, 200)(
+            name=feature_name, is_started=False
+        )
+    except KeyError as error:
+        return unload_feature_responses(response, 404)(message=str(error))

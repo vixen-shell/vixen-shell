@@ -40,9 +40,9 @@ class UserFrameParams(BaseModel):
 class UserFeatureParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    start: Optional[bool] = None
     frames: Optional[Dict[str, UserFrameParams]] = None
     state: Optional[Dict[str, None | str | int | float | bool]] = None
+    start: Optional[bool] = None
 
 
 # ---------------------------------------------- - - -
@@ -75,6 +75,6 @@ class UserFrameParamsDict(TypedDict):
 
 
 class UserFeatureParamsDict(TypedDict):
-    start: Optional[bool]
     frames: Optional[Dict[str, UserFrameParamsDict]]
     state: Optional[Dict[str, None | str | int | float | bool]]
+    start: Optional[bool]

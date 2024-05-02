@@ -5,8 +5,8 @@ from .parameters import FeatureParams
 
 
 class FrameHandler:
-    def __init__(self, feature_params: FeatureParams):
-        self.feature_name = feature_params.name
+    def __init__(self, feature_name: str, feature_params: FeatureParams):
+        self.feature_name = feature_name
         self.frames_params = feature_params.frames
         self.frames: Dict[str, FrameView] = {}
 

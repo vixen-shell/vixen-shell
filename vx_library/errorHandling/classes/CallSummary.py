@@ -52,4 +52,5 @@ class CallSummary:
 
     @property
     def is_exclude(self):
-        return "# @errorHandling exclude" in self.code.code_line
+        top_line = self.code.overview[self.code.line_number - 1]
+        return "# @errorHandling exclude" in top_line

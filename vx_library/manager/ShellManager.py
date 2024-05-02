@@ -1,70 +1,52 @@
-from .logger import Logger
+from .utils import use_sudo
 
 
 class ShellManager:
     @staticmethod
+    @use_sudo(False)
     def open():
-        from ..shell import Shell
+        from .requests import ShellRequests
 
-        try:
-            Shell.open()
-        except Shell.ShellException as exception:
-            Logger.log(exception, "WARNING")
-        except Exception:
-            raise
+        ShellRequests.open()
 
     @staticmethod
+    @use_sudo(False)
     def close():
-        from ..shell import Shell
+        from .requests import ShellRequests
 
-        try:
-            Shell.close()
-            Logger.log("Exit Vixen Shell successfull")
-        except Shell.ShellException as exception:
-            Logger.log(exception, "WARNING")
-        except Exception:
-            raise
+        ShellRequests.close()
 
     @staticmethod
-    def dev(dev_dir: str):
+    @use_sudo(False)
+    def dev(directory: str):
+        from .requests import ShellRequests
         from .utils import get_vite_process
-        from ..shell import Shell
 
-        try:
-            vite_process = get_vite_process(dev_dir)
-            dev_feature = Shell.init_dev_feature(dev_dir)
-        except Shell.ShellException as exception:
-            Logger.log(exception, "ERROR")
+        feature_name = ShellRequests.load_feature(directory)
+        if not feature_name:
             return
-        except Exception:
-            raise
+
+        vite_process = get_vite_process(directory)
+        if not vite_process:
+            return
 
         vite_process.start()
 
-        try:
-            dev_feature.start()
-            print(f"  \033[92m➜\033[0m  Vixen: start feature '{dev_feature.name}'")
-        except Exception as exception:
-            f"  \033[91m➜\033[0m  Vixen: {exception}"
+        if ShellRequests.start_feature(feature_name):
+            print(f"  \033[92m➜\033[0m  Vixen: start feature '{feature_name}'")
+            vite_process.join()
+        else:
+            print(
+                f"  \033[31m➜\033[0m  Vixen: Error on starting feature '{feature_name}'"
+            )
             vite_process.terminate()
 
-        if vite_process.is_alive:
-            vite_process.join()
-
-        try:
-            Shell.stop_dev_feature()
-        except Shell.ShellException as exception:
-            Logger.log(exception, "WARNING")
-        except Exception:
-            raise
+        if ShellRequests.ping():
+            ShellRequests.unload_feature(feature_name)
 
     @staticmethod
+    @use_sudo(False)
     def feature_names():
-        from ..shell import Shell
+        from .requests import ShellRequests
 
-        try:
-            print(Shell.feature_names())
-        except Shell.ShellException as exception:
-            Logger.log(exception, "WARNING")
-        except Exception:
-            raise
+        print(ShellRequests.feature_names())

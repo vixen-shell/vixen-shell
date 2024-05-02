@@ -1,16 +1,11 @@
 from pydantic import BaseModel
-from typing import Dict, List, Literal, Any, Optional
+from typing import Dict, List, Literal
 
 
 # COMMONS MODELS
 class Commons_Error(BaseModel):
     message: str
-    details: Optional[Any] = None
-
-
-class Commons_KeyError(BaseModel):
-    error: Literal["KeyError", "KeyExists"] = "KeyError"
-    key: str
+    shell_error: bool = True
 
 
 # LOG MODELS

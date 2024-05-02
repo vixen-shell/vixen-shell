@@ -1,73 +1,98 @@
 from typing import List, Dict
-from fastapi import WebSocket
 from .Feature import Feature
-from .parameters import ParamsFiles
+from .parameters import Parameters
 from .Gtk_main_loop import Gtk_main_loop
+from ..logger import Logger
+
+
+class DevMode:
+    feature_name: str = None
+
+    @staticmethod
+    def enable(feature_name: str):
+        if DevMode.feature_name:
+            raise ValueError("Development mode already in use")
+
+        DevMode.feature_name = feature_name
+        Logger.log("[Dev mode]: enabled")
+
+    @staticmethod
+    def disable():
+        if not DevMode.feature_name:
+            Logger.log("[Dev mode]: not in use", "WARNING")
+
+        DevMode.feature_name = None
+        Logger.log("[Dev mode]: disabled")
+
+    @staticmethod
+    def toggle(feature: Feature):
+        if DevMode.feature_name and DevMode.feature_name == feature.name:
+            DevMode.disable()
+
+        if not DevMode.feature_name and feature.dev_mode:
+            DevMode.enable(feature.name)
 
 
 class Features:
-    _dict: Dict[str, Feature] = {}
-    _dev_name: str = None
+    dict: Dict[str, Feature] = {}
 
     @staticmethod
     def init():
         Gtk_main_loop.run()
 
-        for name in ParamsFiles.get_feature_names():
-            Features.add(Feature.from_name(name))
+        for name in Parameters.get_root_feature_names():
+            try:
+                Features.load(name)
 
-        return True
+            except Exception as exception:
+                Logger.log(exception, "WARNING")
+
+        Logger.log(
+            f"{'No' if len(Features.dict) == 0 else len(Features.dict)} features initialized"
+        )
 
     @staticmethod
-    def add(feature: Feature):
-        if Features.exists(feature.name):
-            raise ValueError(f"A feature called '{feature.name}' already exists")
+    def load(entry: str):
+        name, feature = Feature.load(entry)
 
-        Features._dict[feature.name] = feature
+        if Features.exists(name):
+            suffix = " in development mode" if DevMode.feature_name == name else ""
+            raise KeyError(f"Feature '{name}' already loaded{suffix}")
+
+        DevMode.toggle(feature)
+
+        Features.dict[name] = feature
+        Logger.log(f"'{name}' feature loaded")
+
+        return name, feature.is_started
 
     @staticmethod
-    async def remove(name: str):
+    async def unload(name: str):
         feature = Features.get(name)
 
-        if feature and feature.is_started:
+        if not feature:
+            raise KeyError(f"'{name}' feature not found")
+
+        DevMode.toggle(feature)
+
+        if feature.is_started:
             await feature.stop()
-            del Features._dict[name]
+
+        del Features.dict[name]
+        Logger.log(f"'{name}' feature unloaded")
 
     @staticmethod
     async def stop():
         Gtk_main_loop.quit()
 
     @staticmethod
-    def init_dev(directory: str) -> tuple[str | None, str | None]:
-        if Features._dev_name:
-            return None, "Development mode is already in use"
-
-        try:
-            feature = Feature.from_dev_directory(directory)
-            Features.add(feature)
-            Features._dev_name = feature.name
-        except Exception as exception:
-            return None, exception
-
-        return Features._dev_name, None
-
-    @staticmethod
-    async def remove_dev() -> tuple[str | None, str | None]:
-        if not Features._dev_name:
-            return None, "Development mode is not in use"
-
-        await Features.remove(Features._dev_name)
-        Features._dev_name = None
-        return Features._dev_name, None
-
-    @staticmethod
     def names() -> List[str]:
-        return list(Features._dict.keys())
+        return list(Features.dict.keys())
 
     @staticmethod
     def exists(name: str) -> bool:
-        return name in Features._dict
+        return name in Features.dict
 
     @staticmethod
     def get(name: str) -> Feature | None:
-        return Features._dict.get(name)
+        return Features.dict.get(name)

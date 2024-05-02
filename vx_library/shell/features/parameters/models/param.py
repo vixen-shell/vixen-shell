@@ -72,7 +72,6 @@ class FrameParamsDict(TypedDict):
 
 class FeatureParamsDict(TypedDict):
     path: str
-    name: str
-    start: Optional[bool]
     frames: Dict[str, FrameParamsDict]
     state: Optional[Dict[str, None | str | int | float | bool]]
+    start: Optional[bool]
