@@ -12,6 +12,7 @@ class ErrorHandling:
         def decorator(func):
             def wrapper(*args, **kwargs):
                 if bool(ErrorHandling.get_excepthook) == value:
+                    # @errorHandling exclude
                     return func(*args, **kwargs)
                 else:
                     raise ValueError(

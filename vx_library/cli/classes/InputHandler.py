@@ -1,4 +1,4 @@
-from .InputSelection import InputFilter, InputFilterError
+from .InputSelection import InputFilter
 
 
 class InputHandler:
@@ -15,10 +15,7 @@ class InputHandler:
         if no_spaces:
             response = response.replace(" ", "")
 
-        try:
-            for filter in self.filters:
-                filter.check(response)
-        except InputFilterError:
-            raise
+        for filter in self.filters:
+            filter.check(response)
 
         return response
