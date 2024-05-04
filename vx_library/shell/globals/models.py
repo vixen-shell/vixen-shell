@@ -49,3 +49,19 @@ class Frames_Base(BaseModel):
 
 class Frames_Properties(Frames_Base):
     feature: Features_Base
+
+
+# OS MODELS
+class Os_ExecOutput(BaseModel):
+    command: str
+    args: list[str]
+    exitcode: int
+    stdout: str | None
+    stderr: str | None
+
+
+class Os_ExecInfo(BaseModel):
+    id: int
+    pid: int
+    command: str
+    args: list[str]
