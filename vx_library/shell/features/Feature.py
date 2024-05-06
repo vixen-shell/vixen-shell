@@ -1,4 +1,5 @@
 import asyncio
+from types import ModuleType
 from .parameters import Parameters, FeatureParams
 from .FrameHandler import FrameHandler
 from .FeaturePipe import FeaturePipe
@@ -8,13 +9,16 @@ from ..logger import Log, Logger
 
 
 class Feature(FeatureState, FeaturePipe):
-    def __init__(self, name: str, params: FeatureParams):
+    def __init__(
+        self, name: str, params: FeatureParams, custom_data_module: ModuleType
+    ):
         FeatureState.__init__(self, params)
         FeaturePipe.__init__(self)
 
         self.name = name
         self.dev_mode = params.dev
         self.frames = FrameHandler(name, params)
+        self.custom_data = custom_data_module
 
         self.is_started = False
         self._listen_logs = False
@@ -24,8 +28,8 @@ class Feature(FeatureState, FeaturePipe):
 
     @staticmethod
     def load(entry: str):
-        name, params = Parameters.get(entry)
-        return name, Feature(name, params)
+        name, params, custom_data_module = Parameters.get(entry)
+        return name, Feature(name, params, custom_data_module)
 
     @property
     def frame_ids(self):

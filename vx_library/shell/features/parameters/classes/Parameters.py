@@ -1,4 +1,5 @@
-import os
+import os, importlib.util
+from types import ModuleType
 from .FeatureParams import FeatureParams
 from .ParamsBuilder import MissingFileError
 from ..utils import read_json
@@ -37,28 +38,49 @@ def get_dev_feature_name(dev_directory: str):
     return feature_name
 
 
-def get_params_from_dev_directory(directory: str) -> tuple[str, FeatureParams]:
+def import_module_from_path(name: str, path: str):
+    module_spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+
+    return module
+
+
+def get_params_from_dev_directory(
+    directory: str,
+) -> tuple[str, FeatureParams, ModuleType]:
     feature_name = get_dev_feature_name(directory)
 
+    custom_data_module = import_module_from_path(
+        f"{feature_name}_custom_data", f"{directory}/config/root/{feature_name}.py"
+    )
     root_file_path = f"{directory}/config/root/{feature_name}.json"
     user_file_path = f"{directory}/config/user/{feature_name}.json"
 
-    return feature_name, FeatureParams.create(root_file_path, user_file_path, True)
+    return (
+        feature_name,
+        FeatureParams.create(root_file_path, user_file_path, True),
+        custom_data_module,
+    )
 
 
-def get_params_from_feature_name(name: str) -> FeatureParams:
+def get_params_from_feature_name(name: str) -> tuple[FeatureParams, ModuleType]:
+    custom_data_module = import_module_from_path(
+        f"{name}_custom_data", f"{ROOT_PARAMS_DIR}/{name}.py"
+    )
     root_file_path = f"{ROOT_PARAMS_DIR}/{name}.json"
     user_file_path = f"{USER_PARAMS_DIR}/{name}.json"
 
-    return FeatureParams.create(root_file_path, user_file_path)
+    return FeatureParams.create(root_file_path, user_file_path), custom_data_module
 
 
-def get_params_from_entry(entry: str) -> tuple[str, FeatureParams]:
+def get_params_from_entry(entry: str) -> tuple[str, FeatureParams, ModuleType]:
     if os.path.exists(entry) and os.path.isdir(entry):
         return get_params_from_dev_directory(entry)
 
     try:
-        return entry, get_params_from_feature_name(entry)
+        params, custom_data_module = get_params_from_feature_name(entry)
+        return entry, params, custom_data_module
     except MissingFileError:
         raise ValueError(f"{entry} (Bad entry)")
 
