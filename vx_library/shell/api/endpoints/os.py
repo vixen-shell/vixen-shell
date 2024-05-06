@@ -3,7 +3,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
-import subprocess, threading, time
+import subprocess, threading
 from typing import Literal
 from fastapi import Response, Path, Body
 from fastapi.responses import FileResponse
@@ -21,54 +21,6 @@ exec_responses = ModelResponses(
     }
 )
 
-process_outputs = {}
-active_processes = {}
-
-
-class PopenProcess:
-    def __init__(self, command: str, args: list[str] = [], keep_output: bool = False):
-        self.command = command
-        self.args = args
-        self.keep_output = keep_output
-        self.is_alive = False
-
-    def run(self):
-        if not self.is_alive:
-            self.process = subprocess.Popen(
-                [self.command] + self.args,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-
-            self.id = str(self.process.pid) + str(time.time()).replace(".", "")
-            active_processes[self.id] = self
-
-            threading.Thread(target=self.process_wait).start()
-
-            return {
-                "id": self.id,
-                "pid": self.process.pid,
-                "command": self.command,
-                "args": self.args,
-            }
-
-    def process_wait(self):
-        self.process.wait()
-        self.is_alive = False
-        del active_processes[self.id]
-
-        if self.keep_output:
-            stdout, stderr = self.process.communicate()
-
-            process_outputs[self.id] = {
-                "command": self.command,
-                "args": self.args,
-                "exitcode": self.process.returncode,
-                "stdout": stdout,
-                "stderr": stderr,
-            }
-
 
 @api.post(
     "/os/run", description="Run linux command", responses=exec_responses.responses
@@ -77,13 +29,25 @@ async def post_log(
     response: Response,
     command: str = Body(description="Command"),
     args: list[str] = Body(description="Optional command arguments", default=[]),
-    keep_output: bool = Body(description="Keep output command", default=False),
+    wait_process: bool = Body(
+        description="Wait for the process to end in a thread (Can solve certain problems with single instance programs e.g. rofi)",
+        default=False,
+    ),
 ):
-    process = PopenProcess(command, args, keep_output)
-
     try:
-        exec_info = process.run()
-        return exec_responses(response, 200)(**exec_info)
+        process = subprocess.Popen(
+            [command] + args,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+
+        if wait_process:
+            threading.Thread(target=process.wait).start()
+
+        return exec_responses(response, 200)(
+            pid=process.pid, command=command, args=args
+        )
 
     except Exception as exception:
         return exec_responses(response, 404)(message=str(exception))

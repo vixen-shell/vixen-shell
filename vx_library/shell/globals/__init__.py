@@ -30,5 +30,4 @@ class Models:
         from .models import Log_Logs as Logs
 
     class Os:
-        from .models import Os_ExecOutput as ExecOutput
         from .models import Os_ExecInfo as ExecInfo
