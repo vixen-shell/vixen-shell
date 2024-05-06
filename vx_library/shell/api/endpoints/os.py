@@ -80,7 +80,7 @@ def get_icon_path(icon_name: str, size: Literal[16, 24, 32, 48], color: str = No
     return icon_info.get_filename()
 
 
-@api.get("/os/icon/{icon_name}", description="Get a Gtk icon")
+@api.post("/os/icon/{icon_name}", description="Get a Gtk icon")
 async def get_icon(
     icon_name: str = Path(description="Icon name"),
     size: Literal["16", "24", "32", "48"] = Body(description="Icon size", default="48"),
