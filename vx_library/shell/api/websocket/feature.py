@@ -33,14 +33,14 @@ async def feature_pipe_websocket(
         feature.remove_client(client_id)
 
 
-class DataStreamerInit(BaseModel):
-    data_ids: list[str]
-    interval: float = 1
-
-
 # ---------------------------------------------- - - -
 # CUSTOM DATA STREAMER
 #
+
+
+class DataStreamerInit(BaseModel):
+    data_ids: list[str]
+    interval: float = 1
 
 
 @api.websocket("/feature/{feature_name}/custom_data_streamer")

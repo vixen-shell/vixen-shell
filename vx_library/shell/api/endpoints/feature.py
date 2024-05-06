@@ -1,4 +1,4 @@
-from fastapi import Response, Path
+from fastapi import Response, Path, Body
 from ..api import api
 from ...globals import ModelResponses, Models
 from ...features import Features
@@ -182,3 +182,56 @@ async def toggle_feature_log_listener_state(
     return toggle_logListener_responses(response, 200)(
         name=feature_name, is_started=True, log_listener=feature.listen_logs
     )
+
+
+# ---------------------------------------------- - - -
+# CUSTOM_DATA
+#
+
+custom_data_responses = ModelResponses(
+    {
+        200: dict,
+        404: Models.Commons.Error,
+        409: Models.Commons.Error,
+    }
+)
+
+
+@api.post("/feature/{feature_name}/custom_data", description="Get a custom data")
+async def get_custom_data(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+    data_ids: list[str] = Body(description="Data IDs"),
+):
+    if not Features.exists(feature_name):
+        return custom_data_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    if not feature.is_started:
+        return custom_data_responses(response, 409)(
+            message=f"Feature '{feature_name}' is not started"
+        )
+
+    if not feature.custom_data:
+        return custom_data_responses(response, 409)(
+            message=f"Feature '{feature_name}' does not have a custom data module"
+        )
+
+    data_handlers = {}
+    for id in data_ids:
+        try:
+            data_handlers[id] = getattr(feature.custom_data, id)
+        except AttributeError:
+            return custom_data_responses(response, 404)(
+                message=f"Custom data id '{id}' not found"
+            )
+
+    custom_data = {}
+
+    for id, data_handler in data_handlers.items():
+        custom_data[id] = data_handler()
+
+    return custom_data_responses(response, 200)(**custom_data)

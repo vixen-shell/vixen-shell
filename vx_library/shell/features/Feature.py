@@ -10,7 +10,11 @@ from ..logger import Log, Logger
 
 class Feature(FeatureState, FeaturePipe):
     def __init__(
-        self, name: str, params: FeatureParams, custom_data_module: ModuleType
+        self,
+        name: str,
+        params: FeatureParams,
+        custom_data_module: ModuleType = None,
+        custom_actions_module: ModuleType = None,
     ):
         FeatureState.__init__(self, params)
         FeaturePipe.__init__(self)
@@ -18,6 +22,7 @@ class Feature(FeatureState, FeaturePipe):
         self.name = name
         self.dev_mode = params.dev
         self.frames = FrameHandler(name, params)
+        self.custom_actions = custom_actions_module
         self.custom_data = custom_data_module
 
         self.is_started = False
@@ -28,8 +33,8 @@ class Feature(FeatureState, FeaturePipe):
 
     @staticmethod
     def load(entry: str):
-        name, params, custom_data_module = Parameters.get(entry)
-        return name, Feature(name, params, custom_data_module)
+        name, params, custom_data_module, custom_actions_module = Parameters.get(entry)
+        return name, Feature(name, params, custom_data_module, custom_actions_module)
 
     @property
     def frame_ids(self):

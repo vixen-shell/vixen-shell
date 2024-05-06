@@ -1,2 +1,2 @@
-from . import features
-from . import hyprevents
+from . import feature
+from . import hypr
