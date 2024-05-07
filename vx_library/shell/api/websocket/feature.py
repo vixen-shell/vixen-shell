@@ -1,10 +1,21 @@
 import asyncio
-from fastapi import WebSocket, WebSocketDisconnect
-from websockets.exceptions import ConnectionClosedOK
+from fastapi import WebSocket
 from pydantic import BaseModel
 from ..api import api
 from ...features import Features
 from ...globals import Models
+
+
+def get_feature(feature_name: str):
+    feature = Features.get(feature_name)
+
+    if not feature:
+        raise Exception(f"Feature '{feature_name}' not found")
+
+    if not feature.is_started:
+        raise Exception(f"Feature '{feature.name}' is not started")
+
+    return feature
 
 
 # ---------------------------------------------- - - -
@@ -16,15 +27,19 @@ from ...globals import Models
 async def feature_pipe_websocket(
     websocket: WebSocket, feature_name: str, client_id: str
 ):
-    feature = Features.get(feature_name)
+    await websocket.accept()
 
-    if not feature:
-        await websocket.close(reason=f"Feature '{feature_name}' not found")
+    try:
+        feature = get_feature(feature_name)
+    except Exception as exception:
+        await websocket.close(reason=str(exception))
+        return
 
-    if not feature.pipe_is_opened:
-        await websocket.close(reason=f"'{feature_name}' feature pipe is closed")
-
-    await feature.connect_client(client_id, websocket)
+    try:
+        await feature.connect_client(client_id, websocket)
+    except Exception as exception:
+        await websocket.close(reason=str(exception))
+        return
 
     try:
         while True:
@@ -45,12 +60,19 @@ class DataStreamerInit(BaseModel):
 
 @api.websocket("/feature/{feature_name}/custom_data_streamer")
 async def feature_pipe_websocket(websocket: WebSocket, feature_name: str):
-    feature = Features.get(feature_name)
-
-    if not feature:
-        await websocket.close(reason=f"Feature '{feature_name}' not found")
-
     await websocket.accept()
+
+    try:
+        feature = get_feature(feature_name)
+    except Exception as exception:
+        await websocket.close(reason=str(exception))
+        return
+
+    if not feature.custom_data:
+        await websocket.close(
+            reason=f"Feature '{feature_name}' does not have a custom data module"
+        )
+        return
 
     try:
         while True:
@@ -73,10 +95,15 @@ async def feature_pipe_websocket(websocket: WebSocket, feature_name: str):
                     await websocket.send_json(custom_data)
                     await asyncio.sleep(interval)
 
+            except AttributeError as attribute_error:
+                await websocket.send_json(
+                    Models.Commons.Error(message=str(attribute_error)).model_dump()
+                )
+
             except ValueError as value_error:
                 await websocket.send_json(
                     Models.Commons.Error(message=str(value_error)).model_dump()
                 )
 
-    except (WebSocketDisconnect, ConnectionClosedOK):
+    except:
         pass

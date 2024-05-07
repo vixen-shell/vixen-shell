@@ -21,16 +21,12 @@ class FeaturePipe:
 
     async def connect_client(self, client_id: str, websocket: WebSocket):
         if not self.pipe_is_opened:
-            await websocket.close(reason="Pipe is closed")
-            return False
+            raise Exception("Pipe is closed")
 
         if client_id in self.client_websockets:
-            await websocket.close(reason=f"Client '{client_id}' already connected")
-            return False
+            raise Exception(f"Client '{client_id}' already connected")
 
         self.client_websockets[client_id] = websocket
-        await websocket.accept()
-        return True
 
     def remove_client(self, client_id: str):
         if client_id in self.client_websockets:
