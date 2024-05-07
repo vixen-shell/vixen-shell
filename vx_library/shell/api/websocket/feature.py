@@ -68,7 +68,7 @@ async def feature_pipe_websocket(websocket: WebSocket, feature_name: str):
         await websocket.close(reason=str(exception))
         return
 
-    if not feature.custom_data:
+    if not feature.data_module:
         await websocket.close(
             reason=f"Feature '{feature_name}' does not have a custom data module"
         )
@@ -82,7 +82,7 @@ async def feature_pipe_websocket(websocket: WebSocket, feature_name: str):
 
                 data_handlers = {}
                 for id in init.data_ids:
-                    data_handlers[id] = getattr(feature.custom_data, id)
+                    data_handlers[id] = getattr(feature.data_module, id)
 
                 interval = init.interval
 

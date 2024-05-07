@@ -215,7 +215,7 @@ async def get_custom_data(
             message=f"Feature '{feature_name}' is not started"
         )
 
-    if not feature.custom_data:
+    if not feature.data_module:
         return custom_data_responses(response, 409)(
             message=f"Feature '{feature_name}' does not have a custom data module"
         )
@@ -223,7 +223,7 @@ async def get_custom_data(
     data_handlers = {}
     for id in data_ids:
         try:
-            data_handlers[id] = getattr(feature.custom_data, id)
+            data_handlers[id] = getattr(feature.data_module, id)
         except AttributeError:
             return custom_data_responses(response, 404)(
                 message=f"Custom data id '{id}' not found"

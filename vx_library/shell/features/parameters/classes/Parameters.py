@@ -1,4 +1,4 @@
-import os, importlib.util
+import os, importlib.util, sys
 from types import ModuleType
 from .FeatureParams import FeatureParams
 from .ParamsBuilder import MissingFileError
@@ -43,54 +43,63 @@ def import_module_from_path(name: str, path: str):
         return
 
     module_spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(module_spec)
-    module_spec.loader.exec_module(module)
 
-    return module
+    if module_spec:
+        module = importlib.util.module_from_spec(module_spec)
+        module_spec.loader.exec_module(module)
+        return module
 
 
 def get_params_from_dev_directory(
     directory: str,
 ) -> tuple[str, FeatureParams, ModuleType | None, ModuleType | None]:
     feature_name = get_dev_feature_name(directory)
+    sys.path.append(f"{ROOT_PARAMS_DIR}/{feature_name}")
 
-    custom_actions_module = import_module_from_path(
-        f"{feature_name}_custom_actions",
-        f"{directory}/config/root/{feature_name}/custom_actions.py",
+    actions_module = import_module_from_path(
+        f"{feature_name}_actions",
+        f"{directory}/config/root/{feature_name}/{feature_name}_actions/__init__.py",
     )
-    custom_data_module = import_module_from_path(
-        f"{feature_name}_custom_data",
-        f"{directory}/config/root/{feature_name}/custom_data.py",
+    data_module = import_module_from_path(
+        f"{feature_name}_data",
+        f"{directory}/config/root/{feature_name}/{feature_name}_data/__init__.py",
     )
-    root_file_path = f"{directory}/config/root/{feature_name}.json"
-    user_file_path = f"{directory}/config/user/{feature_name}.json"
+    params = FeatureParams.create(
+        f"{directory}/config/root/{feature_name}.json",
+        f"{directory}/config/user/{feature_name}.json",
+        True,
+    )
 
     return (
         feature_name,
-        FeatureParams.create(root_file_path, user_file_path, True),
-        custom_actions_module,
-        custom_data_module,
+        params,
+        actions_module,
+        data_module,
     )
 
 
 def get_params_from_feature_name(
     feature_name: str,
 ) -> tuple[FeatureParams, ModuleType | None, ModuleType | None]:
-    custom_actions_module = import_module_from_path(
-        f"{feature_name}_custom_actions",
-        f"{ROOT_PARAMS_DIR}/{feature_name}/custom_actions.py",
+    sys.path.append(f"{ROOT_PARAMS_DIR}/{feature_name}")
+
+    actions_module = import_module_from_path(
+        f"{feature_name}_actions",
+        f"{ROOT_PARAMS_DIR}/{feature_name}/{feature_name}_actions/__init__.py",
     )
-    custom_data_module = import_module_from_path(
-        f"{feature_name}_custom_data",
-        f"{ROOT_PARAMS_DIR}/{feature_name}/custom_data.py",
+    data_module = import_module_from_path(
+        f"{feature_name}_data",
+        f"{ROOT_PARAMS_DIR}/{feature_name}/{feature_name}_data/__init__.py",
     )
-    root_file_path = f"{ROOT_PARAMS_DIR}/{feature_name}.json"
-    user_file_path = f"{USER_PARAMS_DIR}/{feature_name}.json"
+    params = FeatureParams.create(
+        f"{ROOT_PARAMS_DIR}/{feature_name}.json",
+        f"{USER_PARAMS_DIR}/{feature_name}.json",
+    )
 
     return (
-        FeatureParams.create(root_file_path, user_file_path),
-        custom_data_module,
-        custom_actions_module,
+        params,
+        actions_module,
+        data_module,
     )
 
 
@@ -101,10 +110,8 @@ def get_params_from_entry(
         return get_params_from_dev_directory(entry)
 
     try:
-        params, custom_data_module, custom_actions_module = (
-            get_params_from_feature_name(entry)
-        )
-        return entry, params, custom_data_module, custom_actions_module
+        params, actions_module, data_module = get_params_from_feature_name(entry)
+        return entry, params, actions_module, data_module
     except MissingFileError:
         raise ValueError(f"{entry} (Bad entry)")
 

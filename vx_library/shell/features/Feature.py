@@ -13,8 +13,8 @@ class Feature(FeatureState, FeaturePipe):
         self,
         name: str,
         params: FeatureParams,
-        custom_data_module: ModuleType = None,
-        custom_actions_module: ModuleType = None,
+        actions_module: ModuleType = None,
+        data_module: ModuleType = None,
     ):
         FeatureState.__init__(self, params)
         FeaturePipe.__init__(self)
@@ -22,8 +22,9 @@ class Feature(FeatureState, FeaturePipe):
         self.name = name
         self.dev_mode = params.dev
         self.frames = FrameHandler(name, params)
-        self.custom_actions = custom_actions_module
-        self.custom_data = custom_data_module
+
+        self.actions_module = actions_module
+        self.data_module = data_module
 
         self.is_started = False
         self._listen_logs = False
@@ -33,8 +34,8 @@ class Feature(FeatureState, FeaturePipe):
 
     @staticmethod
     def load(entry: str):
-        name, params, custom_data_module, custom_actions_module = Parameters.get(entry)
-        return name, Feature(name, params, custom_data_module, custom_actions_module)
+        name, params, actions_module, data_module = Parameters.get(entry)
+        return name, Feature(name, params, actions_module, data_module)
 
     @property
     def frame_ids(self):
