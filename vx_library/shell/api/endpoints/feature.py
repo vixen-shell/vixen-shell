@@ -1,4 +1,5 @@
 from fastapi import Response, Path, Body
+from pydantic import BaseModel
 from ..api import api
 from ...globals import ModelResponses, Models
 from ...features import Features
@@ -185,10 +186,10 @@ async def toggle_feature_log_listener_state(
 
 
 # ---------------------------------------------- - - -
-# CUSTOM_DATA
+# FEATURE DATA
 #
 
-custom_data_responses = ModelResponses(
+feature_data_responses = ModelResponses(
     {
         200: dict,
         404: Models.Commons.Error,
@@ -197,41 +198,57 @@ custom_data_responses = ModelResponses(
 )
 
 
-@api.post("/feature/{feature_name}/custom_data", description="Get a custom data")
-async def get_custom_data(
+class DataHandlerModel(BaseModel):
+    name: str
+    args: list = []
+
+
+class DataHandler:
+    def __init__(self, handler, handler_args: list = []):
+        self.handler = handler
+        self.handler_args = handler_args
+
+    def get_data(self):
+        return self.handler(*self.handler_args)
+
+
+@api.post("/feature/{feature_name}/data", description="Get a feature data")
+async def get_data(
     response: Response,
     feature_name: str = Path(description="Feature name"),
-    data_ids: list[str] = Body(description="Data IDs"),
+    data_handlers: list[DataHandlerModel] = Body(
+        description="Data handlers information"
+    ),
 ):
     if not Features.exists(feature_name):
-        return custom_data_responses(response, 404)(
+        return feature_data_responses(response, 404)(
             message=f"Feature '{feature_name}' not found"
         )
 
     feature = Features.get(feature_name)
 
     if not feature.is_started:
-        return custom_data_responses(response, 409)(
+        return feature_data_responses(response, 409)(
             message=f"Feature '{feature_name}' is not started"
         )
 
     if not feature.data_module:
-        return custom_data_responses(response, 409)(
-            message=f"Feature '{feature_name}' does not have a custom data module"
+        return feature_data_responses(response, 409)(
+            message=f"Feature '{feature_name}' does not have a data module"
         )
 
-    data_handlers = {}
-    for id in data_ids:
+    handlers: dict[str, DataHandler] = {}
+    for handler in data_handlers:
         try:
-            data_handlers[id] = getattr(feature.data_module, id)
-        except AttributeError:
-            return custom_data_responses(response, 404)(
-                message=f"Custom data id '{id}' not found"
+            handlers[handler.name] = DataHandler(
+                getattr(feature.data_module, handler.name), handler.args
             )
+        except AttributeError as attribute_error:
+            return feature_data_responses(response, 404)(message=str(attribute_error))
 
     custom_data = {}
 
-    for id, data_handler in data_handlers.items():
-        custom_data[id] = data_handler()
+    for name, handler in handlers.items():
+        custom_data[name] = handler.get_data()
 
-    return custom_data_responses(response, 200)(**custom_data)
+    return feature_data_responses(response, 200)(**custom_data)

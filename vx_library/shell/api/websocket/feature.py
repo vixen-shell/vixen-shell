@@ -49,17 +49,31 @@ async def feature_pipe_websocket(
 
 
 # ---------------------------------------------- - - -
-# CUSTOM DATA STREAMER
+# DATA STREAMER
 #
 
 
-class DataStreamerInit(BaseModel):
-    data_ids: list[str]
+class DataHandlerModel(BaseModel):
+    name: str
+    args: list = []
+
+
+class DataStreamerModel(BaseModel):
+    data_handlers: list[DataHandlerModel]
     interval: float = 1
 
 
-@api.websocket("/feature/{feature_name}/custom_data_streamer")
-async def feature_pipe_websocket(websocket: WebSocket, feature_name: str):
+class DataHandler:
+    def __init__(self, handler, handler_args: list = []):
+        self.handler = handler
+        self.handler_args = handler_args
+
+    def get_data(self):
+        return self.handler(*self.handler_args)
+
+
+@api.websocket("/feature/{feature_name}/data_streamer")
+async def feature_data_streamer_websocket(websocket: WebSocket, feature_name: str):
     await websocket.accept()
 
     try:
@@ -77,22 +91,24 @@ async def feature_pipe_websocket(websocket: WebSocket, feature_name: str):
     try:
         while True:
             try:
-                init_data = await websocket.receive_json()
-                init = DataStreamerInit(**init_data)
+                init_data = DataStreamerModel(**(await websocket.receive_json()))
 
-                data_handlers = {}
-                for id in init.data_ids:
-                    data_handlers[id] = getattr(feature.data_module, id)
+                data_handlers: dict[str, DataHandler] = {}
+                for data_handler in init_data.data_handlers:
+                    data_handlers[data_handler.name] = DataHandler(
+                        getattr(feature.data_module, data_handler.name),
+                        data_handler.args,
+                    )
 
-                interval = init.interval
+                interval = init_data.interval
 
                 while True:
-                    custom_data = {}
+                    data = {}
 
-                    for id, data_handler in data_handlers.items():
-                        custom_data[id] = data_handler()
+                    for name, handler in data_handlers.items():
+                        data[name] = handler.get_data()
 
-                    await websocket.send_json(custom_data)
+                    await websocket.send_json(data)
                     await asyncio.sleep(interval)
 
             except AttributeError as attribute_error:
