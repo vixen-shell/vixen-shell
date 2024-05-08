@@ -1,8 +1,10 @@
+import sys
 from typing import List, Dict
 from .Feature import Feature
 from .parameters import Parameters
 from .Gtk_main_loop import Gtk_main_loop
 from ..logger import Logger
+from ..globals import ROOT_CONFIG_DIRECTORY
 
 
 class DevMode:
@@ -38,6 +40,7 @@ class Features:
 
     @staticmethod
     def init():
+        sys.path.append(f"{ROOT_CONFIG_DIRECTORY}/features")
         Gtk_main_loop.run()
 
         for name in Parameters.get_root_feature_names():

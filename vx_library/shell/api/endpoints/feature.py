@@ -232,23 +232,24 @@ async def get_data(
             message=f"Feature '{feature_name}' is not started"
         )
 
-    if not feature.data_module:
-        return feature_data_responses(response, 409)(
-            message=f"Feature '{feature_name}' does not have a data module"
-        )
-
     handlers: dict[str, DataHandler] = {}
     for handler in data_handlers:
         try:
             handlers[handler.name] = DataHandler(
-                getattr(feature.data_module, handler.name), handler.args
+                feature.get_module_attribute("Data", handler.name),
+                handler.args,
             )
-        except AttributeError as attribute_error:
-            return feature_data_responses(response, 404)(message=str(attribute_error))
+
+        except Exception as exception:
+            return feature_data_responses(response, 409)(message=str(exception))
 
     custom_data = {}
 
-    for name, handler in handlers.items():
-        custom_data[name] = handler.get_data()
+    try:
+        for name, handler in handlers.items():
+            custom_data[name] = handler.get_data()
+
+    except Exception as exception:
+        return feature_data_responses(response, 409)(message=str(exception))
 
     return feature_data_responses(response, 200)(**custom_data)

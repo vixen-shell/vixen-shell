@@ -52,66 +52,49 @@ def import_module_from_path(name: str, path: str):
 
 def get_params_from_dev_directory(
     directory: str,
-) -> tuple[str, FeatureParams, ModuleType | None, ModuleType | None]:
+) -> tuple[str, FeatureParams, ModuleType | None]:
     feature_name = get_dev_feature_name(directory)
-    sys.path.append(f"{ROOT_PARAMS_DIR}/{feature_name}")
 
-    actions_module = import_module_from_path(
-        f"{feature_name}_actions",
-        f"{directory}/config/root/{feature_name}/{feature_name}_actions/__init__.py",
+    module = import_module_from_path(
+        f"{feature_name}_module",
+        f"{directory}/config/root/{feature_name}_module/__init__.py",
     )
-    data_module = import_module_from_path(
-        f"{feature_name}_data",
-        f"{directory}/config/root/{feature_name}/{feature_name}_data/__init__.py",
-    )
+
     params = FeatureParams.create(
         f"{directory}/config/root/{feature_name}.json",
         f"{directory}/config/user/{feature_name}.json",
         True,
     )
 
-    return (
-        feature_name,
-        params,
-        actions_module,
-        data_module,
-    )
+    return feature_name, params, module
 
 
 def get_params_from_feature_name(
     feature_name: str,
-) -> tuple[FeatureParams, ModuleType | None, ModuleType | None]:
-    sys.path.append(f"{ROOT_PARAMS_DIR}/{feature_name}")
+) -> tuple[FeatureParams, ModuleType | None]:
 
-    actions_module = import_module_from_path(
-        f"{feature_name}_actions",
-        f"{ROOT_PARAMS_DIR}/{feature_name}/{feature_name}_actions/__init__.py",
+    module = import_module_from_path(
+        f"{feature_name}_module",
+        f"{ROOT_PARAMS_DIR}/{feature_name}_module/__init__.py",
     )
-    data_module = import_module_from_path(
-        f"{feature_name}_data",
-        f"{ROOT_PARAMS_DIR}/{feature_name}/{feature_name}_data/__init__.py",
-    )
+
     params = FeatureParams.create(
         f"{ROOT_PARAMS_DIR}/{feature_name}.json",
         f"{USER_PARAMS_DIR}/{feature_name}.json",
     )
 
-    return (
-        params,
-        actions_module,
-        data_module,
-    )
+    return params, module
 
 
 def get_params_from_entry(
     entry: str,
-) -> tuple[str, FeatureParams, ModuleType | None, ModuleType | None]:
+) -> tuple[str, FeatureParams, ModuleType | None]:
     if os.path.exists(entry) and os.path.isdir(entry):
         return get_params_from_dev_directory(entry)
 
     try:
-        params, actions_module, data_module = get_params_from_feature_name(entry)
-        return entry, params, actions_module, data_module
+        params, module = get_params_from_feature_name(entry)
+        return entry, params, module
     except MissingFileError:
         raise ValueError(f"{entry} (Bad entry)")
 
@@ -124,5 +107,5 @@ class Parameters:
     @staticmethod
     def get(
         entry: str,
-    ) -> tuple[str, FeatureParams, ModuleType | None, ModuleType | None]:
+    ) -> tuple[str, FeatureParams, ModuleType | None]:
         return get_params_from_entry(entry)

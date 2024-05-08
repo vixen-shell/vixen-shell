@@ -1,5 +1,6 @@
 import asyncio
 from types import ModuleType
+from typing import Literal
 from .parameters import Parameters, FeatureParams
 from .FrameHandler import FrameHandler
 from .FeaturePipe import FeaturePipe
@@ -9,13 +10,7 @@ from ..logger import Log, Logger
 
 
 class Feature(FeatureState, FeaturePipe):
-    def __init__(
-        self,
-        name: str,
-        params: FeatureParams,
-        actions_module: ModuleType = None,
-        data_module: ModuleType = None,
-    ):
+    def __init__(self, name: str, params: FeatureParams, module: ModuleType = None):
         FeatureState.__init__(self, params)
         FeaturePipe.__init__(self)
 
@@ -23,8 +18,7 @@ class Feature(FeatureState, FeaturePipe):
         self.dev_mode = params.dev
         self.frames = FrameHandler(name, params)
 
-        self.actions_module = actions_module
-        self.data_module = data_module
+        self.module = module
 
         self.is_started = False
         self._listen_logs = False
@@ -34,8 +28,17 @@ class Feature(FeatureState, FeaturePipe):
 
     @staticmethod
     def load(entry: str):
-        name, params, actions_module, data_module = Parameters.get(entry)
-        return name, Feature(name, params, actions_module, data_module)
+        name, params, module = Parameters.get(entry)
+        return name, Feature(name, params, module)
+
+    def get_module_attribute(self, module: Literal["Data", "Actions"], attribute: str):
+        if not self.is_started:
+            raise Exception(f"Feature '{self.name}' is not started")
+
+        if not self.module:
+            raise Exception(f"Feature '{self.name}' module not have any module")
+
+        return getattr(getattr(self.module, module), attribute)
 
     @property
     def frame_ids(self):

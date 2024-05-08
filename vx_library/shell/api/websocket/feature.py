@@ -82,12 +82,6 @@ async def feature_data_streamer_websocket(websocket: WebSocket, feature_name: st
         await websocket.close(reason=str(exception))
         return
 
-    if not feature.data_module:
-        await websocket.close(
-            reason=f"Feature '{feature_name}' does not have a custom data module"
-        )
-        return
-
     try:
         while True:
             try:
@@ -96,7 +90,7 @@ async def feature_data_streamer_websocket(websocket: WebSocket, feature_name: st
                 data_handlers: dict[str, DataHandler] = {}
                 for data_handler in init_data.data_handlers:
                     data_handlers[data_handler.name] = DataHandler(
-                        getattr(feature.data_module, data_handler.name),
+                        feature.get_module_attribute("Data", data_handler.name),
                         data_handler.args,
                     )
 
@@ -111,14 +105,9 @@ async def feature_data_streamer_websocket(websocket: WebSocket, feature_name: st
                     await websocket.send_json(data)
                     await asyncio.sleep(interval)
 
-            except AttributeError as attribute_error:
+            except Exception as exception:
                 await websocket.send_json(
-                    Models.Commons.Error(message=str(attribute_error)).model_dump()
-                )
-
-            except ValueError as value_error:
-                await websocket.send_json(
-                    Models.Commons.Error(message=str(value_error)).model_dump()
+                    Models.Commons.Error(message=str(exception)).model_dump()
                 )
 
     except:
