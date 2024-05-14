@@ -8,7 +8,7 @@ Description       : Vixen manager executable.
 License           : GPL3
 """
 
-import os, argparse
+import os, argparse, sys
 
 os.environ["GDK_BACKEND"] = "wayland"
 from vx_library import Manager
@@ -27,10 +27,15 @@ def handle_args(args):
 
     elif args.shell:
         if args.shell == "open":
+            sys.path.append("/usr/share/vixen/features")
             Manager.Shell.open()
 
         if args.shell == "close":
             Manager.Shell.close()
+
+        if args.shell == "dev":
+            sys.path.append(f"{os.getcwd()}/config/root/vixen/features")
+            Manager.Shell.open()
 
     elif args.dev:
         if args.dev == "run":
@@ -63,7 +68,10 @@ if __name__ == "__main__":
         "--setup", type=str, choices=["update", "remove"], help="Vixen Shell setup."
     )
     root_args.add_argument(
-        "--shell", type=str, choices=["open", "close"], help="Vixen Shell controls."
+        "--shell",
+        type=str,
+        choices=["open", "close", "dev"],
+        help="Vixen Shell controls.",
     )
     root_args.add_argument(
         "--dev", type=str, choices=["run", "new"], help="Vixen Shell devs controls."

@@ -1,7 +1,6 @@
-import os, importlib.util, sys
-from types import ModuleType
+import os, importlib
+from vx_feature_utils import FeatureContent
 from .FeatureParams import FeatureParams
-from .ParamsBuilder import MissingFileError
 from ..utils import read_json
 from ....globals import ROOT_CONFIG_DIRECTORY, USER_CONFIG_DIRECTORY
 
@@ -12,12 +11,13 @@ USER_PARAMS_DIR = f"{USER_CONFIG_DIRECTORY}/features"
 def get_root_feature_names():
     feature_names: list[str] = []
 
-    for filename in os.listdir(ROOT_PARAMS_DIR):
-        filepath = f"{ROOT_PARAMS_DIR}/{filename}"
+    for item in os.listdir(ROOT_PARAMS_DIR):
+        path = f"{ROOT_PARAMS_DIR}/{item}"
 
-        if os.path.isfile(filepath) and filename.endswith(".json"):
-            feature_names.append(filename[:-5])
+        if os.path.isdir(path):
+            feature_names.append(item)
 
+    feature_names.remove("vx_feature_utils")
     return feature_names
 
 
@@ -38,30 +38,16 @@ def get_dev_feature_name(dev_directory: str):
     return feature_name
 
 
-def import_module_from_path(name: str, path: str):
-    if not os.path.exists(path):
-        return
-
-    module_spec = importlib.util.spec_from_file_location(name, path)
-
-    if module_spec:
-        module = importlib.util.module_from_spec(module_spec)
-        module_spec.loader.exec_module(module)
-        return module
-
-
 def get_params_from_dev_directory(
     directory: str,
-) -> tuple[str, FeatureParams, ModuleType | None]:
+) -> tuple[str, FeatureParams, FeatureContent]:
     feature_name = get_dev_feature_name(directory)
 
-    module = import_module_from_path(
-        f"{feature_name}_module",
-        f"{directory}/config/root/{feature_name}_module/__init__.py",
-    )
+    module = importlib.import_module(feature_name)
+    feature_content: FeatureContent = module.feature
 
     params = FeatureParams.create(
-        f"{directory}/config/root/{feature_name}.json",
+        feature_content.root_params_dict,
         f"{directory}/config/user/{feature_name}.json",
         True,
     )
@@ -71,32 +57,27 @@ def get_params_from_dev_directory(
 
 def get_params_from_feature_name(
     feature_name: str,
-) -> tuple[FeatureParams, ModuleType | None]:
+) -> tuple[FeatureParams, FeatureContent]:
 
-    module = import_module_from_path(
-        f"{feature_name}_module",
-        f"{ROOT_PARAMS_DIR}/{feature_name}_module/__init__.py",
-    )
+    module = importlib.import_module(feature_name)
+    feature_content: FeatureContent = module.feature
 
     params = FeatureParams.create(
-        f"{ROOT_PARAMS_DIR}/{feature_name}.json",
+        feature_content.root_params_dict,
         f"{USER_PARAMS_DIR}/{feature_name}.json",
     )
 
-    return params, module
+    return params, feature_content
 
 
 def get_params_from_entry(
     entry: str,
-) -> tuple[str, FeatureParams, ModuleType | None]:
+) -> tuple[str, FeatureParams, FeatureContent]:
     if os.path.exists(entry) and os.path.isdir(entry):
         return get_params_from_dev_directory(entry)
 
-    try:
-        params, module = get_params_from_feature_name(entry)
-        return entry, params, module
-    except MissingFileError:
-        raise ValueError(f"{entry} (Bad entry)")
+    params, feature_content = get_params_from_feature_name(entry)
+    return entry, params, feature_content
 
 
 class Parameters:
@@ -107,5 +88,5 @@ class Parameters:
     @staticmethod
     def get(
         entry: str,
-    ) -> tuple[str, FeatureParams, ModuleType | None]:
+    ) -> tuple[str, FeatureParams, FeatureContent]:
         return get_params_from_entry(entry)

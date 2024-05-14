@@ -1,7 +1,15 @@
+from vx_feature_utils import (
+    LevelKeys,
+    AnchorEdgeKeys,
+    AlignmentKeys,
+    MarginParams,
+    LayerFrameParams,
+)
 from ..layerise import Edges, Levels, Margins, layerise_window
-from ..parameters import LevelKeys, AnchorEdgeKeys, AlignmentKeys, MarginParams
-from ..parameters import LayerFrameParams
-from ..Gtk_imports import Gtk, Gdk
+
+# from ..parameters import LevelKeys, AnchorEdgeKeys, AlignmentKeys, MarginParams
+# from ..parameters import LayerFrameParams
+from ..Gtk_imports import Gtk
 
 anchor_key_values = {
     "top_start": [Edges.top, Edges.left],

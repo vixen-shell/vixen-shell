@@ -1,7 +1,9 @@
+from vx_feature_utils import FeatureParams
 from typing import Callable, Coroutine, Any
 from fastapi import WebSocket
 from .pipe_events import InputEvent, OutputEvent
-from .parameters import FeatureParams
+
+# from .parameters import FeatureParams
 
 Dispatcher = Callable[[OutputEvent, str | None], Coroutine[Any, Any, None]]
 

@@ -8,4 +8,5 @@ License           : GPL3
 
 from .Feature import Feature
 from .Features import Features
-from .parameters import *
+
+# from .parameters import *

@@ -1,7 +1,8 @@
 import asyncio
-from types import ModuleType
 from typing import Literal
-from .parameters import Parameters, FeatureParams
+from vx_feature_utils import FeatureContent, get_feature_content
+
+# from .parameters import Parameters, FeatureParams
 from .FrameHandler import FrameHandler
 from .FeaturePipe import FeaturePipe
 from .pipe_events import InputEvent
@@ -10,15 +11,19 @@ from ..logger import Log, Logger
 
 
 class Feature(FeatureState, FeaturePipe):
-    def __init__(self, name: str, params: FeatureParams, module: ModuleType = None):
+    def __init__(self, feature_content: FeatureContent):
+        params = feature_content.get_params()
+
         FeatureState.__init__(self, params)
         FeaturePipe.__init__(self)
 
-        self.name = name
+        self.name = feature_content.feature_name
         self.dev_mode = params.dev
-        self.frames = FrameHandler(name, params)
+        self.frames = FrameHandler(self.name, params)
 
-        self.module = module
+        self.data_handlers = feature_content.data_handlers
+        self.action_handlers = feature_content.action_handlers
+        self.websocket_handlers = feature_content.websocket_handlers
 
         self.is_started = False
         self._listen_logs = False
@@ -28,17 +33,8 @@ class Feature(FeatureState, FeaturePipe):
 
     @staticmethod
     def load(entry: str):
-        name, params, module = Parameters.get(entry)
-        return name, Feature(name, params, module)
-
-    def get_module_attribute(self, module: Literal["Data", "Actions"], attribute: str):
-        if not self.is_started:
-            raise Exception(f"Feature '{self.name}' is not started")
-
-        if not self.module:
-            raise Exception(f"Feature '{self.name}' module not have any module")
-
-        return getattr(getattr(self.module, module), attribute)
+        feature_name, feature_content = get_feature_content(entry)
+        return feature_name, Feature(feature_content)
 
     @property
     def frame_ids(self):
@@ -53,6 +49,7 @@ class Feature(FeatureState, FeaturePipe):
             self.open_pipe()
             self.frames.init(self.dev_mode)
             self.is_started = True
+            Logger.log(f"[{self.name}]: feature started")
 
     async def stop(self):
         if self.is_started:
@@ -62,6 +59,7 @@ class Feature(FeatureState, FeaturePipe):
             await self.close_pipe()
             self.frames.cleanup()
             self.is_started = False
+            Logger.log(f"[{self.name}]: feature stopped")
 
     def open_frame(self, frame_id: str):
         if self.is_started:

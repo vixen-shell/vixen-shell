@@ -1,5 +1,7 @@
+from vx_feature_utils import FrameParams
 from .layerise_frame import layerise_frame
-from ..parameters import FrameParams
+
+# from ..parameters import FrameParams
 from ..Gtk_imports import GLib, Gtk, Gdk, WebKit2
 from ...globals import get_frame_uri
 

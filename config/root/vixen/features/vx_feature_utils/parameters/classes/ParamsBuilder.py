@@ -1,14 +1,12 @@
 from typing import Any, Literal
 from pydantic import ValidationError
-from ..utils import read_json
+from ...utils import read_json
 
 from ..models import (
-    RootFeatureParams,
     RootFeatureParamsDict,
     RootFrameParamsDict,
     RootLayerFrameParamsDict,
     RootMarginParamsDict,
-    UserFeatureParams,
     UserFeatureParamsDict,
     FeatureParamsDict,
 )
@@ -23,37 +21,12 @@ class ParameterError(Exception):
         )
 
 
-class MissingFileError(Exception):
-    def __init__(self, file_path: str):
-        super().__init__(f"Root configuration file '{file_path}' not found")
-
-
 class ParamsBuilder:
-    def __init__(self, root_file_path: str, user_file_path: str):
-        self.user_file_path = user_file_path
-
-        try:
-            root_dict = read_json(root_file_path)
-
-            if not root_dict:
-                raise MissingFileError(root_file_path)
-
-            self.root_data: RootFeatureParamsDict = RootFeatureParams(
-                **read_json(root_file_path) or {}
-            ).model_dump()
-
-        except ValidationError as error:
-            raise ParameterError(root_file_path, error)
-
-        except MissingFileError as error:
-            raise error
-
-        try:
-            self.data: FeatureParamsDict = self.init_data(
-                UserFeatureParams(**read_json(user_file_path) or {}).model_dump()
-            )
-        except ValidationError as error:
-            raise ParameterError(user_file_path, error)
+    def __init__(
+        self, root_data: RootFeatureParamsDict, user_data: UserFeatureParamsDict
+    ):
+        self.root_data = root_data
+        self.data: FeatureParamsDict = self.init_data(user_data)
 
     def init_data(self, user_data: UserFeatureParamsDict):
         if self.root_data.get("templates"):
@@ -81,8 +54,6 @@ class ParamsBuilder:
             return "__user__"
 
     def build(self):
-        self.data["path"] = self.user_file_path
-
         start = self.root_validator(self.root_data["start"])
         if start != "__user__":
             self.data["start"] = start

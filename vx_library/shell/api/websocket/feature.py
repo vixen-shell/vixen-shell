@@ -90,7 +90,7 @@ async def feature_data_streamer_websocket(websocket: WebSocket, feature_name: st
                 data_handlers: dict[str, DataHandler] = {}
                 for data_handler in init_data.data_handlers:
                     data_handlers[data_handler.name] = DataHandler(
-                        feature.get_module_attribute("Data", data_handler.name),
+                        feature.data_handlers[data_handler.name],
                         data_handler.args,
                     )
 
@@ -104,6 +104,13 @@ async def feature_data_streamer_websocket(websocket: WebSocket, feature_name: st
 
                     await websocket.send_json(data)
                     await asyncio.sleep(interval)
+
+            except KeyError as key_error:
+                await websocket.send_json(
+                    Models.Commons.Error(
+                        message=f"{key_error} not found in '{feature_name}' feature data handlers"
+                    ).model_dump()
+                )
 
             except Exception as exception:
                 await websocket.send_json(

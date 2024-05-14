@@ -227,17 +227,17 @@ async def get_data(
 
     feature = Features.get(feature_name)
 
-    if not feature.is_started:
-        return feature_data_responses(response, 409)(
-            message=f"Feature '{feature_name}' is not started"
-        )
-
     handlers: dict[str, DataHandler] = {}
     for handler in data_handlers:
         try:
             handlers[handler.name] = DataHandler(
-                feature.get_module_attribute("Data", handler.name),
+                feature.data_handlers[handler.name],
                 handler.args,
+            )
+
+        except KeyError as key_error:
+            return feature_data_responses(response, 404)(
+                message=f"{key_error} not found in '{feature_name}' feature data handlers"
             )
 
         except Exception as exception:

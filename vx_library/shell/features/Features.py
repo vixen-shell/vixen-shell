@@ -1,7 +1,8 @@
-import sys
+from vx_feature_utils import get_feature_names
 from typing import List, Dict
 from .Feature import Feature
-from .parameters import Parameters
+
+# from .parameters import Parameters
 from .Gtk_main_loop import Gtk_main_loop
 from ..logger import Logger
 from ..globals import ROOT_CONFIG_DIRECTORY
@@ -40,10 +41,9 @@ class Features:
 
     @staticmethod
     def init():
-        sys.path.append(f"{ROOT_CONFIG_DIRECTORY}/features")
         Gtk_main_loop.run()
 
-        for name in Parameters.get_root_feature_names():
+        for name in get_feature_names():
             try:
                 Features.load(name)
 
@@ -65,7 +65,7 @@ class Features:
         DevMode.toggle(feature)
 
         Features.dict[name] = feature
-        Logger.log(f"'{name}' feature loaded")
+        Logger.log(f"[{name}]: feature loaded")
 
         return name, feature.is_started
 
@@ -82,7 +82,7 @@ class Features:
             await feature.stop()
 
         del Features.dict[name]
-        Logger.log(f"'{name}' feature unloaded")
+        Logger.log(f"[{name}]: feature unloaded")
 
     @staticmethod
     async def stop():

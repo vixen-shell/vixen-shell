@@ -1,5 +1,7 @@
 from typing import Optional, Dict
 from pydantic import BaseModel, ConfigDict
+
+# from vx_feature_utils import RootFeatureParamsDict
 from .ParamsBuilder import ParamsBuilder
 from ..models import FrameParams
 from ..utils import write_json
@@ -15,8 +17,8 @@ class FeatureParams(BaseModel):
     dev: Optional[bool] = False
 
     @staticmethod
-    def create(root_file_path: str, user_file_path: str, dev: bool = False):
-        builder = ParamsBuilder(root_file_path, user_file_path)
+    def create(root_dict, user_file_path: str, dev: bool = False):
+        builder = ParamsBuilder(root_dict, user_file_path)
 
         params_dict = builder.build()
         params_dict["dev"] = dev

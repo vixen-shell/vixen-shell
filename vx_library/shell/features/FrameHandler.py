@@ -1,7 +1,8 @@
+from vx_feature_utils import FeatureParams
 from typing import Dict, List
-from .Gtk_imports import GLib
 from .frame_view import FrameView
-from .parameters import FeatureParams
+
+# from .parameters import FeatureParams
 
 
 class FrameHandler:
@@ -11,8 +12,9 @@ class FrameHandler:
         self.frames: Dict[str, FrameView] = {}
 
     def init(self, dev_mode: bool = False):
-        for id, param in self.frames_params.items():
-            self.frames[id] = FrameView(self.feature_name, id, param, dev_mode)
+        if self.frames_params:
+            for id, param in self.frames_params.items():
+                self.frames[id] = FrameView(self.feature_name, id, param, dev_mode)
 
     def open(self, id: str):
         self.frames[id].show()
