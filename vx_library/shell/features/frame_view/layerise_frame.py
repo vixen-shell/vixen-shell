@@ -6,9 +6,6 @@ from vx_feature_utils import (
     LayerFrameParams,
 )
 from ..layerise import Edges, Levels, Margins, layerise_window
-
-# from ..parameters import LevelKeys, AnchorEdgeKeys, AlignmentKeys, MarginParams
-# from ..parameters import LayerFrameParams
 from ..Gtk_imports import Gtk
 
 anchor_key_values = {

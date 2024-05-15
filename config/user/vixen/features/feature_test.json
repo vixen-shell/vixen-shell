@@ -1,7 +1,7 @@
 {
-    "autostart": true,
     "frames": {
-        "main": {
+        "test": {
+            "template": "temp_test",
             "show_on_startup": true
         }
     }

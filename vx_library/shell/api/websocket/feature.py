@@ -19,6 +19,34 @@ def get_feature(feature_name: str):
 
 
 # ---------------------------------------------- - - -
+# FEATURE WEBSOCKET
+#
+
+
+@api.websocket("/feature/{feature_name}/socket/{handler_name}")
+async def feature_data_streamer_websocket(
+    websocket: WebSocket, feature_name: str, handler_name: str
+):
+    await websocket.accept()
+
+    try:
+        feature = get_feature(feature_name)
+    except Exception as exception:
+        await websocket.close(reason=str(exception))
+        return
+
+    try:
+        socket_handler = feature.websocket_handlers[handler_name]
+    except KeyError as key_error:
+        await websocket.close(
+            reason=f"{key_error} not found in '{feature_name}' feature websocket handlers"
+        )
+        return
+
+    await socket_handler(websocket)
+
+
+# ---------------------------------------------- - - -
 # FEATURE PIPE WEBSOCKET
 #
 

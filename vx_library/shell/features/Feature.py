@@ -1,8 +1,5 @@
 import asyncio
-from typing import Literal
 from vx_feature_utils import FeatureContent, get_feature_content
-
-# from .parameters import Parameters, FeatureParams
 from .FrameHandler import FrameHandler
 from .FeaturePipe import FeaturePipe
 from .pipe_events import InputEvent
@@ -18,8 +15,11 @@ class Feature(FeatureState, FeaturePipe):
         FeaturePipe.__init__(self)
 
         self.name = feature_content.feature_name
-        self.dev_mode = params.dev
+        self.dev_mode = params.dev_mode
         self.frames = FrameHandler(self.name, params)
+
+        self.startup_handler = feature_content.startup_handler
+        self.shutdown_handler = feature_content.shutdown_handler
 
         self.data_handlers = feature_content.data_handlers
         self.action_handlers = feature_content.action_handlers
@@ -28,12 +28,13 @@ class Feature(FeatureState, FeaturePipe):
         self.is_started = False
         self._listen_logs = False
 
-        if params.start and not params.dev:
+        if params.autostart and not params.dev_mode:
             self.start()
 
     @staticmethod
     def load(entry: str):
         feature_name, feature_content = get_feature_content(entry)
+        feature_content.logger = Logger
         return feature_name, Feature(feature_content)
 
     @property
@@ -48,6 +49,10 @@ class Feature(FeatureState, FeaturePipe):
         if not self.is_started:
             self.open_pipe()
             self.frames.init(self.dev_mode)
+
+            if self.startup_handler:
+                self.startup_handler()
+
             self.is_started = True
             Logger.log(f"[{self.name}]: feature started")
 
@@ -56,8 +61,12 @@ class Feature(FeatureState, FeaturePipe):
             if self.listen_logs:
                 self.listen_logs = False
 
+            if self.shutdown_handler:
+                self.shutdown_handler()
+
             await self.close_pipe()
             self.frames.cleanup()
+
             self.is_started = False
             Logger.log(f"[{self.name}]: feature stopped")
 

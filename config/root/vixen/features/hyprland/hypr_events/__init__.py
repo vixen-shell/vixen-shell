@@ -2,9 +2,8 @@
 Author            : Nohavye
 Author's Email    : noha.poncelet@gmail.com
 Repository        : https://github.com/vixen-shell/vixen-shell.git
-Description       : vixen shell api features library.
+Description       : vixen shell api hype events feature.
 License           : GPL3
 """
 
-from .Feature import Feature
-from .Features import Features
+from .HyprEventsListener import HyprEventsListener

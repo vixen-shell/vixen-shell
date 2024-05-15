@@ -1,8 +1,6 @@
 from vx_feature_utils import get_feature_names
 from typing import List, Dict
 from .Feature import Feature
-
-# from .parameters import Parameters
 from .Gtk_main_loop import Gtk_main_loop
 from ..logger import Logger
 from ..globals import ROOT_CONFIG_DIRECTORY
@@ -86,6 +84,10 @@ class Features:
 
     @staticmethod
     async def stop():
+        for feature in Features.dict.values():
+            if feature.is_started:
+                await feature.stop()
+
         Gtk_main_loop.quit()
 
     @staticmethod

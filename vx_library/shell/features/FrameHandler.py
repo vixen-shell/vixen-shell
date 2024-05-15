@@ -2,8 +2,6 @@ from vx_feature_utils import FeatureParams
 from typing import Dict, List
 from .frame_view import FrameView
 
-# from .parameters import FeatureParams
-
 
 class FrameHandler:
     def __init__(self, feature_name: str, feature_params: FeatureParams):
