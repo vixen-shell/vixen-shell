@@ -10,9 +10,6 @@ FRONT_DEV_PORT = 5173
 # ---------------------------------------------- - - -
 # PATH
 
-HOME_DIRECTORY = os.path.expanduser("~")
-USER_CONFIG_DIRECTORY = f"{HOME_DIRECTORY}/.config/vixen"
-ROOT_CONFIG_DIRECTORY = f"/usr/share/vixen"
 FRONT_DIST_DIRECTORY = "/var/opt/vx-front-main/dist"
 
 # ---------------------------------------------- - - -

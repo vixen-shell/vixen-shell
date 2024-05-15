@@ -3,7 +3,6 @@ from typing import List, Dict
 from .Feature import Feature
 from .Gtk_main_loop import Gtk_main_loop
 from ..logger import Logger
-from ..globals import ROOT_CONFIG_DIRECTORY
 
 
 class DevMode:

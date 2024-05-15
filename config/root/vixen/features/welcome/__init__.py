@@ -11,7 +11,9 @@ feature = define_feature(
             "about": {
                 "name": "About Vixen Shell",
                 "route": "about",
-                "layer_frame": {"monitor_id": 2},
+                "layer_frame": {
+                    "monitor_id": 2,
+                },
             },
         },
         "state": "disable",

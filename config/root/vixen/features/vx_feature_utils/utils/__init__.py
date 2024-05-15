@@ -1,13 +1,7 @@
 import os, json
 
-# ROOT_PARAMS_DIRECTORY = f"/usr/share/vixen/features"
-# USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
-ROOT_PARAMS_DIRECTORY = (
-    "/home/noha/Workflow/final/vixen-shell/config/root/vixen/features"
-)
-USER_PARAMS_DIRECTORY = (
-    "/home/noha/Workflow/final/vixen-shell/config/user/vixen/features"
-)
+ROOT_PARAMS_DIRECTORY = f"/usr/share/vixen/features"
+USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
 
 
 def read_json(file_path: str) -> dict | None:
