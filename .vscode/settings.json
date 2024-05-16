@@ -1,0 +1,8 @@
+{
+    "python.autoComplete.extraPaths": [
+        "./config/root/vixen/features"
+    ],
+    "python.analysis.extraPaths": [
+        "./config/root/vixen/features"
+    ]
+}

@@ -156,7 +156,7 @@ def vx_new_feature(path: str, project_name: str):
                 undo_command=Commands.folder_remove(f"/tmp/{project_name}"),
             ),
             RoutineTask(
-                purpose="Patch package file",
+                purpose="Update project name in 'package.json' file",
                 command=Commands.json_patch_feature_name_property(
                     f"/tmp/{project_name}/package.json", f"vx-feature-{project_name}"
                 ),
@@ -169,10 +169,10 @@ def vx_new_feature(path: str, project_name: str):
                 ),
             ),
             RoutineTask(
-                purpose="Setup root config file",
+                purpose="Setup root config module",
                 command=Commands.rename(
-                    f"/tmp/{project_name}/config/root/feature.json",
-                    f"/tmp/{project_name}/config/root/{project_name}.json",
+                    f"/tmp/{project_name}/config/root/feature",
+                    f"/tmp/{project_name}/config/root/{project_name}",
                 ),
             ),
             RoutineTask(
