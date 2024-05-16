@@ -26,11 +26,10 @@ class DevMode:
 
     @staticmethod
     def toggle(feature: Feature):
-        if DevMode.feature_name and DevMode.feature_name == feature.name:
-            DevMode.disable()
-
         if not DevMode.feature_name and feature.dev_mode:
             DevMode.enable(feature.name)
+        elif DevMode.feature_name and DevMode.feature_name == feature.name:
+            DevMode.disable()
 
 
 class Features:
