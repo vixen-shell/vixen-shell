@@ -1,6 +1,6 @@
-from . import feature
+from . import content
 
 
-@feature.action
+@content.action
 def hello_world():
     print("Hello World !!!")

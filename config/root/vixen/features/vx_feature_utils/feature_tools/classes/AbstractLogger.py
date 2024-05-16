@@ -12,7 +12,7 @@ class Log(TypedDict):
 LogListener = Callable[[Log], None]
 
 
-class Logger(ABC):
+class AbstractLogger(ABC):
     @staticmethod
     @abstractmethod
     def log(message: str, level: LogLevel):

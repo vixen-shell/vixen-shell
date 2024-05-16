@@ -15,7 +15,7 @@ from ..models import (
     user_FeatureParams,
     user_FrameParams,
 )
-from ...utils import read_json
+from ..utils import read_json
 
 
 class ParamsBuilder:

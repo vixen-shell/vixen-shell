@@ -1,4 +1,4 @@
-from vx_feature_utils import get_feature_names
+from vx_feature_utils import Utils
 from typing import List, Dict
 from .Feature import Feature
 from .Gtk_main_loop import Gtk_main_loop
@@ -40,7 +40,7 @@ class Features:
     def init():
         Gtk_main_loop.run()
 
-        for name in get_feature_names():
+        for name in Utils.get_feature_names():
             try:
                 Features.load(name)
 

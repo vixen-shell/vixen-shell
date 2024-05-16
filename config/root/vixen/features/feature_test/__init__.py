@@ -1,6 +1,8 @@
-from vx_feature_utils import define_feature
+from vx_feature_utils import Utils
 
-feature = define_feature(
+utils = Utils()
+
+content = utils.define_feature_content(
     {
         "frames": {
             "main": {

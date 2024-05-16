@@ -1,41 +1,63 @@
 import os, sys, importlib
-from .classes import FeatureContent
+from .classes import FeatureContent, AbstractLogger
 from ..feature_params import root_FeatureParams_dict
 
 
-def define_feature(root_params_dict: root_FeatureParams_dict):
-    from inspect import stack, getmodule
+class Utils:
+    from .classes import FeatureContent
 
-    return FeatureContent(getmodule(stack()[1][0]).__package__, root_params_dict)
+    def __init__(self):
+        self.Logger: AbstractLogger = None
 
+    @staticmethod
+    def define_feature_content(root_params_dict: root_FeatureParams_dict):
+        from inspect import stack, getmodule
 
-def get_feature_names():
-    from ..utils import ROOT_PARAMS_DIRECTORY
+        return FeatureContent(getmodule(stack()[1][0]).__package__, root_params_dict)
 
-    feature_names: list[str] = []
+    @staticmethod
+    def get_feature_names():
+        root_params_directory = f"/usr/share/vixen/features"
 
-    for item in os.listdir(ROOT_PARAMS_DIRECTORY):
-        path = f"{ROOT_PARAMS_DIRECTORY}/{item}"
+        feature_names: list[str] = []
 
-        if os.path.isdir(path):
-            feature_names.append(item)
+        for item in os.listdir(root_params_directory):
+            path = f"{root_params_directory}/{item}"
 
-    feature_names.remove("vx_feature_utils")
-    return feature_names
+            if os.path.isdir(path):
+                feature_names.append(item)
 
+        feature_names.remove("vx_feature_utils")
+        return feature_names
 
-def get_feature_content(entry: str) -> tuple[str, FeatureContent]:
-    if os.path.exists(entry) and os.path.isdir(entry):
-        from ..utils import get_dev_feature_name
+    @staticmethod
+    def get_dev_feature_name(dev_directory):
+        root_params_directory = f"{dev_directory}/config/root"
 
-        sys.path.append(f"{entry}/config/root")
+        for item in os.listdir(root_params_directory):
+            path = f"{root_params_directory}/{item}"
 
-        feature_name = get_dev_feature_name(entry)
-        feature_content: FeatureContent = importlib.import_module(feature_name).feature
-        feature_content.dev_user_params_filepath = (
-            f"{entry}/config/user/{feature_name}.json"
-        )
+            if os.path.isdir(path):
+                return item
 
-        return feature_name, feature_content
+    @staticmethod
+    def get_feature_content(entry: str):
 
-    return entry, importlib.import_module(entry).feature
+        if os.path.exists(entry) and os.path.isdir(entry):
+            sys.path.append(f"{entry}/config/root")
+            feature_name = Utils.get_dev_feature_name(entry)
+        else:
+            feature_name = entry
+
+        feature_module = importlib.import_module(feature_name)
+
+        utils: Utils = getattr(feature_module, "utils", None)
+
+        try:
+            content: FeatureContent = getattr(feature_module, "content")
+        except AttributeError as attribute_error:
+            raise Exception(
+                f"[{feature_name}]: Feature content not found ({str(attribute_error)})"
+            )
+
+        return content, utils

@@ -1,12 +1,12 @@
 import psutil
-from . import feature
+from . import content
 
 
-@feature.data
+@content.data
 def cpu_usage(percpu: bool = False):
     return psutil.cpu_percent(percpu=percpu)
 
 
-@feature.data
+@content.data
 def ram_usage():
     return psutil.virtual_memory().percent

@@ -1,5 +1,5 @@
 import asyncio
-from vx_feature_utils import FeatureContent, get_feature_content
+from vx_feature_utils import Utils
 from .FrameHandler import FrameHandler
 from .FeaturePipe import FeaturePipe
 from .pipe_events import InputEvent
@@ -8,8 +8,8 @@ from ..logger import Log, Logger
 
 
 class Feature(FeatureState, FeaturePipe):
-    def __init__(self, feature_content: FeatureContent):
-        params = feature_content.get_params()
+    def __init__(self, feature_content: Utils.FeatureContent):
+        params = feature_content.params
 
         FeatureState.__init__(self, params)
         FeaturePipe.__init__(self)
@@ -33,9 +33,14 @@ class Feature(FeatureState, FeaturePipe):
 
     @staticmethod
     def load(entry: str):
-        feature_name, feature_content = get_feature_content(entry)
-        feature_content.logger = Logger
-        return feature_name, Feature(feature_content)
+        content, utils = Utils.get_feature_content(entry)
+
+        content.init_params(entry)
+
+        if utils:
+            utils.Logger = Logger
+
+        return content.feature_name, Feature(content)
 
     @property
     def frame_ids(self):
