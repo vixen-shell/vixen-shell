@@ -13,6 +13,10 @@ class FeatureContent:
     def __init__(self, package_name: str, root_params_dict: root_FeatureParams_dict):
         self.feature_name = package_name
         self.root_params_dict = root_params_dict
+        self.user_params_filepath = f"{USER_PARAMS_DIRECTORY}/{package_name}.json"
+        self.sys_path = None
+        self.dev_mode = False
+
         self.params = None
 
         self.startup_handler = None
@@ -24,14 +28,16 @@ class FeatureContent:
 
     def init_params(self, entry: str):
         try:
+            if not entry == self.feature_name:
+                self.user_params_filepath = (
+                    f"{entry}/config/user/{self.feature_name}.json"
+                )
+                self.dev_mode = True
+
             self.params = FeatureParams.create(
                 root_params_dict=self.root_params_dict,
-                user_filepath=(
-                    f"{USER_PARAMS_DIRECTORY}/{self.feature_name}.json"
-                    if entry == self.feature_name
-                    else f"{entry}/config/user/{self.feature_name}.json"
-                ),
-                dev_mode=False if entry == self.feature_name else True,
+                user_filepath=self.user_params_filepath,
+                dev_mode=self.dev_mode,
             )
         except ParamsError as params_error:
             raise Exception(f"[{self.feature_name}]: {str(params_error)}")

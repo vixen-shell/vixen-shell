@@ -13,7 +13,7 @@ def get_feature(feature_name: str):
         raise Exception(f"Feature '{feature_name}' not found")
 
     if not feature.is_started:
-        raise Exception(f"Feature '{feature.name}' is not started")
+        raise Exception(f"Feature '{feature_name}' is not started")
 
     return feature
 
@@ -36,7 +36,7 @@ async def feature_data_streamer_websocket(
         return
 
     try:
-        socket_handler = feature.websocket_handlers[handler_name]
+        socket_handler = feature.content.websocket_handlers[handler_name]
     except KeyError as key_error:
         await websocket.close(
             reason=f"{key_error} not found in '{feature_name}' feature websocket handlers"
@@ -118,7 +118,7 @@ async def feature_data_streamer_websocket(websocket: WebSocket, feature_name: st
                 data_handlers: dict[str, DataHandler] = {}
                 for data_handler in init_data.data_handlers:
                     data_handlers[data_handler.name] = DataHandler(
-                        feature.data_handlers[data_handler.name],
+                        feature.content.data_handlers[data_handler.name],
                         data_handler.args,
                     )
 

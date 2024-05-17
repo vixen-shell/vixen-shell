@@ -42,19 +42,34 @@ class Utils:
 
     @staticmethod
     def get_feature_content(entry: str):
+        sys_path = None
 
         if os.path.exists(entry) and os.path.isdir(entry):
-            sys.path.append(f"{entry}/config/root")
+            sys_path = f"{entry}/config/root"
             feature_name = Utils.get_dev_feature_name(entry)
         else:
             feature_name = entry
 
-        feature_module = importlib.import_module(feature_name)
+        try:
+            if sys_path:
+                sys.path.append(sys_path)
+
+            feature_module = importlib.import_module(feature_name)
+
+        except:
+            if sys_path and sys_path in sys.path:
+                sys.path.remove(sys_path)
+
+            raise
 
         utils: Utils = getattr(feature_module, "utils", None)
 
         try:
             content: FeatureContent = getattr(feature_module, "content")
+
+            if sys_path:
+                content.sys_path = sys_path
+
         except AttributeError as attribute_error:
             raise Exception(
                 f"[{feature_name}]: Feature content not found ({str(attribute_error)})"

@@ -8,27 +8,21 @@ from ..logger import Log, Logger
 
 
 class Feature(FeatureState, FeaturePipe):
-    def __init__(self, feature_content: Utils.FeatureContent):
-        params = feature_content.params
-
-        FeatureState.__init__(self, params)
+    def __init__(self, content: Utils.FeatureContent):
+        FeatureState.__init__(self, content.params)
         FeaturePipe.__init__(self)
 
-        self.name = feature_content.feature_name
-        self.dev_mode = params.dev_mode
-        self.frames = FrameHandler(self.name, params)
+        self.content = content
 
-        self.startup_handler = feature_content.startup_handler
-        self.shutdown_handler = feature_content.shutdown_handler
-
-        self.data_handlers = feature_content.data_handlers
-        self.action_handlers = feature_content.action_handlers
-        self.websocket_handlers = feature_content.websocket_handlers
+        self.frames = FrameHandler(
+            feature_name=content.feature_name,
+            feature_params=content.params,
+        )
 
         self.is_started = False
         self._listen_logs = False
 
-        if params.autostart and not params.dev_mode:
+        if content.params.autostart and not content.dev_mode:
             self.start()
 
     @staticmethod
@@ -53,27 +47,27 @@ class Feature(FeatureState, FeaturePipe):
     def start(self):
         if not self.is_started:
             self.open_pipe()
-            self.frames.init(self.dev_mode)
+            self.frames.init(self.content.dev_mode)
 
-            if self.startup_handler:
-                self.startup_handler()
+            if self.content.startup_handler:
+                self.content.startup_handler()
 
             self.is_started = True
-            Logger.log(f"[{self.name}]: feature started")
+            Logger.log(f"[{self.content.feature_name}]: feature started")
 
     async def stop(self):
         if self.is_started:
             if self.listen_logs:
                 self.listen_logs = False
 
-            if self.shutdown_handler:
-                self.shutdown_handler()
+            if self.content.shutdown_handler:
+                self.content.shutdown_handler()
 
             await self.close_pipe()
             self.frames.cleanup()
 
             self.is_started = False
-            Logger.log(f"[{self.name}]: feature stopped")
+            Logger.log(f"[{self.content.feature_name}]: feature stopped")
 
     def open_frame(self, frame_id: str):
         if self.is_started:

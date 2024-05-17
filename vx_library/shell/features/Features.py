@@ -1,3 +1,4 @@
+import sys
 from vx_feature_utils import Utils
 from typing import List, Dict
 from .Feature import Feature
@@ -26,9 +27,14 @@ class DevMode:
 
     @staticmethod
     def toggle(feature: Feature):
-        if not DevMode.feature_name and feature.dev_mode:
-            DevMode.enable(feature.name)
-        elif DevMode.feature_name and DevMode.feature_name == feature.name:
+        if not DevMode.feature_name and feature.content.dev_mode:
+            DevMode.enable(feature.content.feature_name)
+
+        elif (
+            DevMode.feature_name
+            and DevMode.feature_name == feature.content.feature_name
+        ):
+            sys.path.remove(feature.content.sys_path)
             DevMode.disable()
 
 

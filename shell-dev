@@ -1,0 +1,9 @@
+#!./.venv/bin/python
+
+import os, argparse, sys
+
+os.environ["GDK_BACKEND"] = "wayland"
+from vx_library import Manager
+
+sys.path.append(f"{os.getcwd()}/config/root/vixen/features")
+Manager.Shell.open()
