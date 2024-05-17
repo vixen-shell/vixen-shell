@@ -1,6 +1,6 @@
 from . import content
 
 
-@content.action
+@content.add("action")
 def hello_world():
     print("Hello World !!!")

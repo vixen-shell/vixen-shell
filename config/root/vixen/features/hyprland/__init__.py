@@ -1,9 +1,8 @@
 from vx_feature_utils import Utils
 from fastapi import WebSocket
 
-utils = Utils()
-
-content = utils.define_feature_content({"autostart": True})
+utils = Utils.define_feature_utils()
+content = Utils.define_feature_content({"autostart": True})
 
 from .hypr_events import HyprEventsListener
 
@@ -18,7 +17,7 @@ def on_shutdown():
     HyprEventsListener.stop()
 
 
-@content.websocket
+@content.add("websocket")
 async def events(websocket: WebSocket):
     try:
         HyprEventsListener.attach_websocket(websocket)

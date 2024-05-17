@@ -1,22 +1,24 @@
 import os, sys, importlib
-from .classes import FeatureContent, AbstractLogger
 from ..feature_params import root_FeatureParams_dict
 
 
 class Utils:
-    from .classes import FeatureContent
-
-    def __init__(self):
-        self.Logger: AbstractLogger = None
+    from .classes import FeatureUtils, FeatureContent
 
     @staticmethod
-    def define_feature_content(root_params_dict: root_FeatureParams_dict):
+    def define_feature_utils():
+        return Utils.FeatureUtils()
+
+    @staticmethod
+    def define_feature_content(root_params_dict: root_FeatureParams_dict = {}):
         from inspect import stack, getmodule
 
-        return FeatureContent(getmodule(stack()[1][0]).__package__, root_params_dict)
+        return Utils.FeatureContent(
+            getmodule(stack()[1][0]).__package__, root_params_dict
+        )
 
     @staticmethod
-    def get_feature_names():
+    def get_root_feature_names():
         root_params_directory = f"/usr/share/vixen/features"
 
         feature_names: list[str] = []
@@ -62,10 +64,10 @@ class Utils:
 
             raise
 
-        utils: Utils = getattr(feature_module, "utils", None)
+        utils: Utils.FeatureUtils | None = getattr(feature_module, "utils", None)
 
         try:
-            content: FeatureContent = getattr(feature_module, "content")
+            content: Utils.FeatureContent = getattr(feature_module, "content")
 
             if sys_path:
                 content.sys_path = sys_path

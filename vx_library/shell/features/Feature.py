@@ -22,19 +22,22 @@ class Feature(FeatureState, FeaturePipe):
         self.is_started = False
         self._listen_logs = False
 
-        if content.params.autostart and not content.dev_mode:
-            self.start()
-
     @staticmethod
     def load(entry: str):
         content, utils = Utils.get_feature_content(entry)
-
         content.init_params(entry)
 
-        if utils:
-            utils.Logger = Logger
+        feature = Feature(content)
 
-        return content.feature_name, Feature(content)
+        if utils:
+            from .Features import Features
+
+            utils.init(Logger, feature, Features)
+
+        if content.params.autostart and not content.dev_mode:
+            feature.start()
+
+        return content.feature_name, feature
 
     @property
     def frame_ids(self):

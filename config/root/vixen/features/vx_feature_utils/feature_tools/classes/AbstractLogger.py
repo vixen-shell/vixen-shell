@@ -13,17 +13,28 @@ LogListener = Callable[[Log], None]
 
 
 class AbstractLogger(ABC):
-    @staticmethod
     @abstractmethod
-    def log(message: str, level: LogLevel):
+    def log(self, message: str, level: LogLevel = "INFO"):
         pass
 
-    @staticmethod
     @abstractmethod
-    def add_listener(listener: LogListener):
+    def add_listener(self, listener: LogListener):
         pass
 
-    @staticmethod
     @abstractmethod
-    def remove_listener(listener: LogListener):
+    def remove_listener(self, listener: LogListener):
         pass
+
+
+def get_logger_reference(logger):
+    class LoggerReference(AbstractLogger):
+        def log(self, message: str, level: LogLevel = "INFO"):
+            logger.log(message, level)
+
+        def add_listener(self, listener: LogListener):
+            logger.add_listener(listener)
+
+        def remove_listener(self, listener: LogListener):
+            logger.remove_listener(listener)
+
+    return LoggerReference()

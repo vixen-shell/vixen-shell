@@ -30,14 +30,14 @@ class HyprEventsListener:
     @staticmethod
     def start():
         if not HyprEventsListener._task:
-            utils.Logger.log(f"[{content.feature_name}]: Start event listener")
+            utils.logger.log(f"[{content.feature_name}]: Start event listener")
             HyprEventsListener._task = asyncio.create_task(
                 HyprEventsListener.listener_task()
             )
 
     @staticmethod
     def stop():
-        utils.Logger.log(f"[{content.feature_name}]: Stop event listener")
+        utils.logger.log(f"[{content.feature_name}]: Stop event listener")
         HyprEventsListener._task.cancel()
 
     @staticmethod

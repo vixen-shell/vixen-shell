@@ -45,7 +45,7 @@ class Features:
     def init():
         Gtk_main_loop.run()
 
-        for name in Utils.get_feature_names():
+        for name in Utils.get_root_feature_names():
             try:
                 Features.load(name)
 
