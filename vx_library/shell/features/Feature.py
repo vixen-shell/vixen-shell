@@ -51,10 +51,7 @@ class Feature(FeatureState, FeaturePipe):
         if not self.is_started:
             self.open_pipe()
             self.frames.init(self.content.dev_mode)
-
-            if self.content.startup_handler:
-                self.content.startup_handler()
-
+            self.content.startup_sequence()
             self.is_started = True
             Logger.log(f"[{self.content.feature_name}]: feature started")
 
@@ -63,9 +60,7 @@ class Feature(FeatureState, FeaturePipe):
             if self.listen_logs:
                 self.listen_logs = False
 
-            if self.content.shutdown_handler:
-                self.content.shutdown_handler()
-
+            self.content.shutdown_sequence()
             await self.close_pipe()
             self.frames.cleanup()
 

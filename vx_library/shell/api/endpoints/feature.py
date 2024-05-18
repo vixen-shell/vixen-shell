@@ -231,7 +231,7 @@ async def get_data(
     for handler in data_handlers:
         try:
             handlers[handler.name] = DataHandler(
-                feature.content.data_handlers[handler.name],
+                feature.content.get("data", handler.name),
                 handler.args,
             )
 

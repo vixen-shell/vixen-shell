@@ -17,7 +17,7 @@ def on_shutdown():
     HyprEventsListener.stop()
 
 
-@content.add("websocket")
+@content.add("socket")
 async def events(websocket: WebSocket):
     try:
         HyprEventsListener.attach_websocket(websocket)

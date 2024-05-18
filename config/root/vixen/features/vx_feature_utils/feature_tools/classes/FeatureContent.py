@@ -7,6 +7,17 @@ from ...feature_params import (
 )
 
 USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
+ContentType = Literal["action", "data", "socket"]
+
+
+class Contents:
+    def __init__(self):
+        self.action: dict[str, Callable] = {}
+        self.data: dict[str, Callable] = {}
+        self.socket: dict[str, Callable] = {}
+
+        self.shutdown: Callable = None
+        self.startup: Callable = None
 
 
 class FeatureContent:
@@ -19,21 +30,7 @@ class FeatureContent:
         self.dev_mode = False
 
         self.params = None
-
-        self.startup_handler = None
-        self.shutdown_handler = None
-
-        self.data_handlers: dict[str, Callable] = {}
-        self.action_handlers: dict[str, Callable] = {}
-        self.websocket_handlers = {}
-
-        self.contents = {
-            "startup": None,
-            "shutdown": None,
-            "data": {},
-            "action": {},
-            "socket": {},
-        }
+        self.contents = Contents()
 
     def init_params(self, entry: str):
         try:
@@ -51,37 +48,57 @@ class FeatureContent:
         except ParamsError as params_error:
             raise Exception(f"[{self.feature_name}]: {str(params_error)}")
 
-    def add(self, content_type: Literal["data", "action", "websocket"]):
-        def decorator(callback):
-            if content_type == "data":
-                self.data_handlers[callback.__name__] = callback
+    def add(self, content_type: ContentType):
+        def decorator(callback: Callable):
+            try:
+                sub_contents: dict = getattr(self.contents, content_type)
+            except AttributeError as attribute_error:
+                callback_filename = callback.__code__.co_filename
+                callback_line_number = callback.__code__.co_firstlineno
+                raise Exception(
+                    f"Content type '{content_type}' not exists: Error in file '{callback_filename}' (line: {str(callback_line_number)})"
+                )
 
-            if content_type == "action":
-                self.action_handlers[callback.__name__] = callback
+            if sub_contents.get(callback.__name__):
+                raise Exception(
+                    f"Feature already has content of type '{content_type}' named '{callback.__name__}'"
+                )
 
-            if content_type == "websocket":
-                self.websocket_handlers[callback.__name__] = callback
-
+            sub_contents[callback.__name__] = callback
             return callback
 
         return decorator
 
-    def on_startup(self, callback):
-        self.startup_handler = callback
+    def get(self, content_type: ContentType, name: str):
+        sub_contents: dict = getattr(self.contents, content_type)
+        return sub_contents[name]
+
+    def on_startup(self, callback: Callable):
+        if self.contents.startup:
+            callback_filename = callback.__code__.co_filename
+            callback_line_number = callback.__code__.co_firstlineno
+            raise Exception(
+                f"Feature already has a startup sequence: Error in file '{callback_filename}' (line: {str(callback_line_number)})"
+            )
+
+        self.contents.startup = callback
         return callback
 
-    def on_shutdown(self, callback):
-        self.shutdown_handler = callback
+    def on_shutdown(self, callback: Callable):
+        if self.contents.shutdown:
+            callback_filename = callback.__code__.co_filename
+            callback_line_number = callback.__code__.co_firstlineno
+            raise Exception(
+                f"Feature already has a shutdown sequence: Error in file '{callback_filename}' (line: {str(callback_line_number)})"
+            )
+
+        self.contents.shutdown = callback
         return callback
 
-    # def data(self, callback):
-    #     self.data_handlers[callback.__name__] = callback
-    #     return callback
+    def startup_sequence(self):
+        if self.contents.startup:
+            self.contents.startup()
 
-    # def action(self, callback):
-    #     self.action_handlers[callback.__name__] = callback
-    #     return callback
-
-    # def websocket(self, callback):
-    #     self.websocket_handlers[callback.__name__] = callback
-    #     return callback
+    def shutdown_sequence(self):
+        if self.contents.shutdown:
+            self.contents.shutdown()

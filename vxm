@@ -30,6 +30,13 @@ def handle_args(args):
             sys.path.append("/usr/share/vixen/features")
             Manager.Shell.open()
 
+        if args.shell == "open-dev":
+            if not __file__ == "/usr/bin/vxm":
+                sys.path.append(f"{os.getcwd()}/config/root/vixen/features")
+                Manager.Shell.open()
+            else:
+                print("Invalid option in release mode")
+
         if args.shell == "close":
             Manager.Shell.close()
 
@@ -66,7 +73,7 @@ if __name__ == "__main__":
     root_args.add_argument(
         "--shell",
         type=str,
-        choices=["open", "close"],
+        choices=["open", "open-dev", "close"],
         help="Vixen Shell controls.",
     )
     root_args.add_argument(
