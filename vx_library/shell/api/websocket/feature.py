@@ -91,6 +91,10 @@ async def feature_state_websocket(websocket: WebSocket, feature_name: str):
 
     feature.state_clients.append(websocket)
 
+    async def dispatch_event(event: OutputEvent):
+        for websocket in feature.state_clients:
+            await websocket.send_json(event)
+
     try:
         while True:
             try:
@@ -111,7 +115,7 @@ async def feature_state_websocket(websocket: WebSocket, feature_name: str):
                             data={"key": key},
                         )
 
-                    await websocket.send_json(
+                    await dispatch_event(
                         OutputEvent(
                             id="UPDATE",
                             data={
@@ -138,7 +142,7 @@ async def feature_state_websocket(websocket: WebSocket, feature_name: str):
 
                     feature.content.params.state[key] = input_event.data.get("value")
 
-                    await websocket.send_json(
+                    await dispatch_event(
                         OutputEvent(
                             id="UPDATE",
                             data={"key": key, "value": input_event.data.get("value")},
@@ -147,11 +151,14 @@ async def feature_state_websocket(websocket: WebSocket, feature_name: str):
 
                 if input_event.id == "SAVE":
                     feature.content.params.save_state()
-                    await websocket.send_json(
+
+                    await dispatch_event(
                         OutputEvent(id="SAVE", data=feature.content.params.state)
                     )
 
             except ErrorEvent as error_event:
+                print("Error Event")
+
                 Logger.log(
                     f"[{feature_name}]: (State socket) {error_event.data}",
                     "WARNING",
@@ -161,6 +168,8 @@ async def feature_state_websocket(websocket: WebSocket, feature_name: str):
                 )
 
             except ValidationError as exception:
+                print("Validation Error")
+
                 Logger.log(
                     f"[{feature_name}]: (State socket) {str(exception)}",
                     "WARNING",
@@ -169,14 +178,6 @@ async def feature_state_websocket(websocket: WebSocket, feature_name: str):
                     OutputEvent(id="ERROR", data=json.loads(exception.json()))
                 )
 
-            except Exception as exception:
-                Logger.log(
-                    f"[{feature_name}]: (State socket) {str(exception)}",
-                    "WARNING",
-                )
-                await websocket.send_json(
-                    OutputEvent(id="ERROR", data={"message": str(exception)})
-                )
     except:
         feature.state_clients.remove(websocket)
 

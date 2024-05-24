@@ -80,6 +80,9 @@ class Feature(FeatureState, FeaturePipe):
     async def stop(self):
         self.content.shutdown_sequence()
 
+        for websocket in self.state_clients:
+            await websocket.close()
+
         await self.close_pipe()
         self.frames.cleanup()
 
