@@ -3,6 +3,7 @@ from vx_feature_utils import Utils
 from typing import List, Dict
 from .Feature import Feature
 from .Gtk_main_loop import Gtk_main_loop
+from .Gtk_dialog import show_dialog
 from ..logger import Logger
 
 
@@ -50,7 +51,8 @@ class Features:
                 Features.load(name)
 
             except Exception as exception:
-                Logger.log(exception, "WARNING")
+                Logger.log(str(exception), "WARNING")
+                show_dialog(str(exception), "WARNING")
 
         Logger.log(
             f"{'No' if len(Features.dict) == 0 else len(Features.dict)} features initialized"

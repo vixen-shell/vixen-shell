@@ -102,86 +102,13 @@ async def feature_state(
             message=f"Feature '{feature_name}' is not started"
         )
 
+    if not feature.content.params.state_is_enable:
+        return start_responses(response, 409)(
+            message=f"'{feature_name}' feature state is disable"
+        )
+
     return state_responses(response, 200)(
-        name=feature_name, is_started=True, state=feature.state
-    )
-
-
-# ---------------------------------------------- - - -
-# LOG LISTENER FEATURE
-#
-
-logListener_responses = ModelResponses(
-    {
-        200: Models.Features.LogListener,
-        404: Models.Commons.Error,
-        409: Models.Commons.Error,
-    }
-)
-
-
-@api.get(
-    "/feature/{feature_name}/log_listener",
-    description="Get feature log listener state",
-    responses=logListener_responses.responses,
-)
-async def feature_log_listener_state(
-    response: Response, feature_name: str = Path(description="Feature name")
-):
-    if not Features.exists(feature_name):
-        return logListener_responses(response, 404)(
-            message=f"Feature '{feature_name}' not found"
-        )
-
-    feature = Features.get(feature_name)
-
-    if not feature.is_started:
-        return logListener_responses(response, 409)(
-            message=f"Feature '{feature_name}' is not started"
-        )
-
-    return logListener_responses(response, 200)(
-        name=feature_name, is_started=True, log_listener=feature.listen_logs
-    )
-
-
-# ---------------------------------------------- - - -
-# TOGGLE LOG LISTENER
-#
-
-toggle_logListener_responses = ModelResponses(
-    {
-        200: Models.Features.LogListener,
-        404: Models.Commons.Error,
-        409: Models.Commons.Error,
-    }
-)
-
-
-@api.get(
-    "/feature/{feature_name}/log_listener/toggle",
-    description="Toogle feature log listener state",
-    responses=toggle_logListener_responses.responses,
-)
-async def toggle_feature_log_listener_state(
-    response: Response, feature_name: str = Path(description="Feature name")
-):
-    if not Features.exists(feature_name):
-        return toggle_logListener_responses(response, 404)(
-            message=f"Feature '{feature_name}' not found"
-        )
-
-    feature = Features.get(feature_name)
-
-    if not feature.is_started:
-        return toggle_logListener_responses(response, 409)(
-            message=f"Feature '{feature_name}' is not started"
-        )
-
-    feature.listen_logs = not feature.listen_logs
-
-    return toggle_logListener_responses(response, 200)(
-        name=feature_name, is_started=True, log_listener=feature.listen_logs
+        name=feature_name, is_started=True, state=feature.content.params.state
     )
 
 

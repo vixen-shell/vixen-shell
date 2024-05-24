@@ -1,2 +1,2 @@
 from .models import *
-from .classes import FeatureParams, ParamsError
+from .classes import *

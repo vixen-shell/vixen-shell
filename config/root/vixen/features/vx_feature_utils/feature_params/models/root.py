@@ -1,5 +1,5 @@
-from pydantic import BaseModel, ConfigDict
-from typing import TypedDict
+from pydantic import BaseModel, ConfigDict, root_validator
+from typing import Any, TypedDict
 from .types import *
 
 # ---------------------------------------------- - - -
@@ -45,7 +45,14 @@ class root_FeatureParams(BaseModel):
     autostart: bool | Disable | None = None
     frames: dict[str, root_FrameParams] | Disable | None = None
     templates: dict[str, root_FrameParams] | None = None
-    state: dict | Disable | None = None
+    state: Disable | None = None
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.frames == "disable":
+            if self.templates is not None:
+                raise ValueError(
+                    "The 'frames' field is disabled. The 'templates' field should not be defined"
+                )
 
 
 # ---------------------------------------------- - - -
@@ -83,4 +90,4 @@ class root_FeatureParams_dict(TypedDict):
     autostart: bool | Disable
     frames: dict[str, root_FrameParams_dict] | Disable
     templates: dict[str, root_FrameParams_dict]
-    state: dict | Disable
+    state: Disable

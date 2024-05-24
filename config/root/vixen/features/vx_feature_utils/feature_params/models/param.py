@@ -70,7 +70,14 @@ class FrameParams_dict(TypedDict):
     layer_frame: LayerFrameParams_dict
 
 
+from .root import root_FeatureParams_dict
+from .user import user_FeatureParams_dict
+
+
 class FeatureParams_dict(TypedDict):
+    root: root_FeatureParams_dict
+    user: user_FeatureParams_dict
+
     user_filepath: str
     dev_mode: bool
 

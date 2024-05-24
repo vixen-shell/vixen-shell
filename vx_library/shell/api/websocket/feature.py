@@ -1,9 +1,11 @@
-import asyncio
+import asyncio, json
+from typing import TypedDict, Optional
 from fastapi import WebSocket
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, ValidationError
 from ..api import api
 from ...features import Features
 from ...globals import Models
+from ...logger import Logger
 
 
 def get_feature(feature_name: str):
@@ -44,6 +46,139 @@ async def feature_data_streamer_websocket(
         return
 
     await socket_handler(websocket)
+
+
+# ---------------------------------------------- - - -
+# FEATURE STATE WEBSOCKET
+#
+
+
+class OutputEvent(TypedDict):
+    id: str
+    data: Optional[dict]
+
+
+class InputEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    data: dict = None
+
+
+class ErrorEvent(Exception):
+    def __init__(self, event: str, message: str, data: dict = {}) -> None:
+        super().__init__(message)
+        self.event = event
+        self.message = message
+
+        data.update({"event": event, "message": message})
+        self.data = data
+
+
+@api.websocket("/feature/{feature_name}/state")
+async def feature_state_websocket(websocket: WebSocket, feature_name: str):
+    await websocket.accept()
+
+    try:
+        feature = get_feature(feature_name)
+    except Exception as exception:
+        await websocket.close(reason=str(exception))
+        return
+
+    if not feature.content.params.state_is_enable:
+        await websocket.close(reason=f"'{feature_name}' feature state is disable")
+        return
+
+    feature.state_clients.append(websocket)
+
+    try:
+        while True:
+            try:
+                input_event = InputEvent(**await websocket.receive_json())
+
+                if input_event.id == "GET":
+                    if not input_event.data:
+                        raise ErrorEvent("GET", "Missing item data")
+
+                    key = input_event.data.get("key")
+                    if not key:
+                        raise ErrorEvent("GET", "Missing item key")
+
+                    if not key in feature.content.params.state:
+                        raise ErrorEvent(
+                            event="GET",
+                            message="Key not found",
+                            data={"key": key},
+                        )
+
+                    await websocket.send_json(
+                        OutputEvent(
+                            id="UPDATE",
+                            data={
+                                "key": key,
+                                "value": feature.content.params.state[key],
+                            },
+                        )
+                    )
+
+                if input_event.id == "SET":
+                    if not input_event.data:
+                        raise ErrorEvent("SET", "Missing item data")
+
+                    key = input_event.data.get("key")
+                    if not key:
+                        raise ErrorEvent("SET", "Missing item key")
+
+                    if not key in feature.content.params.state:
+                        raise ErrorEvent(
+                            event="SET",
+                            message="Key not found",
+                            data={"key": key},
+                        )
+
+                    feature.content.params.state[key] = input_event.data.get("value")
+
+                    await websocket.send_json(
+                        OutputEvent(
+                            id="UPDATE",
+                            data={"key": key, "value": input_event.data.get("value")},
+                        )
+                    )
+
+                if input_event.id == "SAVE":
+                    feature.content.params.save_state()
+                    await websocket.send_json(
+                        OutputEvent(id="SAVE", data=feature.content.params.state)
+                    )
+
+            except ErrorEvent as error_event:
+                Logger.log(
+                    f"[{feature_name}]: (State socket) {error_event.data}",
+                    "WARNING",
+                )
+                await websocket.send_json(
+                    OutputEvent(id="ERROR", data=error_event.data)
+                )
+
+            except ValidationError as exception:
+                Logger.log(
+                    f"[{feature_name}]: (State socket) {str(exception)}",
+                    "WARNING",
+                )
+                await websocket.send_json(
+                    OutputEvent(id="ERROR", data=json.loads(exception.json()))
+                )
+
+            except Exception as exception:
+                Logger.log(
+                    f"[{feature_name}]: (State socket) {str(exception)}",
+                    "WARNING",
+                )
+                await websocket.send_json(
+                    OutputEvent(id="ERROR", data={"message": str(exception)})
+                )
+    except:
+        feature.state_clients.remove(websocket)
 
 
 # ---------------------------------------------- - - -

@@ -17,8 +17,10 @@ def handle_log_cache(log: Log):
 
 Logger.add_listener(handle_log_cache)
 
-
+# ---------------------------------------------- - - -
 # GET LOGS
+#
+
 logs_responses = ModelResponses({200: Models.Log.Logs})
 
 
@@ -26,6 +28,10 @@ logs_responses = ModelResponses({200: Models.Log.Logs})
 async def get_logs(response: Response):
     return logs_responses(response, 200)(logs=log_cache)
 
+
+# ---------------------------------------------- - - -
+# POST LOG
+#
 
 log_responses = ModelResponses({200: Models.Log.Log})
 

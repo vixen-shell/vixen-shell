@@ -16,7 +16,7 @@ class FeaturePipe:
 
     async def close_pipe(self):
         if self.pipe_is_opened:
-            await self.disconnect_client("Pipe closed")
+            # await self.disconnect_client("Pipe closed")
             self.pipe_is_opened = False
 
     async def connect_client(self, client_id: str, websocket: WebSocket):
@@ -32,18 +32,18 @@ class FeaturePipe:
         if client_id in self.client_websockets:
             del self.client_websockets[client_id]
 
-    async def disconnect_client(self, reason: str, client_id: str | None = None):
-        async def disconnect(id: str):
-            if id in self.client_websockets:
-                await self.client_websockets[id].close(reason=reason)
-                self.remove_client(id)
+    # async def disconnect_client(self, reason: str, client_id: str | None = None):
+    #     async def disconnect(id: str):
+    #         if id in self.client_websockets:
+    #             await self.client_websockets[id].close(reason=reason)
+    #             self.remove_client(id)
 
-        if not client_id:
-            ids = list(self.client_websockets.keys())
-            for id in ids:
-                await disconnect(id)
-        else:
-            await disconnect(client_id)
+    #     if not client_id:
+    #         ids = list(self.client_websockets.keys())
+    #         for id in ids:
+    #             await disconnect(id)
+    #     else:
+    #         await disconnect(client_id)
 
     async def dispatch_event(self, event: OutputEvent, client_id: str | None = None):
         ids = list(self.client_websockets.keys())

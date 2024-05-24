@@ -16,8 +16,7 @@ content = Utils.define_feature_content(
                     "monitor_id": 2,
                 },
             },
-        },
-        "state": "disable",
+        }
     }
 )
 

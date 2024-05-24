@@ -19,7 +19,7 @@ def get_vite_process(directory: str):
 
         def start(self):
             self.process.start()
-            time.sleep(1)
+            time.sleep(2)
 
         def join(self):
             try:
