@@ -17,16 +17,5 @@ def on_shutdown():
     HyprEventsListener.stop()
 
 
-@content.add("socket")
-async def events(websocket: WebSocket):
-    try:
-        HyprEventsListener.attach_websocket(websocket)
-
-        while True:
-            text = await websocket.receive_text()
-            if text == "close":
-                HyprEventsListener.detach_websocket(websocket)
-                await websocket.close()
-                break
-    except:
-        HyprEventsListener.detach_websocket(websocket)
+from .events_socket import *
+from .hypr_infos import *
