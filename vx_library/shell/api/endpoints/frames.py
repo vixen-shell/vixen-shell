@@ -3,7 +3,10 @@ from ..api import api
 from ...globals import ModelResponses, Models
 from ...features import Features
 
+# ---------------------------------------------- - - -
 # Frame IDs
+#
+
 ids_responses = ModelResponses(
     {200: Models.Frames.Ids, 404: Models.Commons.Error, 409: Models.Commons.Error}
 )
@@ -35,7 +38,10 @@ async def frame_ids(
     )
 
 
+# ---------------------------------------------- - - -
 # Toggle Frame
+#
+
 toggle_responses = ModelResponses(
     {
         200: Models.Frames.Properties,
@@ -85,7 +91,10 @@ async def toggle_frame(
     )
 
 
+# ---------------------------------------------- - - -
 # Open Frame
+#
+
 open_responses = ModelResponses(
     {
         200: Models.Frames.Properties,
@@ -134,7 +143,10 @@ async def open_frame(
     )
 
 
+# ---------------------------------------------- - - -
 # Close Frame
+#
+
 close_responses = ModelResponses(
     {
         200: Models.Frames.Properties,

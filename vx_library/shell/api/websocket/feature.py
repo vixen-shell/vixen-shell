@@ -21,14 +21,12 @@ def get_feature(feature_name: str):
 
 
 # ---------------------------------------------- - - -
-# FEATURE WEBSOCKET
+# FEATURE SOCKETS
 #
 
 
-@api.websocket("/feature/{feature_name}/socket/{handler_name}")
-async def feature_data_streamer_websocket(
-    websocket: WebSocket, feature_name: str, handler_name: str
-):
+@api.websocket("/feature/{feature_name}/sockets/{handler_name}")
+async def feature_sockets(websocket: WebSocket, feature_name: str, handler_name: str):
     await websocket.accept()
 
     try:
@@ -49,7 +47,7 @@ async def feature_data_streamer_websocket(
 
 
 # ---------------------------------------------- - - -
-# FEATURE STATE WEBSOCKET
+# FEATURE STATE SOCKET
 #
 
 
@@ -76,7 +74,7 @@ class ErrorEvent(Exception):
 
 
 @api.websocket("/feature/{feature_name}/state")
-async def feature_state_websocket(websocket: WebSocket, feature_name: str):
+async def feature_state_socket(websocket: WebSocket, feature_name: str):
     await websocket.accept()
 
     try:
@@ -183,37 +181,7 @@ async def feature_state_websocket(websocket: WebSocket, feature_name: str):
 
 
 # ---------------------------------------------- - - -
-# FEATURE PIPE WEBSOCKET
-#
-
-
-@api.websocket("/feature/{feature_name}/pipe/{client_id}")
-async def feature_pipe_websocket(
-    websocket: WebSocket, feature_name: str, client_id: str
-):
-    await websocket.accept()
-
-    try:
-        feature = get_feature(feature_name)
-    except Exception as exception:
-        await websocket.close(reason=str(exception))
-        return
-
-    try:
-        await feature.connect_client(client_id, websocket)
-    except Exception as exception:
-        await websocket.close(reason=str(exception))
-        return
-
-    try:
-        while True:
-            await feature.handle_pipe_events(await websocket.receive_json(), client_id)
-    except:
-        feature.remove_client(client_id)
-
-
-# ---------------------------------------------- - - -
-# DATA STREAMER
+# FEATURE DATA STREAMER
 #
 
 
@@ -237,7 +205,7 @@ class DataHandler:
 
 
 @api.websocket("/feature/{feature_name}/data_streamer")
-async def feature_data_streamer_websocket(websocket: WebSocket, feature_name: str):
+async def feature_data_streamer(websocket: WebSocket, feature_name: str):
     await websocket.accept()
 
     try:

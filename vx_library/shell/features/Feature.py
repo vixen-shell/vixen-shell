@@ -1,13 +1,10 @@
 from vx_feature_utils import Utils
 from fastapi import WebSocket
 from .FrameHandler import FrameHandler
-from .FeaturePipe import FeaturePipe
-from .pipe_events import InputEvent
-from .FeatureState import FeatureState
 from ..logger import Logger
 
 
-class Feature(FeatureState, FeaturePipe):
+class Feature:
     @staticmethod
     def load(entry: str):
         content, utils = Utils.get_feature_content(entry)
@@ -43,11 +40,7 @@ class Feature(FeatureState, FeaturePipe):
         return decorator
 
     def __init__(self, content: Utils.FeatureContent):
-        FeatureState.__init__(self, content.params)
-        FeaturePipe.__init__(self)
-
         self.content = content
-
         self.state_clients: list[WebSocket] = []
 
         self.frames = FrameHandler(
@@ -56,7 +49,6 @@ class Feature(FeatureState, FeaturePipe):
         )
 
         self.is_started = False
-        self._listen_logs = False
 
     @property
     @check_is_started(True)
@@ -70,8 +62,8 @@ class Feature(FeatureState, FeaturePipe):
 
     @check_is_started(False)
     def start(self):
-        self.open_pipe()
         self.frames.init(self.content.dev_mode)
+
         self.content.startup_sequence()
         self.is_started = True
         Logger.log(f"[{self.content.feature_name}]: feature started")
@@ -83,7 +75,6 @@ class Feature(FeatureState, FeaturePipe):
         for websocket in self.state_clients:
             await websocket.close()
 
-        await self.close_pipe()
         self.frames.cleanup()
 
         self.is_started = False
@@ -97,10 +88,3 @@ class Feature(FeatureState, FeaturePipe):
     @check_is_started(True)
     def close_frame(self, id: str):
         self.frames.close(id)
-
-    @check_is_started(True)
-    async def handle_pipe_events(self, event: InputEvent, client_id: str):
-        if self.pipe_is_opened:
-            await self.handle_state_events(
-                event, self.client_websockets[client_id], self.dispatch_event
-            )
