@@ -1,7 +1,20 @@
 from vx_feature_utils import FrameParams
 from .layerise_frame import layerise_frame
 from ..Gtk_imports import GLib, Gtk, Gdk, WebKit2
-from ...globals import get_frame_uri
+from ...globals import FRONT_PORT, FRONT_DEV_PORT
+
+
+def get_frame_uri(feature_name: str, route: str, dev_mode: bool):
+    def get_front_port(dev_mode: bool):
+        return FRONT_PORT if not dev_mode else FRONT_DEV_PORT
+
+    def get_params():
+        feature_param = f"feature={feature_name}"
+        route_param = f"route={route}"
+
+        return f"{feature_param}&{route_param}"
+
+    return f"http://localhost:{get_front_port(dev_mode)}/?{get_params()}"
 
 
 def webview(uri: str, dev_mode: bool):
@@ -34,18 +47,14 @@ class FrameView:
     def __init__(
         self,
         feature_name: str,
-        client_id: str,
         frame_params: FrameParams,
         dev_mode: bool = False,
     ):
         self.is_first_render = True
         self.feature_name = feature_name
-        self.client_id = client_id
         self.route = frame_params.route
         self.dev_mode = dev_mode
-        self.frame_uri = get_frame_uri(
-            self.feature_name, self.client_id, self.route, self.dev_mode
-        )
+        self.frame_uri = get_frame_uri(self.feature_name, self.route, self.dev_mode)
 
         def process():
             self.frame = Gtk.Window()

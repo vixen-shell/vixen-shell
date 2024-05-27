@@ -12,7 +12,7 @@ class FrameHandler:
     def init(self, dev_mode: bool = False):
         if self.frames_params:
             for id, param in self.frames_params.items():
-                self.frames[id] = FrameView(self.feature_name, id, param, dev_mode)
+                self.frames[id] = FrameView(self.feature_name, param, dev_mode)
 
     def open(self, id: str):
         self.frames[id].show()
