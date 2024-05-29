@@ -4,8 +4,22 @@ from fastapi import WebSocket
 from pydantic import BaseModel, ConfigDict, ValidationError
 from ..api import api
 from ...features import Features
-from ...globals import Models
 from ...logger import Logger
+
+
+class OutputEvent(TypedDict):
+    id: str
+    data: Optional[dict]
+
+
+class ErrorEvent(Exception):
+    def __init__(self, event: str, message: str, data: dict = {}) -> None:
+        super().__init__(message)
+        self.event = event
+        self.message = message
+
+        data.update({"event": event, "message": message})
+        self.data = data
 
 
 def get_feature(feature_name: str):
@@ -28,19 +42,21 @@ def get_feature(feature_name: str):
 @api.websocket("/feature/{feature_name}/sockets/{handler_name}")
 async def feature_sockets(websocket: WebSocket, feature_name: str, handler_name: str):
     await websocket.accept()
+    error = None
 
     try:
         feature = get_feature(feature_name)
     except Exception as exception:
-        await websocket.close(reason=str(exception))
-        return
+        error = str(exception)
 
     try:
         socket_handler = feature.content.get("socket", handler_name)
     except KeyError as key_error:
-        await websocket.close(
-            reason=f"{key_error} not found in '{feature_name}' feature websocket handlers"
-        )
+        error = f"{key_error} not found in '{feature_name}' feature websocket handlers"
+
+    if error:
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": error}))
+        await websocket.close(reason=error)
         return
 
     await socket_handler(websocket)
@@ -51,40 +67,29 @@ async def feature_sockets(websocket: WebSocket, feature_name: str, handler_name:
 #
 
 
-class OutputEvent(TypedDict):
-    id: str
-    data: Optional[dict]
-
-
-class InputEvent(BaseModel):
+class InputStateEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str
     data: dict = None
 
 
-class ErrorEvent(Exception):
-    def __init__(self, event: str, message: str, data: dict = {}) -> None:
-        super().__init__(message)
-        self.event = event
-        self.message = message
-
-        data.update({"event": event, "message": message})
-        self.data = data
-
-
 @api.websocket("/feature/{feature_name}/state")
 async def feature_state_socket(websocket: WebSocket, feature_name: str):
     await websocket.accept()
+    error = None
 
     try:
         feature = get_feature(feature_name)
     except Exception as exception:
-        await websocket.close(reason=str(exception))
-        return
+        error = str(exception)
 
     if not feature.content.params.state_is_enable:
-        await websocket.close(reason=f"'{feature_name}' feature state is disable")
+        error = f"'{feature_name}' feature state is disable"
+
+    if error:
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": error}))
+        await websocket.close(reason=error)
         return
 
     feature.state_clients.append(websocket)
@@ -96,7 +101,7 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
     try:
         while True:
             try:
-                input_event = InputEvent(**await websocket.receive_json())
+                input_event = InputStateEvent(**await websocket.receive_json())
 
                 if input_event.id == "GET":
                     if not input_event.data:
@@ -155,8 +160,6 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
                     )
 
             except ErrorEvent as error_event:
-                print("Error Event")
-
                 Logger.log(
                     f"[{feature_name}]: (State socket) {error_event.data}",
                     "WARNING",
@@ -166,8 +169,6 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
                 )
 
             except ValidationError as exception:
-                print("Validation Error")
-
                 Logger.log(
                     f"[{feature_name}]: (State socket) {str(exception)}",
                     "WARNING",
@@ -186,13 +187,24 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
 
 
 class DataHandlerModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     args: list = []
 
 
 class DataStreamerModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     data_handlers: list[DataHandlerModel]
     interval: float = 1
+
+
+class InputDataStreamEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    data: DataStreamerModel
 
 
 class DataHandler:
@@ -207,46 +219,60 @@ class DataHandler:
 @api.websocket("/feature/{feature_name}/data_streamer")
 async def feature_data_streamer(websocket: WebSocket, feature_name: str):
     await websocket.accept()
+    error = None
 
     try:
         feature = get_feature(feature_name)
     except Exception as exception:
-        await websocket.close(reason=str(exception))
+        error = str(exception)
+
+    if error:
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": error}))
+        await websocket.close(reason=error)
         return
 
     try:
         while True:
             try:
-                init_data = DataStreamerModel(**(await websocket.receive_json()))
+                input_event = InputDataStreamEvent(**await websocket.receive_json())
 
-                data_handlers: dict[str, DataHandler] = {}
-                for data_handler in init_data.data_handlers:
-                    data_handlers[data_handler.name] = DataHandler(
-                        feature.content.get("data", data_handler.name),
-                        data_handler.args,
-                    )
+                if input_event.id == "INIT":
+                    init_data = input_event.data
 
-                interval = init_data.interval
+                    data_handlers: dict[str, DataHandler] = {}
+                    for data_handler in init_data.data_handlers:
+                        data_handlers[data_handler.name] = DataHandler(
+                            feature.content.get("data", data_handler.name),
+                            data_handler.args,
+                        )
 
-                while True:
-                    data = {}
+                    interval = init_data.interval
 
-                    for name, handler in data_handlers.items():
-                        data[name] = handler.get_data()
+                    while True:
+                        data = {}
 
-                    await websocket.send_json(data)
-                    await asyncio.sleep(interval)
+                        for name, handler in data_handlers.items():
+                            data[name] = handler.get_data()
+
+                        await websocket.send_json(OutputEvent(id="UPDATE", data=data))
+                        await asyncio.sleep(interval)
 
             except KeyError as key_error:
                 await websocket.send_json(
-                    Models.Commons.Error(
-                        message=f"{key_error} not found in '{feature_name}' feature data handlers"
-                    ).model_dump()
+                    OutputEvent(
+                        id="ERROR",
+                        data={
+                            "message": f"{key_error} not found in '{feature_name}' feature data handlers"
+                        },
+                    )
                 )
 
             except Exception as exception:
                 await websocket.send_json(
-                    Models.Commons.Error(message=str(exception)).model_dump()
+                    OutputEvent(
+                        id="ERROR",
+                        data={"message": str(exception)},
+                    )
                 )
 
     except:
