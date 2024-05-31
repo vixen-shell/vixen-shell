@@ -1,5 +1,15 @@
-import psutil
+import os, psutil
 from . import content
+
+
+@content.add_handler("data")
+def user():
+    return os.getlogin()
+
+
+@content.add_handler("data")
+def user_home():
+    return os.path.expanduser("~")
 
 
 @content.add_handler("data")

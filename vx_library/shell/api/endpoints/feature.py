@@ -1,5 +1,6 @@
 from fastapi import Response, Path, Body
-from pydantic import BaseModel
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, ConfigDict
 from ..api import api
 from ...globals import ModelResponses, Models
 from ...features import Features
@@ -126,6 +127,8 @@ feature_data_responses = ModelResponses(
 
 
 class DataHandlerModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     args: list = []
 
@@ -139,7 +142,11 @@ class DataHandler:
         return self.handler(*self.handler_args)
 
 
-@api.post("/feature/{feature_name}/data", description="Get a feature data")
+@api.post(
+    "/feature/{feature_name}/data",
+    description="Get a feature data",
+    responses=feature_data_responses.responses,
+)
 async def get_data(
     response: Response,
     feature_name: str = Path(description="Feature name"),
@@ -161,12 +168,10 @@ async def get_data(
                 feature.content.get("data", handler.name),
                 handler.args,
             )
-
         except KeyError as key_error:
             return feature_data_responses(response, 404)(
                 message=f"{key_error} not found in '{feature_name}' feature data handlers"
             )
-
         except Exception as exception:
             return feature_data_responses(response, 409)(message=str(exception))
 
@@ -175,8 +180,140 @@ async def get_data(
     try:
         for name, handler in handlers.items():
             custom_data[name] = handler.get_data()
-
     except Exception as exception:
         return feature_data_responses(response, 409)(message=str(exception))
 
     return feature_data_responses(response, 200)(**custom_data)
+
+
+# ---------------------------------------------- - - -
+# FEATURE ACTION
+#
+
+
+class ActionHandlerModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    args: list = []
+
+
+class ActionHandler:
+    def __init__(self, handler, handler_args: list = []):
+        self.handler = handler
+        self.handler_args = handler_args
+
+    def run(self):
+        return self.handler(*self.handler_args)
+
+
+feature_action_responses = ModelResponses(
+    {
+        200: dict,
+        404: Models.Commons.Error,
+        409: Models.Commons.Error,
+    }
+)
+
+
+@api.post(
+    "/feature/{feature_name}/action",
+    description="Run a feature action",
+    responses=feature_action_responses.responses,
+)
+async def get_action(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+    action_handler: ActionHandlerModel = Body(description="Action handler information"),
+):
+    if not Features.exists(feature_name):
+        return feature_action_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    try:
+        handler = ActionHandler(
+            feature.content.get("action", action_handler.name), action_handler.args
+        )
+    except KeyError as key_error:
+        return feature_action_responses(response, 404)(
+            message=f"{key_error} not found in '{feature_name}' feature action handlers"
+        )
+    except Exception as exception:
+        return feature_action_responses(response, 409)(message=str(exception))
+
+    try:
+        returned_data = handler.run()
+    except Exception as exception:
+        return feature_action_responses(response, 409)(message=str(exception))
+
+    return feature_action_responses(response, 200)(
+        **{action_handler.name: returned_data or True}
+    )
+
+
+# ---------------------------------------------- - - -
+# FEATURE FILE
+#
+
+
+class FileHandlerModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    args: list = []
+
+
+class FileHandler:
+    def __init__(self, handler, handler_args: list = []):
+        self.handler = handler
+        self.handler_args = handler_args
+
+    def get_filepath(self) -> str:
+        return self.handler(*self.handler_args)
+
+
+feature_file_responses = ModelResponses(
+    {
+        404: Models.Commons.Error,
+        409: Models.Commons.Error,
+    }
+)
+
+
+@api.post(
+    "/feature/{feature_name}/file",
+    description="Get a feature file",
+    responses=feature_file_responses.responses,
+)
+async def get_file(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+    file_handler: FileHandlerModel = Body(description="File handler information"),
+):
+    if not Features.exists(feature_name):
+        return feature_file_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    try:
+        handler = FileHandler(
+            feature.content.get("file", file_handler.name), file_handler.args
+        )
+    except KeyError as key_error:
+        return feature_file_responses(response, 404)(
+            message=f"{key_error} not found in '{feature_name}' feature file handlers"
+        )
+    except Exception as exception:
+        return feature_file_responses(response, 409)(message=str(exception))
+
+    try:
+        response.status_code = 200
+        filepath = handler.get_filepath()
+        return FileResponse(filepath)
+    except Exception as exception:
+        return feature_action_responses(response, 409)(message=str(exception))

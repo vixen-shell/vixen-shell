@@ -1,4 +1,4 @@
-import os, json
+import os
 from typing import Callable, Literal
 from ...feature_params import (
     root_FeatureParams_dict,
@@ -7,13 +7,14 @@ from ...feature_params import (
 )
 
 USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
-ContentType = Literal["action", "data", "socket"]
+ContentType = Literal["action", "data", "file", "socket"]
 
 
 class Contents:
     def __init__(self):
         self.action: dict[str, Callable] = {}
         self.data: dict[str, Callable] = {}
+        self.file: dict[str, Callable] = {}
         self.socket: dict[str, Callable] = {}
 
         self.shutdown: Callable = None
@@ -32,6 +33,7 @@ class FeatureContent:
         self.contents = Contents()
 
     def init_params(self, entry: str):
+        print("!!! USER PARAMS FILEPATH (DEV) !!!")
         # user_params_filepath = f"{USER_PARAMS_DIRECTORY}/{self.feature_name}.json"
         user_params_filepath = f"/home/noha/Workflow/final/vixen-shell/config/user/vixen/features/{self.feature_name}.json"
 
@@ -49,11 +51,11 @@ class FeatureContent:
         except ParamsError as params_error:
             raise Exception(f"[{self.feature_name}]: {str(params_error)}")
 
-    def add(self, content_type: ContentType):
+    def add_handler(self, content_type: ContentType):
         def decorator(callback: Callable):
             try:
                 sub_contents: dict = getattr(self.contents, content_type)
-            except AttributeError as attribute_error:
+            except AttributeError:
                 callback_filename = callback.__code__.co_filename
                 callback_line_number = callback.__code__.co_firstlineno
                 raise Exception(

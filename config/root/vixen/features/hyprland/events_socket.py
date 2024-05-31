@@ -3,7 +3,7 @@ from . import content
 from .hypr_events import HyprEventsListener
 
 
-@content.add("socket")
+@content.add_handler("socket")
 async def events(websocket: WebSocket):
     try:
         HyprEventsListener.attach_websocket(websocket)

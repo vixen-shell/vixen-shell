@@ -60,7 +60,11 @@ class Features:
 
     @staticmethod
     def load(entry: str):
-        name, feature = Feature.load(entry)
+        try:
+            name, feature = Feature.load(entry)
+        except Exception as exception:
+            Logger.log(str(exception), "ERROR")
+            raise exception
 
         if Features.exists(name):
             suffix = " in development mode" if DevMode.feature_name == name else ""

@@ -1,5 +1,4 @@
 from vx_feature_utils import Utils
-from fastapi import WebSocket
 
 utils = Utils.define_feature_utils()
 content = Utils.define_feature_content({"autostart": True})

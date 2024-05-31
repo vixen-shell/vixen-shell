@@ -44,6 +44,8 @@ async def load_dev_feature(
         return load_feature_responses(response, 409)(message=str(error))
     except ValueError as error:
         return load_feature_responses(response, 409)(message=str(error))
+    except Exception as exception:
+        return load_feature_responses(response, 409)(message=str(exception))
 
 
 # ---------------------------------------------- - - -

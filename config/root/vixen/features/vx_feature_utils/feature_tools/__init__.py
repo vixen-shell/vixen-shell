@@ -19,7 +19,11 @@ class Utils:
 
     @staticmethod
     def get_root_feature_names():
-        root_params_directory = f"/usr/share/vixen/features"
+        print("!!! ROOT PARAMS FILEPATH (DEV) !!!")
+        # root_params_directory = "/usr/share/vixen/features"
+        root_params_directory = (
+            "/home/noha/Workflow/final/vixen-shell/config/root/vixen/features"
+        )
 
         feature_names: list[str] = []
 

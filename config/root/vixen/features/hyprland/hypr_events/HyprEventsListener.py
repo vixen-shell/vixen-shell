@@ -4,8 +4,8 @@ from typing import List
 from .hypr_events import EventData
 from .. import utils, content
 
-HYPR_SOCKET_PATH = "/tmp/hypr/{}/.socket2.sock".format(
-    os.getenv("HYPRLAND_INSTANCE_SIGNATURE")
+HYPR_SOCKET_PATH = "{}/hypr/{}/.socket2.sock".format(
+    os.getenv("XDG_RUNTIME_DIR"), os.getenv("HYPRLAND_INSTANCE_SIGNATURE")
 )
 
 
@@ -30,6 +30,12 @@ class HyprEventsListener:
     @staticmethod
     def start():
         if not HyprEventsListener._task:
+            if not HyprEventsListener.check_hypr_socket():
+                utils.logger.log(
+                    f"[{content.feature_name}]: Socket not found", "WARNING"
+                )
+                return
+
             utils.logger.log(f"[{content.feature_name}]: Start event listener")
             HyprEventsListener._task = asyncio.create_task(
                 HyprEventsListener.listener_task()
@@ -37,8 +43,9 @@ class HyprEventsListener:
 
     @staticmethod
     def stop():
-        utils.logger.log(f"[{content.feature_name}]: Stop event listener")
-        HyprEventsListener._task.cancel()
+        if HyprEventsListener._task:
+            utils.logger.log(f"[{content.feature_name}]: Stop event listener")
+            HyprEventsListener._task.cancel()
 
     @staticmethod
     def attach_websocket(websocket: WebSocket):
