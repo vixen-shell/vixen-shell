@@ -11,10 +11,11 @@ from .AbstractFeatures import AbstractFeatures, get_features_reference
 
 
 class FeatureUtils:
-    def init(self, logger, current_feature, features):
+    def init(self, logger, current_feature, features, show_dialog_box):
         self.Logger: AbstractLogger = get_logger_reference(logger)
         self.CurrentFeature: AbstractFeature = get_feature_references(current_feature)
         self.Features: AbstractFeatures = get_features_reference(features)
+        self.show_dialog_box = show_dialog_box
 
     def show_dialog_box(
         self,
@@ -22,22 +23,4 @@ class FeatureUtils:
         level: Literal["INFO", "WARNING"] = "INFO",
         title: str = "Vixen Shell",
     ):
-        message_type = {"INFO": 0, "WARNING": 1}.get(level)
-
-        def process():
-            dialog = Gtk.MessageDialog(
-                transient_for=None,
-                flags=0,
-                message_type=message_type,
-                buttons=Gtk.ButtonsType.OK,
-                text=title,
-            )
-            dialog.format_secondary_text(message)
-
-            def on_dialog_response(dialog, response_id):
-                dialog.destroy()
-
-            dialog.connect("response", on_dialog_response)
-            dialog.show()
-
-        GLib.idle_add(process)
+        pass
