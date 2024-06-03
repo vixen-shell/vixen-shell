@@ -1,7 +1,6 @@
 from vx_feature_utils import Utils
 from fastapi import WebSocket
 from .FrameHandler import FrameHandler
-from .Gtk_dialog import show_dialog_box
 from ..logger import Logger
 
 
@@ -16,7 +15,7 @@ class Feature:
         if utils:
             from .Features import Features
 
-            utils.init(Logger, feature, Features, show_dialog_box)
+            utils.init(Logger, feature, Features)
 
         if content.params.autostart and not content.dev_mode:
             feature.start()

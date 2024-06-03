@@ -2,7 +2,9 @@ from typing import Literal
 from .Gtk_imports import Gtk, GLib
 
 
-def show_dialog_box(message: str, level: Literal["INFO", "WARNING"] = "INFO"):
+def show_dialog_box(
+    message: str, level: Literal["INFO", "WARNING"] = "INFO", title: str = "Vixen Shell"
+):
     message_type = {"INFO": 0, "WARNING": 1}.get(level)
 
     def process():
@@ -11,7 +13,7 @@ def show_dialog_box(message: str, level: Literal["INFO", "WARNING"] = "INFO"):
             flags=0,
             message_type=message_type,
             buttons=Gtk.ButtonsType.OK,
-            text="Vixen Shell",
+            text=title,
         )
         dialog.format_secondary_text(message)
 
