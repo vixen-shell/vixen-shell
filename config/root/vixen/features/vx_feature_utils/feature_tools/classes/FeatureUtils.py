@@ -17,6 +17,7 @@ class FeatureUtils:
         self.Features: AbstractFeatures = get_features_reference(features)
 
     def show_dialog_box(
+        self,
         message: str,
         level: Literal["INFO", "WARNING"] = "INFO",
         title: str = "Vixen Shell",
