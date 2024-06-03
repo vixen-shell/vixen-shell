@@ -8,35 +8,22 @@ from ..logger import Logger
 
 
 class DevMode:
-    feature_name: str = None
+    feature_names: list[str] = []
 
     @staticmethod
-    def enable(feature_name: str):
-        if DevMode.feature_name:
-            raise ValueError("Development mode already in use")
-
-        DevMode.feature_name = feature_name
-        Logger.log("[Dev mode]: enabled")
+    def enable(feature: Feature):
+        DevMode.feature_names.append(feature.content.feature_name)
+        Logger.log(f"[Dev mode]: feature '{feature.content.feature_name}' enabled")
 
     @staticmethod
-    def disable():
-        if not DevMode.feature_name:
-            Logger.log("[Dev mode]: not in use", "WARNING")
-
-        DevMode.feature_name = None
-        Logger.log("[Dev mode]: disabled")
+    def disable(feature: Feature):
+        DevMode.feature_names.remove(feature.content.feature_name)
+        sys.path.remove(feature.content.sys_path)
+        Logger.log(f"[Dev mode]: feature '{feature.content.feature_name}' disabled")
 
     @staticmethod
-    def toggle(feature: Feature):
-        if not DevMode.feature_name and feature.content.dev_mode:
-            DevMode.enable(feature.content.feature_name)
-
-        elif (
-            DevMode.feature_name
-            and DevMode.feature_name == feature.content.feature_name
-        ):
-            sys.path.remove(feature.content.sys_path)
-            DevMode.disable()
+    def include(feature: Feature):
+        return feature.content.feature_name in DevMode.feature_names
 
 
 class Features:
@@ -67,10 +54,11 @@ class Features:
             raise exception
 
         if Features.exists(name):
-            suffix = " in development mode" if DevMode.feature_name == name else ""
+            suffix = " (Dev mode)" if DevMode.include(feature) else ""
             raise KeyError(f"Feature '{name}' already loaded{suffix}")
 
-        DevMode.toggle(feature)
+        if feature.content.dev_mode:
+            DevMode.enable(feature)
 
         Features.dict[name] = feature
         Logger.log(f"[{name}]: feature loaded")
@@ -84,7 +72,8 @@ class Features:
         if not feature:
             raise KeyError(f"'{name}' feature not found")
 
-        DevMode.toggle(feature)
+        if DevMode.include(feature):
+            DevMode.disable(feature)
 
         if feature.is_started:
             await feature.stop()
