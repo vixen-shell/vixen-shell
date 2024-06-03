@@ -7,6 +7,11 @@ from .FeatureContent import ContentType
 class AbstractFeature(ABC):
     @property
     @abstractmethod
+    def name(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
     def frame_ids(self) -> list[str]:
         pass
 
@@ -38,6 +43,10 @@ class AbstractFeature(ABC):
 
 def get_feature_references(feature):
     class FeatureReference(AbstractFeature):
+        @property
+        def name(self) -> str:
+            return feature.content.feature_name
+
         @property
         def frame_ids(self) -> list[str]:
             return feature.frame_ids

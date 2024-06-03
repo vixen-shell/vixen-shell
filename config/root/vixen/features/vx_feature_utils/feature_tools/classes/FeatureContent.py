@@ -110,12 +110,6 @@ class FeatureContent:
 
 class FeatureContentReference(ABC):
     @abstractmethod
-    def __init__(
-        self, package_name: str, root_params_dict: root_FeatureParams_dict
-    ) -> None:
-        self.feature_name = package_name
-
-    @abstractmethod
     def add_handler(self, content_type: ContentType) -> Callable[[Callable], Callable]:
         pass
 

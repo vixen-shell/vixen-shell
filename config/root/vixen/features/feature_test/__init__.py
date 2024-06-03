@@ -6,13 +6,13 @@ content = Utils.define_feature_content()
 
 @content.on_startup
 def on_startup():
-    hyprland_feature = utils.features.get("hyprland")
+    hyprland_feature = utils.Features.get("hyprland")
     hyprland_feature.stop()
 
 
 @content.add_handler("action")
 def hello():
-    welcome_feature = utils.features.get("welcome")
+    welcome_feature = utils.Features.get("welcome")
 
     if not "about" in welcome_feature.active_frame_ids:
         welcome_feature.open_frame("about")
