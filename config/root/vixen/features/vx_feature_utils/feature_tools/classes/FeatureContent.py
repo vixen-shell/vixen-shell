@@ -1,5 +1,6 @@
 import os
-from typing import Callable, Literal
+from typing import Callable, Literal, Any
+from abc import ABC, abstractmethod
 from ...feature_params import (
     root_FeatureParams_dict,
     FeatureParams,
@@ -105,3 +106,27 @@ class FeatureContent:
     def shutdown_sequence(self):
         if self.contents.shutdown:
             self.contents.shutdown()
+
+
+class FeatureContentReference(ABC):
+    @abstractmethod
+    def __init__(
+        self, package_name: str, root_params_dict: root_FeatureParams_dict
+    ) -> None:
+        self.feature_name = package_name
+
+    @abstractmethod
+    def add_handler(self, content_type: ContentType) -> Callable[[Callable], Callable]:
+        pass
+
+    @abstractmethod
+    def get(self, content_type: ContentType, name: str) -> Any:
+        pass
+
+    @abstractmethod
+    def on_startup(self, callback: Callable) -> Callable:
+        pass
+
+    @abstractmethod
+    def on_shutdown(self, callback: Callable) -> Callable:
+        pass

@@ -1,5 +1,7 @@
 import asyncio
 from abc import ABC, abstractmethod
+from typing import Any
+from .FeatureContent import ContentType
 
 
 class AbstractFeature(ABC):
@@ -11,6 +13,10 @@ class AbstractFeature(ABC):
     @property
     @abstractmethod
     def active_frame_ids(self) -> list[str]:
+        pass
+
+    @abstractmethod
+    def get_content(self, content_type: ContentType, name: str) -> Any:
         pass
 
     @abstractmethod
@@ -39,6 +45,9 @@ def get_feature_references(feature):
         @property
         def active_frame_ids(self) -> list[str]:
             return feature.active_frame_ids
+
+        def get_content(self, content_type: ContentType, name: str) -> Any:
+            return feature.content.get(content_type, name)
 
         def start(self):
             feature.start()

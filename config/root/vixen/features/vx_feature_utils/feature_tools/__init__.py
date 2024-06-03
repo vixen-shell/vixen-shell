@@ -3,14 +3,16 @@ from ..feature_params import root_FeatureParams_dict
 
 
 class Utils:
-    from .classes import FeatureUtils, FeatureContent
+    from .classes import FeatureUtils, FeatureContent, FeatureContentReference
 
     @staticmethod
     def define_feature_utils():
         return Utils.FeatureUtils()
 
     @staticmethod
-    def define_feature_content(root_params_dict: root_FeatureParams_dict = {}):
+    def define_feature_content(
+        root_params_dict: root_FeatureParams_dict = {},
+    ) -> FeatureContentReference:
         from inspect import stack, getmodule
 
         return Utils.FeatureContent(
