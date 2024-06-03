@@ -1,5 +1,10 @@
 import os
-from .utils import use_sudo, get_dev_feature_name
+from .utils import (
+    use_sudo,
+    get_dev_feature_name,
+    feature_has_front_base,
+    dev_feature_has_front_base,
+)
 from .logger import Logger
 from ..cli import Cli
 
@@ -38,7 +43,7 @@ class SetupManager:
     @staticmethod
     @use_sudo(False)
     def create_feature(parent_dir: str):
-        from .setup import vx_new_feature
+        from .setup import vx_new_feature, vx_new_feature_no_front
         from .requests import ShellRequests
 
         feature_names = ShellRequests.feature_names()
@@ -71,22 +76,37 @@ class SetupManager:
         )
 
         if project_name:
+            front_end = True
+            Logger.log("Would you like to include a front-end base in your project?")
+
+            if not Cli.Input.get_confirm():
+                front_end = False
+
             Logger.log(f"Are you sure you want to create '{project_name}' project?")
 
             if Cli.Input.get_confirm():
-                if vx_new_feature(parent_dir, project_name):
-                    print()
-                    Logger.log("The project was created successfully")
-                    Logger.log(
-                        "Type 'yarn dev' in the project folder to launch the dev server"
-                    )
+                if front_end:
+                    if vx_new_feature(parent_dir, project_name):
+                        print()
+                        Logger.log("The project was created successfully")
+                        Logger.log(
+                            "Type [yarn dev] in the project folder to launch the dev server"
+                        )
+                else:
+                    if vx_new_feature_no_front(parent_dir, project_name):
+                        print()
+                        Logger.log("The project was created successfully")
+                        Logger.log(
+                            "Type [vxm --dev run] in the project folder to launch and try your project"
+                        )
+
             else:
                 Logger.log("Operation avorted", "WARNING")
 
     @staticmethod
     @use_sudo(True)
     def add_feature(dev_dir: str):
-        from .setup import vx_add_feature
+        from .setup import vx_add_feature, vx_add_feature_no_front
         from .requests import ShellRequests
 
         feature_names = ShellRequests.feature_names()
@@ -95,6 +115,10 @@ class SetupManager:
 
         feature_name = get_dev_feature_name(dev_dir)
         if not feature_name:
+            Logger.log(
+                "No features to add (root feature module not found)",
+                "ERROR",
+            )
             return
 
         if feature_name in feature_names:
@@ -110,18 +134,25 @@ class SetupManager:
         )
 
         if Cli.Input.get_confirm():
-            if vx_add_feature(dev_dir, feature_name):
-                ShellRequests.load_feature(feature_name)
+            if dev_feature_has_front_base(dev_dir, feature_name):
+                if vx_add_feature(dev_dir, feature_name):
+                    ShellRequests.load_feature(feature_name)
 
-                print()
-                Logger.log(f"'{feature_name}' feature added successfully")
+                    print()
+                    Logger.log(f"'{feature_name}' feature added successfully")
+            else:
+                if vx_add_feature_no_front(dev_dir, feature_name):
+                    ShellRequests.load_feature(feature_name)
+
+                    print()
+                    Logger.log(f"'{feature_name}' feature added successfully")
         else:
             Logger.log("Operation avorted", "WARNING")
 
     @staticmethod
     @use_sudo(True)
     def remove_feature():
-        from .setup import vx_remove_feature
+        from .setup import vx_remove_feature, vx_remove_feature_no_front
         from .requests import ShellRequests
 
         feature_names = ShellRequests.feature_names()
@@ -148,8 +179,14 @@ class SetupManager:
             if Cli.Input.get_confirm():
                 ShellRequests.unload_feature(feature_name)
 
-                if vx_remove_feature(feature_name):
-                    print()
-                    Logger.log(f"'{feature_name}' feature removed successfully")
+                if feature_has_front_base():
+                    if vx_remove_feature(feature_name):
+                        print()
+                        Logger.log(f"'{feature_name}' feature removed successfully")
+                else:
+                    if vx_remove_feature_no_front(feature_name):
+                        print()
+                        Logger.log(f"'{feature_name}' feature removed successfully")
+
             else:
                 Logger.log("Operation avorted", "WARNING")

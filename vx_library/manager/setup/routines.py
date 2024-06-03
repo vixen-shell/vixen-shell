@@ -12,6 +12,7 @@ VX_FRONT_ARCHIVE_URL = (
 VX_FEATURE_TEMPLATE_URL = (
     "https://github.com/vixen-shell/vx-feature-template/archive/refs/heads/main.zip"
 )
+VX_FEATURE_NO_FRONT_TEMPLATE_URL = "https://github.com/vixen-shell/vx-feature-no-front-template/archive/refs/heads/main.zip"
 
 
 # ---------------------------------------------- - - -
@@ -140,6 +141,60 @@ def vx_remove():
 # Create new feature
 
 
+def vx_new_feature_no_front(path: str, project_name: str):
+    return Routine(
+        purpose="Create new feature",
+        tasks=[
+            RoutineTask(
+                purpose="Download feature template",
+                command=Commands.git_get_archive(
+                    VX_FEATURE_NO_FRONT_TEMPLATE_URL, "/tmp"
+                ),
+            ),
+            RoutineTask(
+                purpose="Setup project folder",
+                command=Commands.rename(
+                    "/tmp/vx-feature-no-front-template-main", f"/tmp/{project_name}"
+                ),
+                undo_command=Commands.folder_remove(f"/tmp/{project_name}"),
+            ),
+            RoutineTask(
+                purpose="Setup root config module",
+                command=Commands.rename(
+                    f"/tmp/{project_name}/config/root/feature",
+                    f"/tmp/{project_name}/config/root/{project_name}",
+                ),
+            ),
+            RoutineTask(
+                purpose="Setup user config file",
+                command=Commands.rename(
+                    f"/tmp/{project_name}/config/user/feature.json",
+                    f"/tmp/{project_name}/config/user/{project_name}.json",
+                ),
+            ),
+            RoutineTask(
+                purpose="Create python virtual environment",
+                command=Commands.env_create(f"/tmp/{project_name}/.venv"),
+            ),
+            RoutineTask(
+                purpose="Install python environment dependencies",
+                command=Commands.env_dependencies(
+                    f"/tmp/{project_name}/.venv", f"/tmp/{project_name}"
+                ),
+            ),
+            RoutineTask(
+                purpose="Finalize feature project",
+                command=Commands.folder_copy(f"/tmp/{project_name}", path),
+                undo_command=Commands.folder_remove(f"{path}/{project_name}"),
+            ),
+            RoutineTask(
+                purpose="Clean temporary files",
+                command=Commands.folder_remove(f"/tmp/{project_name}"),
+            ),
+        ],
+    ).run()
+
+
 def vx_new_feature(path: str, project_name: str):
     return Routine(
         purpose="Create new feature",
@@ -183,6 +238,16 @@ def vx_new_feature(path: str, project_name: str):
                 ),
             ),
             RoutineTask(
+                purpose="Create python virtual environment",
+                command=Commands.env_create(f"/tmp/{project_name}/.venv"),
+            ),
+            RoutineTask(
+                purpose="Install python environment dependencies",
+                command=Commands.env_dependencies(
+                    f"/tmp/{project_name}/.venv", f"/tmp/{project_name}"
+                ),
+            ),
+            RoutineTask(
                 purpose="Install project dependencies",
                 command=Commands.yarn_install(f"/tmp/{project_name}"),
             ),
@@ -203,6 +268,34 @@ def vx_new_feature(path: str, project_name: str):
 # Add feature
 
 
+def vx_add_feature_no_front(dev_dir: str, feature_name: str):
+    return Routine(
+        purpose="Add feature",
+        tasks=[
+            RoutineTask(
+                purpose="Setup root config module",
+                command=Commands.folder_copy(
+                    f"{dev_dir}/config/root/{feature_name}",
+                    "/usr/share/vixen/features",
+                ),
+                undo_command=Commands.folder_remove(
+                    f"/usr/share/vixen/features/{feature_name}"
+                ),
+            ),
+            RoutineTask(
+                purpose="Setup user config file",
+                command=Commands.file_copy(
+                    f"{dev_dir}/config/user/{feature_name}.json",
+                    f"/home/{os.getlogin()}/.config/vixen/features",
+                ),
+                undo_command=Commands.file_remove(
+                    f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json"
+                ),
+            ),
+        ],
+    ).run()
+
+
 def vx_add_feature(dev_dir: str, feature_name: str):
     return Routine(
         purpose="Add feature",
@@ -217,13 +310,13 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                 ),
             ),
             RoutineTask(
-                purpose="Setup root config file",
-                command=Commands.file_copy(
-                    f"{dev_dir}/config/root/{feature_name}.json",
+                purpose="Setup root config module",
+                command=Commands.folder_copy(
+                    f"{dev_dir}/config/root/{feature_name}",
                     "/usr/share/vixen/features",
                 ),
-                undo_command=Commands.file_remove(
-                    f"/usr/share/vixen/features/{feature_name}.json"
+                undo_command=Commands.folder_remove(
+                    f"/usr/share/vixen/features/{feature_name}"
                 ),
             ),
             RoutineTask(
@@ -248,6 +341,26 @@ def vx_add_feature(dev_dir: str, feature_name: str):
 # Remove feature
 
 
+def vx_remove_feature_no_front(feature_name: str):
+    return Routine(
+        purpose=f"Remove feature '{feature_name}'",
+        tasks=[
+            RoutineTask(
+                purpose="Remove root config module",
+                command=Commands.folder_remove(
+                    f"/usr/share/vixen/features/{feature_name}"
+                ),
+            ),
+            RoutineTask(
+                purpose="Remove user config file",
+                command=Commands.file_remove(
+                    f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json"
+                ),
+            ),
+        ],
+    ).run()
+
+
 def vx_remove_feature(feature_name: str):
     return Routine(
         purpose=f"Remove feature '{feature_name}'",
@@ -259,9 +372,9 @@ def vx_remove_feature(feature_name: str):
                 ),
             ),
             RoutineTask(
-                purpose="Remove root config file",
-                command=Commands.file_remove(
-                    f"/usr/share/vixen/features/{feature_name}.json"
+                purpose="Remove root config module",
+                command=Commands.folder_remove(
+                    f"/usr/share/vixen/features/{feature_name}"
                 ),
             ),
             RoutineTask(

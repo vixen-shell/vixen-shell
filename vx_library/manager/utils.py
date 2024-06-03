@@ -66,14 +66,38 @@ def read_json(file_path: str) -> dict | None:
 
 
 def get_dev_feature_name(directory: str) -> str | None:
-    package = read_json(f"{directory}/package.json")
-    if not package:
-        Logger.log(f"Unable to found 'package.json' file in '{directory}'", "ERROR")
-        return
+    def folder_list(path):
+        return [
+            name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))
+        ]
 
-    feature_name: str = package.get("name")
-    if not feature_name:
-        Logger.log("Unable to found 'name' property in 'package.json' file", "ERROR")
-        return
+    folders = folder_list(f"{directory}/config/root")
 
-    return feature_name.replace("vx-feature-", "")
+    if len(folders) != 1:
+        return None
+
+    return folders[0]
+
+
+def feature_has_front_base(feature_name: str) -> bool:
+    return os.path.exists(f"/var/opt/vx-front-main/src/{feature_name}")
+
+
+def dev_feature_has_front_base(directory: str, dev_feature_name: str) -> bool:
+    return os.path.exists(f"{directory}/package.json") and os.path.exists(
+        f"{directory}/src/{dev_feature_name}"
+    )
+
+
+# def get_dev_feature_name(directory: str) -> str | None:
+#     package = read_json(f"{directory}/package.json")
+#     if not package:
+#         Logger.log(f"Unable to found 'package.json' file in '{directory}'", "ERROR")
+#         return
+
+#     feature_name: str = package.get("name")
+#     if not feature_name:
+#         Logger.log("Unable to found 'name' property in 'package.json' file", "ERROR")
+#         return
+
+#     return feature_name.replace("vx-feature-", "")
