@@ -101,3 +101,32 @@ def dev_feature_has_front_base(directory: str, dev_feature_name: str) -> bool:
 #         return
 
 #     return feature_name.replace("vx-feature-", "")
+
+
+class DevFeature:
+    from .requests import ShellRequests as request
+
+    def __init__(self, directory: str):
+        self.directory = directory
+        self.name: str | None = None
+
+    @property
+    def has_front_package(self) -> bool:
+        return os.path.exists(f"{self.directory}/package.json")
+
+    def load(self) -> bool:
+        self.name = self.request.load_feature(self.directory)
+
+        if self.name:
+            return bool(self.request.start_feature(self.name))
+
+        return False
+
+    def unload(self) -> bool:
+        if self.name and self.request.ping():
+            return bool(self.request.unload_feature(self.name))
+
+        return False
+
+    def reload(self) -> bool:
+        return self.unload() and self.load()

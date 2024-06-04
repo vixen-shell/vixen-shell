@@ -104,8 +104,8 @@ async def feature_state(
         )
 
     if not feature.content.params.state_is_enable:
-        return start_responses(response, 409)(
-            message=f"'{feature_name}' feature state is disable"
+        return start_responses(response, 200)(
+            name=feature_name, is_started=True, state=None
         )
 
     return state_responses(response, 200)(

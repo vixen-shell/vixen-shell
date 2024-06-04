@@ -1,6 +1,7 @@
-import os, sys, signal, time
-from .utils import use_sudo
+import os, sys, signal
+from .utils import use_sudo, DevFeature
 from .logger import Logger
+from ..cli import Cli
 
 
 class ShellManager:
@@ -24,11 +25,15 @@ class ShellManager:
         from .requests import ShellRequests
         from .utils import get_vite_process
 
-        feature_name = ShellRequests.load_feature(directory)
-        if not feature_name:
-            return
-
         if os.path.exists(f"{directory}/package.json"):
+
+            def load_feature() -> str:
+                return ShellRequests.load_feature(directory)
+
+            feature_name = load_feature()
+            if not feature_name:
+                return
+
             vite_process = get_vite_process(directory)
             if not vite_process:
                 ShellRequests.unload_feature(feature_name)
@@ -49,28 +54,42 @@ class ShellManager:
                 ShellRequests.unload_feature(feature_name)
 
         else:
+            feature = DevFeature(directory)
 
             def signal_handler(sig, frame):
-                Logger.log("Stop feature '{feature_name}' [Dev mode]")
+                Logger.log("Exit Vixen Shell Dev Mode ...")
+                if feature.unload():
+                    Logger.log(f"Unload feature '{feature.name}'", suffix="SUCCESS")
+                    sys.exit(0)
 
-                if ShellRequests.ping():
-                    ShellRequests.unload_feature(feature_name)
-
-                sys.exit(0)
+                Logger.log(f"Unload feature '{feature.name}'", "ERROR", "FAILURE")
+                sys.exit(1)
 
             signal.signal(signal.SIGINT, signal_handler)
 
-            Logger.log("Vixen feature '{feature_name}' [Dev mode]")
+            if feature.load():
+                os.system("clear")
+                Logger.log(f"Load feature '{feature.name}'", suffix="SUCCESS")
 
-            if ShellRequests.start_feature(feature_name):
-                Logger.log("start feature '{feature_name}'")
-            else:
-                Logger.log("Error on starting feature '{feature_name}'", "ERROR")
+                while True:
+                    Logger.log(
+                        "type (r and ENTER) to reload feature or (Ctrl + C) to exit"
+                    )
 
-            Logger.log("Press Ctrl+C to exit...")
+                    choice = Cli.Input.get_answer(
+                        [Cli.Input.Filter(type="include", values=["r"])],
+                        "",
+                    )
 
-            while True:
-                time.sleep(1)
+                    if choice == "r":
+                        if not feature.reload():
+                            Logger.log(
+                                f"Reload feature '{feature.name}'", "ERROR", "FAILURE"
+                            )
+                            break
+
+                        os.system("clear")
+                        Logger.log(f"Reload feature '{feature.name}'", suffix="SUCCESS")
 
     @staticmethod
     @use_sudo(False)

@@ -28,8 +28,10 @@ class Input:
             return False
 
     @staticmethod
-    def get_answer(input_filters: list[InputFilter] = []) -> str | None:
-        input = InputHandler("(type or [ctrl + C]): ", input_filters)
+    def get_answer(
+        input_filters: list[InputFilter] = [], prompt: str = "(type or [ctrl + C]): "
+    ) -> str | None:
+        input = InputHandler(prompt, input_filters)
 
         try:
             while True:
