@@ -27,7 +27,6 @@ class Feature:
         def decorator(method):
             def wrapper(self, *args, **kwargs):
                 if self.is_started == value:
-                    # @errorHandling exclude
                     return method(self, *args, **kwargs)
                 else:
                     raise ValueError(

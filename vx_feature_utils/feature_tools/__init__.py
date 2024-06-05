@@ -35,7 +35,6 @@ class Utils:
             if os.path.isdir(path):
                 feature_names.append(item)
 
-        feature_names.remove("vx_feature_utils")
         return feature_names
 
     @staticmethod

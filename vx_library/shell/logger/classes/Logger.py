@@ -12,7 +12,6 @@ class Logger:
         def decorator(func):
             def wrapper(*args, **kwargs):
                 if bool(Logger.logger) == value:
-                    # @errorHandling exclude
                     return func(*args, **kwargs)
                 else:
                     raise ValueError(

@@ -37,7 +37,6 @@ class ShellRequests:
         def decorator(func):
             def wrapper(*args, **kwargs):
                 if ShellRequests.ping() == value:
-                    # @errorHandling exclude
                     return func(*args, **kwargs)
                 else:
                     Logger.log(

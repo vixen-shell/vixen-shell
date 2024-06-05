@@ -1,5 +1,5 @@
 import logging
-from ..utils import Cli, ErrorHandling
+from ..utils import Cli
 
 
 class Formatter(logging.Formatter):
@@ -7,12 +7,8 @@ class Formatter(logging.Formatter):
         message = record.getMessage()
 
         if record.levelno == logging.ERROR:
-            if "Traceback" in message or "Exception in ASGI application" in message:
-                ErrorHandling.print_error()
-                return str()
-
             if message == "Application startup failed. Exiting.":
-                ErrorHandling.sys_exit()
+                Cli.exec("killall --signal KILL vxm")
 
         levelname = Cli.String.level(record.levelname, record.levelname)
         levelname += ":" + Cli.String.spaces(9 - len(record.levelname))

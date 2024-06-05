@@ -41,7 +41,6 @@ def use_sudo(value: bool):
     def decorator(func):
         def wrapper(*args, **kwargs):
             if bool(os.geteuid() == 0) == value:
-                # @errorHandling exclude
                 return func(*args, **kwargs)
             else:
                 Logger.log(
