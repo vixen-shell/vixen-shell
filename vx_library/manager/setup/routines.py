@@ -80,10 +80,7 @@ def vx_setup(library_path: str):
             #
             RoutineTask(
                 purpose="Setup root config",
-                command=Commands.folder_copy(
-                    f"{library_path}/config/root/vixen",
-                    f"/usr/share",
-                ),
+                command=Commands.folder_create("/usr/share/vixen/features"),
                 undo_command=Commands.folder_remove(f"/usr/share/vixen"),
             ),
             # ---------------------------------------------- - - -
@@ -92,9 +89,8 @@ def vx_setup(library_path: str):
             RoutineTask(
                 purpose="Setup user config",
                 command=Commands.user(
-                    Commands.folder_copy(
-                        f"{library_path}/config/user/vixen",
-                        f"/home/{os.getlogin()}/.config",
+                    Commands.folder_create(
+                        f"/home/{os.getlogin()}/.config/vixen/features"
                     )
                 ),
                 undo_command=Commands.folder_remove(
@@ -141,23 +137,37 @@ def vx_remove():
 # Create new feature
 
 
-def vx_new_feature_no_front(path: str, project_name: str):
+def vx_new_feature(path: str, project_name: str, front_end: bool):
+    front_purpose = f" ({'no ' if not front_end else ''}front-end)"
+
+    template_url = (
+        VX_FEATURE_TEMPLATE_URL if front_end else VX_FEATURE_NO_FRONT_TEMPLATE_URL
+    )
+
+    tmp_template_dir = (
+        "/tmp/vx-feature-template-main"
+        if front_end
+        else "/tmp/vx-feature-no-front-template-main"
+    )
+
     return Routine(
-        purpose="Create new feature",
+        purpose="Create feature project development: " + project_name + front_purpose,
         tasks=[
+            # ---------------------------------------------- - - -
+            # Project Folder
+            #
             RoutineTask(
                 purpose="Download feature template",
-                command=Commands.git_get_archive(
-                    VX_FEATURE_NO_FRONT_TEMPLATE_URL, "/tmp"
-                ),
+                command=Commands.git_get_archive(template_url, "/tmp"),
             ),
             RoutineTask(
                 purpose="Setup project folder",
-                command=Commands.rename(
-                    "/tmp/vx-feature-no-front-template-main", f"/tmp/{project_name}"
-                ),
+                command=Commands.rename(tmp_template_dir, f"/tmp/{project_name}"),
                 undo_command=Commands.folder_remove(f"/tmp/{project_name}"),
             ),
+            # ---------------------------------------------- - - -
+            # Project Config
+            #
             RoutineTask(
                 purpose="Setup root config module",
                 command=Commands.rename(
@@ -172,39 +182,15 @@ def vx_new_feature_no_front(path: str, project_name: str):
                     f"/tmp/{project_name}/config/user/{project_name}.json",
                 ),
             ),
-            RoutineTask(
-                purpose="Finalize feature project",
-                command=Commands.folder_copy(f"/tmp/{project_name}", path),
-                undo_command=Commands.folder_remove(f"{path}/{project_name}"),
-            ),
-            RoutineTask(
-                purpose="Clean temporary files",
-                command=Commands.folder_remove(f"/tmp/{project_name}"),
-            ),
-        ],
-    ).run()
-
-
-def vx_new_feature(path: str, project_name: str):
-    return Routine(
-        purpose="Create new feature",
-        tasks=[
-            RoutineTask(
-                purpose="Download feature template",
-                command=Commands.git_get_archive(VX_FEATURE_TEMPLATE_URL, "/tmp"),
-            ),
-            RoutineTask(
-                purpose="Setup project folder",
-                command=Commands.rename(
-                    "/tmp/vx-feature-template-main", f"/tmp/{project_name}"
-                ),
-                undo_command=Commands.folder_remove(f"/tmp/{project_name}"),
-            ),
+            # ---------------------------------------------- - - -
+            # Front-end Sources
+            #
             RoutineTask(
                 purpose="Update project name in 'package.json' file",
                 command=Commands.json_patch_feature_name_property(
                     f"/tmp/{project_name}/package.json", f"vx-feature-{project_name}"
                 ),
+                skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
             RoutineTask(
                 purpose="Setup feature sources",
@@ -212,25 +198,16 @@ def vx_new_feature(path: str, project_name: str):
                     f"/tmp/{project_name}/src/feature",
                     f"/tmp/{project_name}/src/{project_name}",
                 ),
-            ),
-            RoutineTask(
-                purpose="Setup root config module",
-                command=Commands.rename(
-                    f"/tmp/{project_name}/config/root/feature",
-                    f"/tmp/{project_name}/config/root/{project_name}",
-                ),
-            ),
-            RoutineTask(
-                purpose="Setup user config file",
-                command=Commands.rename(
-                    f"/tmp/{project_name}/config/user/feature.json",
-                    f"/tmp/{project_name}/config/user/{project_name}.json",
-                ),
+                skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
             RoutineTask(
                 purpose="Install project dependencies",
                 command=Commands.yarn_install(f"/tmp/{project_name}"),
+                skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
+            # ---------------------------------------------- - - -
+            # Finalize Project
+            #
             RoutineTask(
                 purpose="Finalize feature project",
                 command=Commands.folder_copy(f"/tmp/{project_name}", path),
@@ -248,10 +225,17 @@ def vx_new_feature(path: str, project_name: str):
 # Add feature
 
 
-def vx_add_feature_no_front(dev_dir: str, feature_name: str):
+def vx_add_feature(dev_dir: str, feature_name: str):
+    front_end = os.path.exists(f"{dev_dir}/package.json") and os.path.exists(
+        f"{dev_dir}/src/{feature_name}"
+    )
+
     return Routine(
-        purpose="Add feature",
+        purpose=f"Add feature '{feature_name}' to Vixen Shell",
         tasks=[
+            # ---------------------------------------------- - - -
+            # Feature Config
+            #
             RoutineTask(
                 purpose="Setup root config module",
                 command=Commands.folder_copy(
@@ -261,6 +245,15 @@ def vx_add_feature_no_front(dev_dir: str, feature_name: str):
                 undo_command=Commands.folder_remove(
                     f"/usr/share/vixen/features/{feature_name}"
                 ),
+                requirements=[
+                    {
+                        "purpose": "Check an existing root config module",
+                        "callback": Commands.Checkers.folder(
+                            f"{dev_dir}/config/root/{feature_name}", True
+                        ),
+                        "failure_message": "Root config module not found",
+                    }
+                ],
             ),
             RoutineTask(
                 purpose="Setup user config file",
@@ -271,15 +264,16 @@ def vx_add_feature_no_front(dev_dir: str, feature_name: str):
                 undo_command=Commands.file_remove(
                     f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json"
                 ),
+                skip_on={
+                    "callback": Commands.Checkers.file(
+                        f"{dev_dir}/config/user/{feature_name}.json", False
+                    ),
+                    "message": "User config file not found",
+                },
             ),
-        ],
-    ).run()
-
-
-def vx_add_feature(dev_dir: str, feature_name: str):
-    return Routine(
-        purpose="Add feature",
-        tasks=[
+            # ---------------------------------------------- - - -
+            # Feature Front-end Sources
+            #
             RoutineTask(
                 purpose="Setup feature front-end sources",
                 command=Commands.folder_copy(
@@ -288,30 +282,12 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                 undo_command=Commands.folder_remove(
                     f"/var/opt/vx-front-main/src/{feature_name}"
                 ),
-            ),
-            RoutineTask(
-                purpose="Setup root config module",
-                command=Commands.folder_copy(
-                    f"{dev_dir}/config/root/{feature_name}",
-                    "/usr/share/vixen/features",
-                ),
-                undo_command=Commands.folder_remove(
-                    f"/usr/share/vixen/features/{feature_name}"
-                ),
-            ),
-            RoutineTask(
-                purpose="Setup user config file",
-                command=Commands.file_copy(
-                    f"{dev_dir}/config/user/{feature_name}.json",
-                    f"/home/{os.getlogin()}/.config/vixen/features",
-                ),
-                undo_command=Commands.file_remove(
-                    f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json"
-                ),
+                skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
             RoutineTask(
                 purpose="Rebuild Vixen Shell front-end",
                 command=Commands.yarn_build("/var/opt/vx-front-main"),
+                skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
         ],
     ).run()
@@ -321,10 +297,15 @@ def vx_add_feature(dev_dir: str, feature_name: str):
 # Remove feature
 
 
-def vx_remove_feature_no_front(feature_name: str):
+def vx_remove_feature(feature_name: str):
+    front_end = os.path.exists(f"/var/opt/vx-front-main/src/{feature_name}")
+
     return Routine(
         purpose=f"Remove feature '{feature_name}'",
         tasks=[
+            # ---------------------------------------------- - - -
+            # Feature Config
+            #
             RoutineTask(
                 purpose="Remove root config module",
                 command=Commands.folder_remove(
@@ -336,36 +317,28 @@ def vx_remove_feature_no_front(feature_name: str):
                 command=Commands.file_remove(
                     f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json"
                 ),
+                skip_on={
+                    "callback": Commands.Checkers.file(
+                        f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json",
+                        False,
+                    ),
+                    "message": "User config file not found",
+                },
             ),
-        ],
-    ).run()
-
-
-def vx_remove_feature(feature_name: str):
-    return Routine(
-        purpose=f"Remove feature '{feature_name}'",
-        tasks=[
+            # ---------------------------------------------- - - -
+            # Feature Front-end Sources
+            #
             RoutineTask(
                 purpose="Remove feature front-end sources",
                 command=Commands.folder_remove(
                     f"/var/opt/vx-front-main/src/{feature_name}"
                 ),
-            ),
-            RoutineTask(
-                purpose="Remove root config module",
-                command=Commands.folder_remove(
-                    f"/usr/share/vixen/features/{feature_name}"
-                ),
-            ),
-            RoutineTask(
-                purpose="Remove user config file",
-                command=Commands.file_remove(
-                    f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json"
-                ),
+                skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
             RoutineTask(
                 purpose="Rebuild Vixen Shell front-end",
                 command=Commands.yarn_build("/var/opt/vx-front-main"),
+                skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
         ],
     ).run()

@@ -34,9 +34,7 @@ class FeatureContent:
         self.contents = Contents()
 
     def init_params(self, entry: str):
-        print("!!! USER PARAMS FILEPATH (DEV) !!!")
-        # user_params_filepath = f"{USER_PARAMS_DIRECTORY}/{self.feature_name}.json"
-        user_params_filepath = f"/home/noha/Workflow/final/vixen-shell/config/user/vixen/features/{self.feature_name}.json"
+        user_params_filepath = f"{USER_PARAMS_DIRECTORY}/{self.feature_name}.json"
 
         try:
             if not entry == self.feature_name:

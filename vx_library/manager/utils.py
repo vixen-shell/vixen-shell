@@ -78,16 +78,6 @@ def get_dev_feature_name(directory: str) -> str | None:
     return folders[0]
 
 
-def feature_has_front_base(feature_name: str) -> bool:
-    return os.path.exists(f"/var/opt/vx-front-main/src/{feature_name}")
-
-
-def dev_feature_has_front_base(directory: str, dev_feature_name: str) -> bool:
-    return os.path.exists(f"{directory}/package.json") and os.path.exists(
-        f"{directory}/src/{dev_feature_name}"
-    )
-
-
 class DevFeature:
     from .requests import ShellRequests as request
 

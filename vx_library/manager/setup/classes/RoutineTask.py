@@ -16,6 +16,11 @@ class Requirement(TypedDict):
     issue: Optional[Issue]
 
 
+class Skipper(TypedDict):
+    callback: Callable[[], bool]
+    message: str
+
+
 class RoutineTask:
     def __init__(
         self,
@@ -23,13 +28,16 @@ class RoutineTask:
         command: str,
         undo_command: str = None,
         requirements: List[Requirement] = None,
+        skip_on: Skipper = None,
         spinner: bool = True,
     ):
         self.is_done = False
+        self.is_skipped = False
         self.purpose = purpose
         self.command = command
         self.undo_command = undo_command
         self.requirements = requirements
+        self.skip_on = skip_on
         self.spinner = Cli.Spinner() if spinner else None
 
     def set_spinner(self, is_running: bool):
@@ -71,24 +79,30 @@ class RoutineTask:
 
         self.set_spinner(True)
 
-        result = True
-        status = "IS DONE"
-        level = "WARNING"
+        if self.skip_on and self.skip_on["callback"]():
+            Logger.log(
+                f"{self.purpose}: {self.skip_on['message']}", "WARNING", "SKIPPED"
+            )
+
+            self.is_skipped = True
+            self.is_done = True
 
         if not self.is_done:
-            result = Cli.exec(self.command)
-            status = "DONE" if result else "FAILED"
-            level = "INFO" if result else "ERROR"
+            self.is_done = Cli.exec(self.command)
 
         self.set_spinner(False)
 
-        Logger.log(self.purpose, level, status)
-        self.is_done = result
+        if not self.is_skipped:
+            Logger.log(
+                self.purpose,
+                "INFO" if self.is_done else "ERROR",
+                "DONE" if self.is_done else "FAILED",
+            )
 
-        return result
+        return self.is_done
 
     def undo(self) -> bool:
-        if not self.undo_command:
+        if not self.undo_command or self.is_skipped:
             return True
 
         result = True

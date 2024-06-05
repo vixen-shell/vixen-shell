@@ -4,6 +4,14 @@ import os
 class Commands:
     class Checkers:
         @staticmethod
+        def file(path: str, exists: bool):
+            return (
+                (lambda: os.path.isfile(path))
+                if exists
+                else (lambda: not os.path.isfile(path))
+            )
+
+        @staticmethod
         def folder(path: str, exists: bool):
             return (
                 (lambda: os.path.isdir(path))
