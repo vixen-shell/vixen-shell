@@ -88,20 +88,6 @@ def dev_feature_has_front_base(directory: str, dev_feature_name: str) -> bool:
     )
 
 
-# def get_dev_feature_name(directory: str) -> str | None:
-#     package = read_json(f"{directory}/package.json")
-#     if not package:
-#         Logger.log(f"Unable to found 'package.json' file in '{directory}'", "ERROR")
-#         return
-
-#     feature_name: str = package.get("name")
-#     if not feature_name:
-#         Logger.log("Unable to found 'name' property in 'package.json' file", "ERROR")
-#         return
-
-#     return feature_name.replace("vx-feature-", "")
-
-
 class DevFeature:
     from .requests import ShellRequests as request
 
