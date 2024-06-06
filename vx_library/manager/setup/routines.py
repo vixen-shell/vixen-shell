@@ -6,14 +6,6 @@ from .classes import Commands, Routine, RoutineTask
 
 VX_ENV = "/opt/vixen-env"
 
-VX_FRONT_ARCHIVE_URL = (
-    "https://github.com/vixen-shell/vx-front/archive/refs/heads/main.zip"
-)
-VX_FEATURE_TEMPLATE_URL = (
-    "https://github.com/vixen-shell/vx-feature-template/archive/refs/heads/main.zip"
-)
-VX_FEATURE_NO_FRONT_TEMPLATE_URL = "https://github.com/vixen-shell/vx-feature-no-front-template/archive/refs/heads/main.zip"
-
 
 # ---------------------------------------------- - - -
 # Install Vixen Shell
@@ -64,7 +56,7 @@ def vx_setup(library_path: str):
             #
             RoutineTask(
                 purpose="Download Vixen Shell front-end",
-                command=Commands.git_get_archive(VX_FRONT_ARCHIVE_URL, "/var/opt"),
+                command=Commands.git_get_archive("/var/opt", "vx-front"),
                 undo_command=Commands.folder_remove("/var/opt/vx-front-main"),
             ),
             RoutineTask(
@@ -139,18 +131,7 @@ def vx_remove():
 
 def vx_new_feature(path: str, project_name: str, front_end: bool):
     front_purpose = f" ({'no ' if not front_end else ''}front-end)"
-
-    template_url = (
-        VX_FEATURE_TEMPLATE_URL if front_end else VX_FEATURE_NO_FRONT_TEMPLATE_URL
-    )
-
-    tmp_template_dir = (
-        "/tmp/vx-feature-template-main"
-        if front_end
-        else "/tmp/vx-feature-no-front-template-main"
-    )
-
-    tmp_project_dir = f"/tmp/vx-feature-{project_name}"
+    tmp_project_dir = f"/tmp/vx_feature_{project_name}"
 
     return Routine(
         purpose="Create feature project development: " + project_name + front_purpose,
@@ -160,11 +141,25 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             #
             RoutineTask(
                 purpose="Download feature template",
-                command=Commands.git_get_archive(template_url, "/tmp"),
+                command=Commands.git_get_archive(
+                    "/tmp",
+                    (
+                        "vx-feature-template"
+                        if front_end
+                        else "vx-feature-no-front-template"
+                    ),
+                ),
             ),
             RoutineTask(
                 purpose="Setup project folder",
-                command=Commands.rename(tmp_template_dir, tmp_project_dir),
+                command=Commands.rename(
+                    (
+                        "/tmp/vx-feature-template-main"
+                        if front_end
+                        else "/tmp/vx-feature-no-front-template-main"
+                    ),
+                    tmp_project_dir,
+                ),
                 undo_command=Commands.folder_remove(tmp_project_dir),
             ),
             # ---------------------------------------------- - - -

@@ -5,6 +5,10 @@ from ..cli import Cli
 
 
 class SetupManager:
+    # ---------------------------------------------- - - -
+    # VIXEN SHELL
+    #
+
     @staticmethod
     @use_sudo(True)
     def run(library_path: str):
@@ -34,6 +38,30 @@ class SetupManager:
             vx_remove()
         else:
             Logger.log("You made the right choice.")
+
+    @staticmethod
+    @use_sudo(True)
+    def update_env():
+        from .setup import update_environment
+        from .requests import ShellRequests
+
+        if ShellRequests.ping():
+            Logger.log(
+                "Vixen Shell is running. Close it and try again.",
+                "WARNING",
+            )
+            return
+
+        Logger.log(
+            "Are you sure you want to update Vixen Shell environment?", "WARNING"
+        )
+
+        if Cli.Input.get_confirm():
+            update_environment()
+
+    # ---------------------------------------------- - - -
+    # FEATURES
+    #
 
     @staticmethod
     @use_sudo(False)

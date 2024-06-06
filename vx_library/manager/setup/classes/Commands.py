@@ -92,8 +92,20 @@ class Commands:
     # ---------------------------------------------- - - -
     # Git
     @staticmethod
-    def git_get_archive(url: str, destination: str):
-        return f"curl -s -L {url} -o /tmp/vx-git-archive.zip && unzip -o /tmp/vx-git-archive.zip -d {destination} && rm /tmp/vx-git-archive.zip"
+    def git_get_archive(
+        destination: str,
+        repository: str,
+        branch: str = "main",
+        git_url: str = "https://github.com/vixen-shell",
+    ):
+        url = f"{git_url}/{repository}/archive/refs/heads/{branch}.zip"
+        archive = "/tmp/vx-git-archive.zip"
+
+        curl = f"curl -s -L {url} -o {archive}"
+        unzip = f"unzip -o {archive} -d {destination}"
+        rm_tmp = f"rm {archive}"
+
+        return f"{curl} && {unzip} && {rm_tmp}"
 
     # ---------------------------------------------- - - -
     # Yarn
