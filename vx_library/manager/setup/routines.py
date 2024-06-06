@@ -150,6 +150,8 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
         else "/tmp/vx-feature-no-front-template-main"
     )
 
+    tmp_project_dir = f"/tmp/vx-feature-{project_name}"
+
     return Routine(
         purpose="Create feature project development: " + project_name + front_purpose,
         tasks=[
@@ -162,8 +164,8 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             ),
             RoutineTask(
                 purpose="Setup project folder",
-                command=Commands.rename(tmp_template_dir, f"/tmp/{project_name}"),
-                undo_command=Commands.folder_remove(f"/tmp/{project_name}"),
+                command=Commands.rename(tmp_template_dir, tmp_project_dir),
+                undo_command=Commands.folder_remove(tmp_project_dir),
             ),
             # ---------------------------------------------- - - -
             # Project Config
@@ -171,15 +173,15 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             RoutineTask(
                 purpose="Setup root config module",
                 command=Commands.rename(
-                    f"/tmp/{project_name}/config/root/feature",
-                    f"/tmp/{project_name}/config/root/{project_name}",
+                    f"{tmp_project_dir}/config/root/feature",
+                    f"{tmp_project_dir}/config/root/{project_name}",
                 ),
             ),
             RoutineTask(
                 purpose="Setup user config file",
                 command=Commands.rename(
-                    f"/tmp/{project_name}/config/user/feature.json",
-                    f"/tmp/{project_name}/config/user/{project_name}.json",
+                    f"{tmp_project_dir}/config/user/feature.json",
+                    f"{tmp_project_dir}/config/user/{project_name}.json",
                 ),
             ),
             # ---------------------------------------------- - - -
@@ -188,21 +190,21 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             RoutineTask(
                 purpose="Update project name in 'package.json' file",
                 command=Commands.json_patch_feature_name_property(
-                    f"/tmp/{project_name}/package.json", f"vx-feature-{project_name}"
+                    f"{tmp_project_dir}/package.json", f"vx-feature-{project_name}"
                 ),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
             RoutineTask(
                 purpose="Setup feature sources",
                 command=Commands.rename(
-                    f"/tmp/{project_name}/src/feature",
-                    f"/tmp/{project_name}/src/{project_name}",
+                    f"{tmp_project_dir}/src/feature",
+                    f"{tmp_project_dir}/src/{project_name}",
                 ),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
             RoutineTask(
                 purpose="Install project dependencies",
-                command=Commands.yarn_install(f"/tmp/{project_name}"),
+                command=Commands.yarn_install(tmp_project_dir),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
             # ---------------------------------------------- - - -
@@ -210,12 +212,14 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             #
             RoutineTask(
                 purpose="Finalize feature project",
-                command=Commands.folder_copy(f"/tmp/{project_name}", path),
-                undo_command=Commands.folder_remove(f"{path}/{project_name}"),
+                command=Commands.folder_copy(tmp_project_dir, path),
+                undo_command=Commands.folder_remove(
+                    f"{path}/vx-feature-{project_name}"
+                ),
             ),
             RoutineTask(
                 purpose="Clean temporary files",
-                command=Commands.folder_remove(f"/tmp/{project_name}"),
+                command=Commands.folder_remove(tmp_project_dir),
             ),
         ],
     ).run()

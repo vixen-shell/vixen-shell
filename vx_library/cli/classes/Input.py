@@ -22,7 +22,7 @@ class Input:
                 try:
                     return responses.get(input())
                 except InputFilterError as error:
-                    print(error.message + "\n")
+                    print(error.message)
         except KeyboardInterrupt:
             print()
             return False
@@ -38,7 +38,7 @@ class Input:
                 try:
                     return input()
                 except InputFilterError as error:
-                    print(error.message + "\n")
+                    print(error.message)
         except KeyboardInterrupt:
             print()
             return
