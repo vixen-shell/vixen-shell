@@ -59,7 +59,7 @@ def update_environment():
             #
             RoutineTask(
                 purpose="Backup current environment",
-                command=Commands.file_copy(VX_ENV, "/tmp"),
+                command=Commands.folder_copy(VX_ENV, "/tmp"),
                 undo_command=Commands.folder_remove("/tmp/vixen-env"),
                 requirements=[
                     {
@@ -129,7 +129,63 @@ def update_environment():
             #
             RoutineTask(
                 purpose="Clean up temporary files",
-                command=f"{Commands.folder_remove("/tmp/vixen-env")} && {Commands.file_remove("/tmp/vxm")}",
+                command=Commands.folder_remove(download_path)
+                + " && "
+                + Commands.folder_remove("/tmp/vixen-env")
+                + " && "
+                + Commands.file_remove("/tmp/vxm"),
+            ),
+        ],
+    ).run()
+
+
+def remove_all():
+    return Routine(
+        purpose="Remove Vixen Shell",
+        tasks=[
+            RoutineTask(
+                purpose="Remove root modules",
+                command=Commands.folder_remove("/usr/share/vixen"),
+                skip_on={
+                    "callback": Commands.Checkers.folder("/usr/share/vixen", False),
+                    "message": "Root modules folder not found",
+                },
+            ),
+            RoutineTask(
+                purpose="Remove user config",
+                command=Commands.folder_remove(f"/home/{os.getlogin()}/.config/vixen"),
+                skip_on={
+                    "callback": Commands.Checkers.folder(
+                        f"/home/{os.getlogin()}/.config/vixen", False
+                    ),
+                    "message": "User config folder not found",
+                },
+            ),
+            RoutineTask(
+                purpose="Remove Vixen Manager executable",
+                command=Commands.file_remove("/usr/bin/vxm"),
+                skip_on={
+                    "callback": Commands.Checkers.file("/usr/bin/vxm", False),
+                    "message": "Executable not found",
+                },
+            ),
+            RoutineTask(
+                purpose="Remove Vixen Shell front-end",
+                command=Commands.folder_remove("/var/opt/vx-front-main"),
+                skip_on={
+                    "callback": Commands.Checkers.folder(
+                        "/var/opt/vx-front-main", False
+                    ),
+                    "message": "Vixen Shell front-end not found",
+                },
+            ),
+            RoutineTask(
+                purpose="Remove Vixen Shell environment",
+                command=Commands.folder_remove(VX_ENV),
+                skip_on={
+                    "callback": Commands.Checkers.folder(VX_ENV, False),
+                    "message": "Vixen Shell environment not found",
+                },
             ),
         ],
     ).run()

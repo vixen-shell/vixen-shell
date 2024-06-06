@@ -12,17 +12,17 @@ class SetupManager:
     @staticmethod
     @use_sudo(True)
     def run(library_path: str):
-        from .setup import vx_setup
+        from .setup import setup
 
         Logger.log("You are about to install Vixen Shell. Confirm your choice.")
 
         if Cli.Input.get_confirm():
-            vx_setup(library_path)
+            setup(library_path)
 
     @staticmethod
     @use_sudo(True)
     def remove():
-        from .setup import vx_remove
+        from .setup import remove_all
         from .requests import ShellRequests
 
         if ShellRequests.ping():
@@ -35,14 +35,14 @@ class SetupManager:
         Logger.log("Are you sure you want to remove Vixen Shell?", "WARNING")
 
         if Cli.Input.get_confirm():
-            vx_remove()
+            remove_all()
         else:
             Logger.log("You made the right choice.")
 
     @staticmethod
     @use_sudo(True)
-    def update_env():
-        from .setup import update_environment
+    def update():
+        from .setup import update
         from .requests import ShellRequests
 
         if ShellRequests.ping():
@@ -52,12 +52,10 @@ class SetupManager:
             )
             return
 
-        Logger.log(
-            "Are you sure you want to update Vixen Shell environment?", "WARNING"
-        )
+        Logger.log("Are you sure you want to update Vixen Shell?", "WARNING")
 
         if Cli.Input.get_confirm():
-            update_environment()
+            update()
 
     # ---------------------------------------------- - - -
     # FEATURES

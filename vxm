@@ -23,7 +23,7 @@ def handle_args(args):
 
     if args.setup:
         if args.setup == "update":
-            Manager.Setup.update_env()
+            Manager.Setup.update()
 
         if args.setup == "remove":
             Manager.Setup.remove()
@@ -32,13 +32,6 @@ def handle_args(args):
         if args.shell == "open":
             sys.path.append("/usr/share/vixen/features")
             Manager.Shell.open()
-
-        if args.shell == "open-dev":
-            if not __file__ == "/usr/bin/vxm":
-                sys.path.append(f"{os.getcwd()}/config/root/vixen/features")
-                Manager.Shell.open()
-            else:
-                print("Invalid option in release mode")
 
         if args.shell == "close":
             Manager.Shell.close()
@@ -71,12 +64,15 @@ if __name__ == "__main__":
     root_args = parser.add_mutually_exclusive_group(required=True)
 
     root_args.add_argument(
-        "--setup", type=str, choices=["update", "remove"], help="Vixen Shell setup."
+        "--setup",
+        type=str,
+        choices=["update", "remove"],
+        help="Vixen Shell setup.",
     )
     root_args.add_argument(
         "--shell",
         type=str,
-        choices=["open", "open-dev", "close"],
+        choices=["open", "close"],
         help="Vixen Shell controls.",
     )
     root_args.add_argument(
