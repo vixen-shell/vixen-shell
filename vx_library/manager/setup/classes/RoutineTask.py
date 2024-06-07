@@ -29,6 +29,7 @@ class RoutineTask:
         undo_command: str = None,
         requirements: List[Requirement] = None,
         skip_on: Skipper = None,
+        show_output: bool = False,
         spinner: bool = True,
     ):
         self.is_done = False
@@ -38,6 +39,7 @@ class RoutineTask:
         self.undo_command = undo_command
         self.requirements = requirements
         self.skip_on = skip_on
+        self.show_output = show_output
         self.spinner = Cli.Spinner() if spinner else None
 
     def set_spinner(self, is_running: bool):
@@ -88,7 +90,7 @@ class RoutineTask:
             self.is_done = True
 
         if not self.is_done:
-            self.is_done = Cli.exec(self.command)
+            self.is_done = Cli.exec(self.command, self.show_output)
 
         self.set_spinner(False)
 

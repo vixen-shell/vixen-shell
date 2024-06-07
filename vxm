@@ -21,6 +21,25 @@ def handle_path(args):
 def handle_args(args):
     path = handle_path(args)
 
+    if args.env:
+        if args.env == "install":
+            if not args.package:
+                print(
+                    "You must specify a package name with the [--package PACKAGE] option"
+                )
+                return
+
+            Manager.Setup.install_package(args.package)
+
+        if args.env == "uninstall":
+            if not args.package:
+                print(
+                    "You must specify a package name with the [--package PACKAGE] option"
+                )
+                return
+
+            Manager.Setup.uninstall_package(args.package)
+
     if args.setup:
         if args.setup == "update":
             Manager.Setup.update()
@@ -64,6 +83,12 @@ if __name__ == "__main__":
     root_args = parser.add_mutually_exclusive_group(required=True)
 
     root_args.add_argument(
+        "--env",
+        type=str,
+        choices=["install", "uninstall"],
+        help="Vixen environment controls.",
+    )
+    root_args.add_argument(
         "--setup",
         type=str,
         choices=["update", "remove"],
@@ -86,5 +111,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument("--path", type=str, default="", help="Optional path")
+    parser.add_argument("--package", type=str, default="", help="Environment package")
 
     handle_args(parser.parse_args())

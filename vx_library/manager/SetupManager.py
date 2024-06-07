@@ -58,6 +58,36 @@ class SetupManager:
             update()
 
     # ---------------------------------------------- - - -
+    # ENVIRONMENT
+    #
+
+    @staticmethod
+    @use_sudo(True)
+    def install_package(package_name: str):
+        from .setup import install_environment_package
+
+        Logger.log(
+            f"Are you sure you want to install '{package_name}' to Vixen Shell environment?",
+            "WARNING",
+        )
+
+        if Cli.Input.get_confirm():
+            install_environment_package(package_name)
+
+    @staticmethod
+    @use_sudo(True)
+    def uninstall_package(package_name: str):
+        from .setup import uninstall_environment_package
+
+        Logger.log(
+            f"Are you sure you want to uninstall '{package_name}' to Vixen Shell environment?",
+            "WARNING",
+        )
+
+        if Cli.Input.get_confirm():
+            uninstall_environment_package(package_name)
+
+    # ---------------------------------------------- - - -
     # FEATURES
     #
 

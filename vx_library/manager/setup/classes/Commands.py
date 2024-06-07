@@ -40,12 +40,20 @@ class Commands:
         return f"python -m venv {env_dir}"
 
     @staticmethod
-    def env_dependencies(env_dir: str, requirements_dir: str):
-        return f"source {env_dir}/bin/activate && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r {requirements_dir}/requirements.txt"
+    def env_dependencies(env_dir: str, requirements_filepath: str):
+        return f"source {env_dir}/bin/activate && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r {requirements_filepath}"
 
     @staticmethod
-    def env_install(env_dir: str, package_dir: str) -> str:
-        return f"source {env_dir}/bin/activate && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir {package_dir}"
+    def env_freeze(env_dir: str, requirements_filepath: str):
+        return f"source {env_dir}/bin/activate && pip freeze > {requirements_filepath}"
+
+    @staticmethod
+    def env_freeze_added(requirements_filepath: str, output_filepath: str):
+        return f"diff -u /usr/share/vixen/vixen_requirements.txt {requirements_filepath} | grep '^+[^+]' | sed 's/^+//' > {output_filepath}"
+
+    @staticmethod
+    def env_install(env_dir: str, entry: str) -> str:
+        return f"source {env_dir}/bin/activate && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir {entry}"
 
     @staticmethod
     def env_remove(env_dir: str, package_name: str) -> str:

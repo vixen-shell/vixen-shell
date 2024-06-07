@@ -10,7 +10,7 @@ def setup_config():
             # Root config
             #
             RoutineTask(
-                purpose="Setup root config",
+                purpose="Create root modules folder",
                 command=Commands.folder_create("/usr/share/vixen/features"),
                 undo_command=Commands.folder_remove(f"/usr/share/vixen"),
             ),
@@ -18,7 +18,7 @@ def setup_config():
             # User config
             #
             RoutineTask(
-                purpose="Setup user config",
+                purpose="Create user config folder",
                 command=Commands.user(
                     Commands.folder_create(
                         f"/home/{os.getlogin()}/.config/vixen/features"

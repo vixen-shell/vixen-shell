@@ -72,6 +72,20 @@ def update_front():
                 purpose="Install Vixen Shell front-end dependencies",
                 command=Commands.yarn_install("/var/opt/vx-front-main"),
             ),
+            # ---------------------------------------------- - - -
+            # Restore feature front-ends
+            #
+            RoutineTask(
+                purpose="Restore feature front-ends",
+                command=Commands.folder_copy(
+                    "/tmp/vx-front-main/src/features",
+                    "/var/opt/vx-front-main/src",
+                    True,
+                ),
+            ),
+            # ---------------------------------------------- - - -
+            # Build front-end
+            #
             RoutineTask(
                 purpose="Build Vixen Shell front-end",
                 command=Commands.yarn_build("/var/opt/vx-front-main"),
