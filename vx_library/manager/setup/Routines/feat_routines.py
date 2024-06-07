@@ -152,10 +152,11 @@ def vx_add_feature(dev_dir: str, feature_name: str):
             RoutineTask(
                 purpose="Setup feature front-end sources",
                 command=Commands.folder_copy(
-                    f"{dev_dir}/src/{feature_name}", "/var/opt/vx-front-main/src"
+                    f"{dev_dir}/src/{feature_name}",
+                    "/var/opt/vx-front-main/src/features",
                 ),
                 undo_command=Commands.folder_remove(
-                    f"/var/opt/vx-front-main/src/{feature_name}"
+                    f"/var/opt/vx-front-main/src/features/{feature_name}"
                 ),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
@@ -206,7 +207,7 @@ def vx_remove_feature(feature_name: str):
             RoutineTask(
                 purpose="Remove feature front-end sources",
                 command=Commands.folder_remove(
-                    f"/var/opt/vx-front-main/src/{feature_name}"
+                    f"/var/opt/vx-front-main/src/features/{feature_name}"
                 ),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
