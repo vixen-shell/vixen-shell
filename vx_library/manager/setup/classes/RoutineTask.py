@@ -40,7 +40,7 @@ class RoutineTask:
         self.requirements = requirements
         self.skip_on = skip_on
         self.show_output = show_output
-        self.spinner = Cli.Spinner() if spinner else None
+        self.spinner = Cli.Spinner() if spinner and not show_output else None
 
     def set_spinner(self, is_running: bool):
         if self.spinner:
@@ -90,7 +90,13 @@ class RoutineTask:
             self.is_done = True
 
         if not self.is_done:
+            if self.show_output:
+                print()
+
             self.is_done = Cli.exec(self.command, self.show_output)
+
+            if self.show_output:
+                print()
 
         self.set_spinner(False)
 

@@ -33,6 +33,17 @@ def setup_environment(library_path: str):
                 ),
             ),
             # ---------------------------------------------- - - -
+            # Install Vixen Shell Libraries
+            #
+            RoutineTask(
+                purpose="Install Vixen Shell libraries",
+                command=Commands.env_install(VX_ENV, library_path),
+            ),
+            RoutineTask(
+                purpose="Remove build folders",
+                command=Commands.folder_remove_build(library_path),
+            ),
+            # ---------------------------------------------- - - -
             # Backup Package List
             #
             RoutineTask(
@@ -45,17 +56,6 @@ def setup_environment(library_path: str):
                 command=Commands.env_freeze(
                     VX_ENV, "/usr/share/vixen/vixen_requirements.txt"
                 ),
-            ),
-            # ---------------------------------------------- - - -
-            # Install Vixen Shell Libraries
-            #
-            RoutineTask(
-                purpose="Install Vixen Shell libraries",
-                command=Commands.env_install(VX_ENV, library_path),
-            ),
-            RoutineTask(
-                purpose="Remove build folders",
-                command=Commands.folder_remove_build(library_path),
             ),
             # ---------------------------------------------- - - -
             # Install Vxm
@@ -140,7 +140,14 @@ def update_environment():
                 ),
             ),
             # ---------------------------------------------- - - -
-            # Backup Package List
+            # Install Vixen Shell Libraries
+            #
+            RoutineTask(
+                purpose="Install Vixen Shell libraries",
+                command=Commands.env_install(VX_ENV, download_path),
+            ),
+            # ---------------------------------------------- - - -
+            # Backup Vixen Package List
             #
             RoutineTask(
                 purpose="Freeze environment dependencies",
@@ -190,13 +197,6 @@ def update_environment():
                     ),
                     "message": "Feature requirements not found",
                 },
-            ),
-            # ---------------------------------------------- - - -
-            # Install Vixen Shell Libraries
-            #
-            RoutineTask(
-                purpose="Install Vixen Shell libraries",
-                command=Commands.env_install(VX_ENV, download_path),
             ),
             # ---------------------------------------------- - - -
             # Install Vxm
