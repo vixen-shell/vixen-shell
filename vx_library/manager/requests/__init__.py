@@ -76,6 +76,11 @@ class ShellRequests:
 
     @staticmethod
     @check_ping(True)
+    def feature_names() -> list[str]:
+        return request_get("/features/names").json()["names"]
+
+    @staticmethod
+    @check_ping(True)
     def load_feature(entry: str) -> str | None:
         response = request_post(f"/features/load", entry)
 
@@ -98,11 +103,6 @@ class ShellRequests:
 
     @staticmethod
     @check_ping(True)
-    def feature_names() -> list[str]:
-        return request_get("/features/names").json()["names"]
-
-    @staticmethod
-    @check_ping(True)
     def start_feature(feature_name: str) -> str | None:
         response = request_get(f"/feature/{feature_name}/start")
 
@@ -111,3 +111,47 @@ class ShellRequests:
             return
 
         return response.json()["name"]
+
+    @staticmethod
+    @check_ping(True)
+    def feature_frame_ids(feature_name: str) -> dict | None:
+        response = request_get(f"/frames/{feature_name}/ids")
+
+        if not response.status_code == 200:
+            handle_error_response(response)
+            return
+
+        return response.json()
+
+    @staticmethod
+    @check_ping(True)
+    def toggle_feature_frame(feature_name: str, frame_id: str) -> str | None:
+        response = request_get(f"/frame/{feature_name}/toggle/{frame_id}")
+
+        if not response.status_code == 200:
+            handle_error_response(response)
+            return
+
+        return response.json()["id"]
+
+    @staticmethod
+    @check_ping(True)
+    def open_feature_frame(feature_name: str, frame_id: str) -> str | None:
+        response = request_get(f"/frame/{feature_name}/open/{frame_id}")
+
+        if not response.status_code == 200:
+            handle_error_response(response)
+            return
+
+        return response.json()["id"]
+
+    @staticmethod
+    @check_ping(True)
+    def close_feature_frame(feature_name: str, frame_id: str) -> str | None:
+        response = request_get(f"/frame/{feature_name}/close/{frame_id}")
+
+        if not response.status_code == 200:
+            handle_error_response(response)
+            return
+
+        return response.json()["id"]

@@ -89,4 +89,42 @@ class ShellManager:
     def feature_names():
         from .requests import ShellRequests
 
-        print(ShellRequests.feature_names())
+        result = ShellRequests.feature_names()
+        if result != None:
+            print(result)
+
+    @staticmethod
+    @use_sudo(False)
+    def feature_frame_ids(feature_name: str):
+        from .requests import ShellRequests
+
+        result = ShellRequests.feature_frame_ids(feature_name)
+        if result != None:
+            print(result)
+
+    @staticmethod
+    @use_sudo(False)
+    def toggle_feature_frame(feature_name: str, frame_id: str):
+        from .requests import ShellRequests
+
+        result = ShellRequests.toggle_feature_frame(feature_name, frame_id)
+        if result != None:
+            print(result)
+
+    @staticmethod
+    @use_sudo(False)
+    def open_feature_frame(feature_name: str, frame_id: str):
+        from .requests import ShellRequests
+
+        result = ShellRequests.open_feature_frame(feature_name, frame_id)
+        if result != None:
+            print(result)
+
+    @staticmethod
+    @use_sudo(False)
+    def close_feature_frame(feature_name: str, frame_id: str):
+        from .requests import ShellRequests
+
+        result = ShellRequests.close_feature_frame(feature_name, frame_id)
+        if result != None:
+            print(result)

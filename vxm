@@ -24,18 +24,14 @@ def handle_args(args):
     if args.env:
         if args.env == "install":
             if not args.package:
-                print(
-                    "You must specify a package name with the [--package PACKAGE] option"
-                )
+                print("Missing [--package PACKAGE] option")
                 return
 
             Manager.Setup.install_package(args.package)
 
         if args.env == "uninstall":
             if not args.package:
-                print(
-                    "You must specify a package name with the [--package PACKAGE] option"
-                )
+                print("Missing [--package PACKAGE] option")
                 return
 
             Manager.Setup.uninstall_package(args.package)
@@ -62,15 +58,56 @@ def handle_args(args):
         if args.dev == "new":
             Manager.Setup.create_feature(path)
 
-    elif args.feature:
-        if args.feature == "names":
+    elif args.features:
+        if args.features == "names":
             Manager.Shell.feature_names()
 
-        if args.feature == "add":
+        if args.features == "add":
             Manager.Setup.add_feature(path)
 
-        if args.feature == "remove":
+        if args.features == "remove":
             Manager.Setup.remove_feature()
+
+    elif args.frames:
+        if args.frames == "ids":
+            if not args.feature:
+                print("Missing [--feature FEATURE] option")
+                return
+
+            Manager.Shell.feature_frame_ids(args.feature)
+
+        if args.frames == "toggle":
+            if not args.feature:
+                print("Missing [--feature FEATURE] option")
+                return
+
+            if not args.frame:
+                print("Missing [--frame FRAME] option")
+                return
+
+            Manager.Shell.toggle_feature_frame(args.feature, args.frame)
+
+        if args.frames == "open":
+            if not args.feature:
+                print("Missing [--feature FEATURE] option")
+                return
+
+            if not args.frame:
+                print("Missing [--frame FRAME] option")
+                return
+
+            Manager.Shell.open_feature_frame(args.feature, args.frame)
+
+        if args.frames == "close":
+            if not args.feature:
+                print("Missing [--feature FEATURE] option")
+                return
+
+            if not args.frame:
+                print("Missing [--frame FRAME] option")
+                return
+
+            Manager.Shell.close_feature_frame(args.feature, args.frame)
 
 
 if __name__ == "__main__":
@@ -101,16 +138,24 @@ if __name__ == "__main__":
         help="Vixen Shell controls.",
     )
     root_args.add_argument(
-        "--dev", type=str, choices=["run", "new"], help="Vixen Shell devs controls."
+        "--dev", type=str, choices=["run", "new"], help="Devs controls."
     )
     root_args.add_argument(
-        "--feature",
+        "--features",
         type=str,
         choices=["names", "add", "remove"],
-        help="Vixen Shell features controls.",
+        help="Features controls.",
+    )
+    root_args.add_argument(
+        "--frames",
+        type=str,
+        choices=["ids", "toggle", "open", "close"],
+        help="Feature frames controls.",
     )
 
     parser.add_argument("--path", type=str, default="", help="Optional path")
     parser.add_argument("--package", type=str, default="", help="Environment package")
+    parser.add_argument("--feature", type=str, default="", help="Feature name")
+    parser.add_argument("--frame", type=str, default="", help="Frame id")
 
     handle_args(parser.parse_args())
