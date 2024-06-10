@@ -186,6 +186,37 @@ class SetupManager:
 
     @staticmethod
     @use_sudo(True)
+    def add_extra_feature(feature_name: str):
+        from .setup import vx_add_extra_feature
+        from .requests import ShellRequests
+
+        feature_names = ShellRequests.feature_names()
+        if feature_names == None:
+            return
+
+        if feature_name in feature_names:
+            Logger.log(
+                f"A feature called '{feature_name}' already exists in Vixen Shell",
+                "ERROR",
+            )
+            return
+
+        Logger.log(
+            f"You are about to add '{feature_name}' extra feature to Vixen Shell. Do you want it?",
+            "WARNING",
+        )
+
+        if Cli.Input.get_confirm():
+            if vx_add_extra_feature(feature_name):
+                ShellRequests.load_feature(feature_name)
+
+                print()
+                Logger.log(f"'{feature_name}' extra feature added successfully")
+        else:
+            Logger.log("Operation avorted", "WARNING")
+
+    @staticmethod
+    @use_sudo(True)
     def remove_feature():
         from .setup import vx_remove_feature
         from .requests import ShellRequests

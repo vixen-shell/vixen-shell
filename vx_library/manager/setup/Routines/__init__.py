@@ -7,7 +7,12 @@ from .env_routines import (
 )
 from .front_routines import setup_front, update_front
 from .conf_routines import setup_config
-from .feat_routines import vx_add_feature, vx_new_feature, vx_remove_feature
+from .feat_routines import (
+    vx_add_feature,
+    vx_add_extra_feature,
+    vx_new_feature,
+    vx_remove_feature,
+)
 
 
 def setup(library_path: str):

@@ -7,7 +7,7 @@ from ..classes import Commands, Routine, RoutineTask
 
 def vx_new_feature(path: str, project_name: str, front_end: bool):
     front_purpose = f" ({'no ' if not front_end else ''}front-end)"
-    tmp_project_dir = f"/tmp/vx_feature_{project_name}"
+    tmp_project_dir = f"/tmp/vx-feature-{project_name}"
 
     return Routine(
         purpose="Create feature project development: " + project_name + front_purpose,
@@ -167,6 +167,36 @@ def vx_add_feature(dev_dir: str, feature_name: str):
             ),
         ],
     ).run()
+
+
+def vx_add_extra_feature(feature_name: str):
+    tmp_feature_dir = f"/tmp/vx-feature-{feature_name}-main"
+
+    if not Routine(
+        purpose=f"Download extra feature '{feature_name}'",
+        tasks=[
+            RoutineTask(
+                purpose="Download feature",
+                command=Commands.git_get_archive("/tmp", f"vx-feature-{feature_name}"),
+            ),
+        ],
+    ).run():
+        return False
+
+    add_result = vx_add_feature(tmp_feature_dir, feature_name)
+
+    return (
+        Routine(
+            purpose=f"Clean temporary files",
+            tasks=[
+                RoutineTask(
+                    purpose="Clean files",
+                    command=Commands.folder_remove(tmp_feature_dir),
+                ),
+            ],
+        ).run()
+        and add_result
+    )
 
 
 # ---------------------------------------------- - - -

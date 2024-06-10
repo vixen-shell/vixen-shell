@@ -76,7 +76,7 @@ class ShellRequests:
 
     @staticmethod
     @check_ping(True)
-    def feature_names() -> list[str]:
+    def feature_names() -> list[str] | None:
         return request_get("/features/names").json()["names"]
 
     @staticmethod

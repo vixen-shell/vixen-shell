@@ -63,7 +63,10 @@ def handle_args(args):
             Manager.Shell.feature_names()
 
         if args.features == "add":
-            Manager.Setup.add_feature(path)
+            if args.extra:
+                Manager.Setup.add_extra_feature(args.extra)
+            else:
+                Manager.Setup.add_feature(path)
 
         if args.features == "remove":
             Manager.Setup.remove_feature()
@@ -153,9 +156,29 @@ if __name__ == "__main__":
         help="Feature frames controls.",
     )
 
-    parser.add_argument("--path", type=str, default="", help="Optional path")
-    parser.add_argument("--package", type=str, default="", help="Environment package")
-    parser.add_argument("--feature", type=str, default="", help="Feature name")
-    parser.add_argument("--frame", type=str, default="", help="Frame id")
+    parser.add_argument(
+        "--path",
+        type=str,
+        default="",
+        help="Optional path (--dev run/new, --features add)",
+    )
+    parser.add_argument(
+        "--package",
+        type=str,
+        default="",
+        help="Environment package (--env install/uninstall)",
+    )
+    parser.add_argument(
+        "--feature",
+        type=str,
+        default="",
+        help="Feature name (--frames ids/toggle/open/close)",
+    )
+    parser.add_argument(
+        "--frame", type=str, default="", help="Frame id (--frames toggle/open/close)"
+    )
+    parser.add_argument(
+        "--extra", type=str, default="", help="Extra feature name (--features add)"
+    )
 
     handle_args(parser.parse_args())
