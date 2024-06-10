@@ -51,7 +51,7 @@ class RoutineTask:
 
     def check_requirements(self) -> bool:
         if self.requirements:
-            Logger.log(self.purpose, suffix="CHECKS")
+            Logger.log(self.purpose, suffix="CHECKS", above=True)
 
             for requirement in self.requirements:
                 if not requirement["callback"]():
@@ -63,12 +63,12 @@ class RoutineTask:
                         issue = requirement["issue"]
 
                         if Cli.exec(issue["command"]):
-                            Logger.log(issue["purpose"], "WARNING", "ISSUE")
+                            Logger.log(issue["purpose"], "WARNING", "ISSUE", above=True)
                         else:
                             Logger.log("Unable to apply issue", "ERROR", "ISSUE")
                             return False
 
-                Logger.log(requirement["purpose"], suffix="OK")
+                Logger.log(requirement["purpose"], suffix="OK", above=True)
 
         return True
 
@@ -83,7 +83,10 @@ class RoutineTask:
 
         if self.skip_on and self.skip_on["callback"]():
             Logger.log(
-                f"{self.purpose}: {self.skip_on['message']}", "WARNING", "SKIPPED"
+                f"{self.purpose}: {self.skip_on['message']}",
+                "WARNING",
+                "SKIPPED",
+                above=True,
             )
 
             self.is_skipped = True
@@ -105,6 +108,7 @@ class RoutineTask:
                 self.purpose,
                 "INFO" if self.is_done else "ERROR",
                 "DONE" if self.is_done else "FAILED",
+                above=True if self.is_done and not self.show_output else False,
             )
 
         return self.is_done

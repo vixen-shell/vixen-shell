@@ -110,20 +110,20 @@ def update_environment():
                 ],
             ),
             # ---------------------------------------------- - - -
-            # Download updates
-            #
-            RoutineTask(
-                purpose="Download Vixen environment",
-                command=Commands.git_get_archive("/tmp/vx_update", "vixen-shell"),
-                undo_command=Commands.folder_remove(download_path),
-            ),
-            # ---------------------------------------------- - - -
             # Clean current setup
             #
             RoutineTask(
                 purpose="Clean current environment",
                 command=Commands.folder_remove(VX_ENV),
                 undo_command=Commands.folder_copy("/tmp/vx_update/vixen-env", "/opt"),
+            ),
+            # ---------------------------------------------- - - -
+            # Download updates
+            #
+            RoutineTask(
+                purpose="Download Vixen environment",
+                command=Commands.git_get_archive("/tmp/vx_update", "vixen-shell"),
+                undo_command=Commands.folder_remove(download_path),
             ),
             # ---------------------------------------------- - - -
             # Update Environment

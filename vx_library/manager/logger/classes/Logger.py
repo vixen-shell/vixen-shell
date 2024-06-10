@@ -1,4 +1,4 @@
-import logging
+import logging, sys
 
 from .Formatter import Formatter
 from ..utils import LogLevel
@@ -38,10 +38,17 @@ class Logger:
 
     @staticmethod
     @check_init(True)
-    def log(message: str, level: LogLevel = "INFO", suffix: str = None):
+    def log(
+        message: str, level: LogLevel = "INFO", suffix: str = None, above: bool = False
+    ):
         message = f"{message} [{suffix}]" if suffix else message
 
         try:
+            if above:
+                sys.stdout.write("\033[F")
+                sys.stdout.write("\033[K")
+                sys.stdout.flush()
+
             Logger.logger.log(logging._nameToLevel[level], message)
         except KeyError as error:
             raise KeyError(f"{error} is not a valid log level")

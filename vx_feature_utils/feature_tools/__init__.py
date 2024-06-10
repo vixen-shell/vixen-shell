@@ -58,11 +58,12 @@ class Utils:
                 sys.path.append(sys_path)
 
             feature_module = importlib.import_module(feature_name)
-            # importlib.reload(feature_module)
-
         except:
-            if sys_path and sys_path in sys.path:
+            module = sys.modules.get(feature_name)
+            if module:
                 sys.modules.pop(feature_name)
+
+            if sys_path and sys_path in sys.path:
                 sys.path.remove(sys_path)
 
             raise

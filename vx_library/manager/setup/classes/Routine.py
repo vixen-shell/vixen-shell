@@ -17,7 +17,6 @@ class Routine:
                     task.undo()
 
             Logger.log(self.purpose, "WARNING", "FAILED")
-            print()
             return False
 
         for task in self.tasks:
@@ -25,5 +24,4 @@ class Routine:
                 return undo()
 
         Logger.log(self.purpose, suffix="DONE")
-        print()
         return True

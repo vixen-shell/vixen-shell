@@ -42,17 +42,18 @@ class ShellManager:
                 Logger.log(f"Unload feature '{feature.name}'", suffix="SUCCESS")
                 sys.exit(0)
 
-            Logger.log(f"Unload feature '{feature.name}'", "ERROR", "FAILED")
+            Logger.log("Unload feature", "ERROR", "FAILED")
             sys.exit(1)
 
         signal.signal(signal.SIGINT, signal_handler)
 
-        if vite_process:
-            vite_process.start()
-
         if feature.load():
+            if vite_process and not vite_process.is_alive:
+                vite_process.start()
+
             os.system("clear")
             Logger.log(f"Load feature '{feature.name}'", suffix="SUCCESS")
+            feature.start()
 
             while True:
                 Logger.log("(r and ENTER) to reload feature, (Ctrl+C) to exit")
@@ -70,16 +71,15 @@ class ShellManager:
 
                 if choice == "r":
                     if not feature.reload():
-                        Logger.log(
-                            f"Reload feature '{feature.name}'", "ERROR", "FAILED"
-                        )
+                        Logger.log("Reload feature", "ERROR", "FAILED")
                         break
 
                     os.system("clear")
                     Logger.log(f"Reload feature '{feature.name}'", suffix="SUCCESS")
+                    feature.start()
 
         else:
-            Logger.log(f"Load feature '{feature.name}'", suffix="FAILED")
+            Logger.log("Load feature", "ERROR", suffix="FAILED")
 
         if vite_process and vite_process.is_alive:
             vite_process.terminate()

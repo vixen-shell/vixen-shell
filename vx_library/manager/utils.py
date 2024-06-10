@@ -19,7 +19,7 @@ def get_vite_process(directory: str):
 
         def start(self):
             self.process.start()
-            time.sleep(1)
+            time.sleep(0.5)
 
         def join(self):
             try:
@@ -91,11 +91,10 @@ class DevFeature:
 
     def load(self) -> bool:
         self.name = self.request.load_feature(self.directory)
+        return bool(self.name)
 
-        if self.name:
-            return bool(self.request.start_feature(self.name))
-
-        return False
+    def start(self) -> bool:
+        return bool(self.request.start_feature(self.name))
 
     def unload(self) -> bool:
         if self.name and self.request.ping():
