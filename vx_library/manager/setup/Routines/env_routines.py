@@ -74,19 +74,45 @@ def setup_environment(library_path: str):
 
 
 def update_environment():
+    from ...utils import get_vx_package_version, is_sup_version, read_json
+
+    def validate_version(new_library_path: str):
+        def check() -> bool:
+            try:
+                current_setup = read_json("/usr/share/vixen/vixen_setup.json")
+                return is_sup_version(
+                    current_setup.get("version"),
+                    get_vx_package_version(new_library_path),
+                )
+            except:
+                return False
+
+        return check
+
     download_path = "/tmp/vx_update/vixen-shell-main"
 
     return Routine(
         purpose="Update Vixen Shell environment",
         tasks=[
             # ---------------------------------------------- - - -
-            # Backup current setup
+            # Init Tmp folder
             #
             RoutineTask(
-                purpose="Init current environment backup",
+                purpose="Init temporary files",
                 command=Commands.folder_create("/tmp/vx_update"),
                 undo_command=Commands.folder_remove("/tmp/vx_update"),
             ),
+            # ---------------------------------------------- - - -
+            # Download updates
+            #
+            RoutineTask(
+                purpose="Download Vixen environment",
+                command=Commands.git_get_archive("/tmp/vx_update", "vixen-shell"),
+                undo_command=Commands.folder_remove(download_path),
+            ),
+            # ---------------------------------------------- - - -
+            # Backup current setup
+            #
             RoutineTask(
                 purpose="Backup current environment",
                 command=Commands.folder_copy(VX_ENV, "/tmp/vx_update"),
@@ -95,7 +121,12 @@ def update_environment():
                         "purpose": "Check an existing environment folder",
                         "callback": Commands.Checkers.folder(VX_ENV, True),
                         "failure_message": f"Environment folder not found",
-                    }
+                    },
+                    {
+                        "purpose": "Check version",
+                        "callback": validate_version(download_path),
+                        "failure_message": "Your current version is the latest version of Vixen Shell",
+                    },
                 ],
             ),
             RoutineTask(
@@ -116,14 +147,6 @@ def update_environment():
                 purpose="Clean current environment",
                 command=Commands.folder_remove(VX_ENV),
                 undo_command=Commands.folder_copy("/tmp/vx_update/vixen-env", "/opt"),
-            ),
-            # ---------------------------------------------- - - -
-            # Download updates
-            #
-            RoutineTask(
-                purpose="Download Vixen environment",
-                command=Commands.git_get_archive("/tmp/vx_update", "vixen-shell"),
-                undo_command=Commands.folder_remove(download_path),
             ),
             # ---------------------------------------------- - - -
             # Update Environment

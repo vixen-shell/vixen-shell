@@ -16,17 +16,18 @@ from .feat_routines import (
 
 
 def setup(library_path: str):
-    if not setup_environment(library_path):
-        return False
+    from ...utils import get_vx_package_version, write_json
 
-    if not setup_front():
-        return False
+    result = setup_environment(library_path) and setup_front() and setup_config()
 
-    return setup_config()
+    if result:
+        write_json(
+            "/usr/share/vixen/vixen_setup.json",
+            {"version": get_vx_package_version(library_path)},
+        )
+
+    return result
 
 
 def update():
-    if not update_environment():
-        return False
-
-    return update_front()
+    return update_environment() and update_front()
