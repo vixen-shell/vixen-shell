@@ -25,6 +25,8 @@ def setup(library_path: str):
             "/usr/share/vixen/vixen_setup.json",
             {"version": get_vx_package_version(library_path)},
         )
+    else:
+        remove_all()
 
     return result
 
