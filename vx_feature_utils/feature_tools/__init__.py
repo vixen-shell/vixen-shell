@@ -35,7 +35,7 @@ class Utils:
 
     @staticmethod
     def get_dev_feature_name(dev_directory):
-        root_params_directory = f"{dev_directory}/config/root"
+        root_params_directory = f"{dev_directory}/root"
 
         for item in os.listdir(root_params_directory):
             path = f"{root_params_directory}/{item}"
@@ -48,7 +48,7 @@ class Utils:
         sys_path = None
 
         if os.path.exists(entry) and os.path.isdir(entry):
-            sys_path = f"{entry}/config/root"
+            sys_path = f"{entry}/root"
             feature_name = Utils.get_dev_feature_name(entry)
         else:
             feature_name = entry

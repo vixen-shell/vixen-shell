@@ -44,15 +44,15 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             RoutineTask(
                 purpose="Setup root config module",
                 command=Commands.rename(
-                    f"{tmp_project_dir}/config/root/feature",
-                    f"{tmp_project_dir}/config/root/{project_name}",
+                    f"{tmp_project_dir}/root/feature",
+                    f"{tmp_project_dir}/root/{project_name}",
                 ),
             ),
             RoutineTask(
                 purpose="Setup user config file",
                 command=Commands.rename(
-                    f"{tmp_project_dir}/config/user/feature.json",
-                    f"{tmp_project_dir}/config/user/{project_name}.json",
+                    f"{tmp_project_dir}/user/feature.json",
+                    f"{tmp_project_dir}/user/{project_name}.json",
                 ),
             ),
             # ---------------------------------------------- - - -
@@ -114,7 +114,7 @@ def vx_add_feature(dev_dir: str, feature_name: str):
             RoutineTask(
                 purpose="Setup root config module",
                 command=Commands.folder_copy(
-                    f"{dev_dir}/config/root/{feature_name}",
+                    f"{dev_dir}/root/{feature_name}",
                     "/usr/share/vixen/features",
                 ),
                 undo_command=Commands.folder_remove(
@@ -124,7 +124,7 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                     {
                         "purpose": "Check an existing root config module",
                         "callback": Commands.Checkers.folder(
-                            f"{dev_dir}/config/root/{feature_name}", True
+                            f"{dev_dir}/root/{feature_name}", True
                         ),
                         "failure_message": "Root config module not found",
                     }
@@ -133,7 +133,7 @@ def vx_add_feature(dev_dir: str, feature_name: str):
             RoutineTask(
                 purpose="Setup user config file",
                 command=Commands.file_copy(
-                    f"{dev_dir}/config/user/{feature_name}.json",
+                    f"{dev_dir}/user/{feature_name}.json",
                     f"/home/{os.getlogin()}/.config/vixen/features",
                 ),
                 undo_command=Commands.file_remove(
@@ -141,7 +141,7 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                 ),
                 skip_on={
                     "callback": Commands.Checkers.file(
-                        f"{dev_dir}/config/user/{feature_name}.json", False
+                        f"{dev_dir}/user/{feature_name}.json", False
                     ),
                     "message": "User config file not found",
                 },

@@ -38,7 +38,7 @@ class FeatureContent:
 
         try:
             if not entry == self.feature_name:
-                user_params_filepath = f"{entry}/config/user/{self.feature_name}.json"
+                user_params_filepath = f"{entry}/user/{self.feature_name}.json"
                 self.dev_mode = True
 
             self.params = FeatureParams.create(

@@ -99,7 +99,7 @@ def get_dev_feature_name(directory: str) -> str | None:
             name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))
         ]
 
-    folders = folder_list(f"{directory}/config/root")
+    folders = folder_list(f"{directory}/root")
 
     if len(folders) != 1:
         return None

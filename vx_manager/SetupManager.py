@@ -140,7 +140,7 @@ class SetupManager:
                     print()
                     Logger.log("The project was created successfully")
                     Logger.log(
-                        f"Type [{'yarn dev' if front_end else 'vxm --dev run'}] in the project folder to launch and try your project"
+                        f"Type 'vxm --dev run' in the project folder to launch and try your project"
                     )
             else:
                 Logger.log("Operation avorted", "WARNING")
