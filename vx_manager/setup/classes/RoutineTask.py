@@ -25,8 +25,8 @@ class RoutineTask:
     def __init__(
         self,
         purpose: str,
-        command: str,
-        undo_command: str = None,
+        command: str | Callable[[], bool],
+        undo_command: str | Callable[[], bool] = None,
         requirements: List[Requirement] = None,
         skip_on: Skipper = None,
         show_output: bool = False,
@@ -96,7 +96,10 @@ class RoutineTask:
             if self.show_output:
                 print()
 
-            self.is_done = Cli.exec(self.command, self.show_output)
+            if isinstance(self.command, str):
+                self.is_done = Cli.exec(self.command, self.show_output)
+            if callable(self.command):
+                self.is_done = self.command()
 
             if self.show_output:
                 print()
@@ -122,7 +125,11 @@ class RoutineTask:
         level = "WARNING"
 
         if self.is_done:
-            result = Cli.exec(self.undo_command)
+            if isinstance(self.undo_command, str):
+                result = Cli.exec(self.undo_command)
+            if callable(self.undo_command):
+                result = self.undo_command()
+
             status = "UNDO" if result else "UNDO FAILED"
             level = "WARNING" if result else "ERROR"
 

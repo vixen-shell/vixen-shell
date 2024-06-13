@@ -1,4 +1,4 @@
-import os, sys, importlib
+import os, sys, importlib, glob
 from ..feature_params import root_FeatureParams_dict
 
 
@@ -48,14 +48,16 @@ class Utils:
         sys_path = None
 
         if os.path.exists(entry) and os.path.isdir(entry):
-            sys_path = f"{entry}/root"
+            sys_path = [f"{entry}/root"]
+            site_packages_dir = glob.glob(f"{entry}/.venv/lib/python*/site-packages")
+            sys_path.extend(site_packages_dir)
             feature_name = Utils.get_dev_feature_name(entry)
         else:
             feature_name = entry
 
         try:
             if sys_path:
-                sys.path.append(sys_path)
+                sys.path.extend(sys_path)
 
             feature_module = importlib.import_module(feature_name)
         except:
@@ -63,8 +65,10 @@ class Utils:
             if module:
                 sys.modules.pop(feature_name)
 
-            if sys_path and sys_path in sys.path:
-                sys.path.remove(sys_path)
+            if sys_path:
+                for path in sys_path:
+                    while path in sys.path:
+                        sys.path.remove(path)
 
             raise
 

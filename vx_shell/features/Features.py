@@ -18,8 +18,16 @@ class DevMode:
     @staticmethod
     def disable(feature: Feature):
         DevMode.feature_names.remove(feature.content.feature_name)
-        sys.modules.pop(feature.content.feature_name)
-        sys.path.remove(feature.content.sys_path)
+
+        module = sys.modules.get(feature.content.feature_name)
+        if module:
+            sys.modules.pop(feature.content.feature_name)
+
+        if feature.content.sys_path:
+            for path in feature.content.sys_path:
+                while path in sys.path:
+                    sys.path.remove(path)
+
         Logger.log(f"[Dev mode]: feature '{feature.content.feature_name}' disabled")
 
     @staticmethod

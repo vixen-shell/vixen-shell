@@ -1,5 +1,6 @@
-import os
+import os, glob
 from ..classes import Commands, Routine, RoutineTask
+from ...utils import write_json
 
 # ---------------------------------------------- - - -
 # Create new feature
@@ -8,6 +9,20 @@ from ..classes import Commands, Routine, RoutineTask
 def vx_new_feature(path: str, project_name: str, front_end: bool):
     front_purpose = f" ({'no ' if not front_end else ''}front-end)"
     tmp_project_dir = f"/tmp/vx-feature-{project_name}"
+
+    def create_vscode_settings() -> bool:
+        try:
+            write_json(
+                f"{tmp_project_dir}/.vscode/settings.json",
+                {
+                    "python.analysis.extraPaths": glob.glob(
+                        "/opt/vixen-env/lib/python*/site-packages"
+                    )
+                },
+            )
+            return True
+        except:
+            return False
 
     return Routine(
         purpose="Create feature project development: " + project_name + front_purpose,
@@ -56,6 +71,17 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
                 ),
             ),
             # ---------------------------------------------- - - -
+            # VsCode Settings
+            #
+            RoutineTask(
+                purpose="Create vscode settings folder",
+                command=Commands.folder_create(f"{tmp_project_dir}/.vscode"),
+            ),
+            RoutineTask(
+                purpose="Setup vscode settings",
+                command=create_vscode_settings,
+            ),
+            # ---------------------------------------------- - - -
             # Front-end Sources
             #
             RoutineTask(
@@ -88,6 +114,12 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
                     f"{path}/vx-feature-{project_name}"
                 ),
             ),
+            # Project Virtual Environment
+            RoutineTask(
+                purpose="Setup virtual environment",
+                command=Commands.env_create(f"{path}/vx-feature-{project_name}/.venv"),
+            ),
+            # Clean temporary files
             RoutineTask(
                 purpose="Clean temporary files",
                 command=Commands.folder_remove(tmp_project_dir),

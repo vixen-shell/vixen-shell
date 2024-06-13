@@ -26,7 +26,7 @@ class FeatureContent:
     def __init__(self, package_name: str, root_params_dict: root_FeatureParams_dict):
         self.feature_name = package_name
         self.root_params_dict = root_params_dict
-        self.sys_path = None
+        self.sys_path: list[str] = None
         self.dev_mode = False
 
         self.params: FeatureParams = None
