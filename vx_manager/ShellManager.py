@@ -1,7 +1,7 @@
 import os, sys, signal
 from .utils import use_sudo, DevFeature
 from .logger import Logger
-from ..cli import Cli
+from vx_cli import Cli
 
 
 class ShellManager:
@@ -78,11 +78,11 @@ class ShellManager:
                     Logger.log(f"Reload feature '{feature.name}'", suffix="SUCCESS")
                     feature.start()
 
+            if vite_process and vite_process.is_alive:
+                vite_process.terminate()
+
         else:
             Logger.log("Load feature", "ERROR", suffix="FAILED")
-
-        if vite_process and vite_process.is_alive:
-            vite_process.terminate()
 
     @staticmethod
     @use_sudo(False)

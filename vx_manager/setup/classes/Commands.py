@@ -65,7 +65,7 @@ class Commands:
 
     @staticmethod
     def folder_remove_build(package_dir: str) -> str:
-        return f"rm -r {package_dir}/build && rm -r {package_dir}/vx_library.egg-info"
+        return f"rm -r {package_dir}/build && rm -r {package_dir}/vx_libraries.egg-info"
 
     # ---------------------------------------------- - - -
     # Folders

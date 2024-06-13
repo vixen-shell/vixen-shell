@@ -11,7 +11,7 @@ License           : GPL3
 import os, argparse, sys
 
 os.environ["GDK_BACKEND"] = "wayland"
-from vx_library import Manager
+from vx_manager import Manager
 
 
 def handle_path(args):

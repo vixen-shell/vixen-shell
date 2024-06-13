@@ -1,7 +1,7 @@
 from typing import TypedDict, List, Callable, Optional
 
 from ...logger import Logger
-from ....cli import Cli
+from vx_cli import Cli
 
 
 class Issue(TypedDict):

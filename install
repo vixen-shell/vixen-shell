@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-from vx_library import Manager
+from vx_manager import Manager
 
 Manager.Setup.run(os.path.dirname(os.path.abspath(__file__)))

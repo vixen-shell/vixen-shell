@@ -1,7 +1,7 @@
 import os
 from .utils import use_sudo, get_dev_feature_name
 from .logger import Logger
-from ..cli import Cli
+from vx_cli import Cli
 
 
 class SetupManager:

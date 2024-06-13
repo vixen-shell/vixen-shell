@@ -9,9 +9,9 @@ License           : GPL3
 from setuptools import setup, find_packages
 
 setup(
-    name="vx_library",
+    name="vx_libraries",
     version="1.0.0b1",
-    description="Vixen Library",
+    description="Vixen Shell Libraries",
     packages=find_packages(),
     url="https://github.com/vixen-shell/vixen-shell.git",
     license="GPL3",

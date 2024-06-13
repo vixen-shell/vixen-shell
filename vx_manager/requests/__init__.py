@@ -64,7 +64,7 @@ class ShellRequests:
     @staticmethod
     @check_ping(False)
     def open():
-        from ...shell import run_shell
+        from vx_shell import run_shell
 
         run_shell()
 
