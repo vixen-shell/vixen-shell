@@ -18,16 +18,6 @@ class DevMode:
     @staticmethod
     def disable(feature: Feature):
         DevMode.feature_names.remove(feature.content.feature_name)
-
-        module = sys.modules.get(feature.content.feature_name)
-        if module:
-            sys.modules.pop(feature.content.feature_name)
-
-        if feature.content.sys_path:
-            for path in feature.content.sys_path:
-                while path in sys.path:
-                    sys.path.remove(path)
-
         Logger.log(f"[Dev mode]: feature '{feature.content.feature_name}' disabled")
 
     @staticmethod
@@ -81,11 +71,36 @@ class Features:
         if not feature:
             raise KeyError(f"'{name}' feature not found")
 
+        if feature.is_started:
+            await feature.stop()
+
         if DevMode.include(feature):
             DevMode.disable(feature)
 
-        if feature.is_started:
-            await feature.stop()
+        if feature.content.sys_path:
+            modules_to_remove = []
+
+            for module in sys.modules.values():
+                try:
+                    file = getattr(module, "__file__", None)
+                    if not file or not isinstance(file, str):
+                        continue
+                except AttributeError:
+                    continue
+
+                if any(path in file for path in feature.content.sys_path):
+                    modules_to_remove.append(module.__name__)
+
+            for module_name in modules_to_remove:
+                sys.modules.pop(module_name)
+
+            for path in feature.content.sys_path:
+                while path in sys.path:
+                    sys.path.remove(path)
+
+        feature_module = sys.modules.get(feature.content.feature_name)
+        if feature_module:
+            sys.modules.pop(feature.content.feature_name)
 
         del Features.dict[name]
         Logger.log(f"[{name}]: feature unloaded")

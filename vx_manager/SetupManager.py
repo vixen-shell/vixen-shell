@@ -58,36 +58,6 @@ class SetupManager:
             update()
 
     # ---------------------------------------------- - - -
-    # ENVIRONMENT
-    #
-
-    @staticmethod
-    @use_sudo(True)
-    def install_package(package_name: str):
-        from .setup import install_environment_package
-
-        Logger.log(
-            f"Are you sure you want to install '{package_name}' to Vixen Shell environment?",
-            "WARNING",
-        )
-
-        if Cli.Input.get_confirm():
-            install_environment_package(package_name)
-
-    @staticmethod
-    @use_sudo(True)
-    def uninstall_package(package_name: str):
-        from .setup import uninstall_environment_package
-
-        Logger.log(
-            f"Are you sure you want to uninstall '{package_name}' to Vixen Shell environment?",
-            "WARNING",
-        )
-
-        if Cli.Input.get_confirm():
-            uninstall_environment_package(package_name)
-
-    # ---------------------------------------------- - - -
     # FEATURES
     #
 
@@ -96,10 +66,13 @@ class SetupManager:
     def create_feature(parent_dir: str):
         from .setup import vx_new_feature
         from .requests import ShellRequests
+        from .utils import get_root_feature_names
 
-        feature_names = ShellRequests.feature_names()
-        if feature_names == None:
+        if not ShellRequests.ping():
+            Logger.log("Vixen Shell is not running", "WARNING")
             return
+
+        feature_names = get_root_feature_names()
 
         Logger.log("You are about to create a new development project", "WARNING")
 
@@ -150,10 +123,13 @@ class SetupManager:
     def add_feature(dev_dir: str):
         from .setup import vx_add_feature
         from .requests import ShellRequests
+        from .utils import get_root_feature_names
 
-        feature_names = ShellRequests.feature_names()
-        if feature_names == None:
+        if not ShellRequests.ping():
+            Logger.log("Vixen Shell is not running", "WARNING")
             return
+
+        feature_names = get_root_feature_names()
 
         feature_name = get_dev_feature_name(dev_dir)
         if not feature_name:
@@ -177,10 +153,19 @@ class SetupManager:
 
         if Cli.Input.get_confirm():
             if vx_add_feature(dev_dir, feature_name):
-                ShellRequests.load_feature(feature_name)
-
                 print()
-                Logger.log(f"'{feature_name}' feature added successfully")
+
+                if ShellRequests.load_feature(feature_name):
+                    Logger.log(f"'{feature_name}' feature added successfully")
+                else:
+                    Logger.log(f"Unable to load '{feature_name}' feature", "WARNING")
+                    SetupManager.remove_feature(feature_name, True)
+                    Logger.log(
+                        f"Add feature '{feature_name}' to Vixen Shell",
+                        "WARNING",
+                        "FAILED",
+                    )
+
         else:
             Logger.log("Operation avorted", "WARNING")
 
@@ -189,10 +174,13 @@ class SetupManager:
     def add_extra_feature(feature_name: str):
         from .setup import vx_add_extra_feature
         from .requests import ShellRequests
+        from .utils import get_root_feature_names
 
-        feature_names = ShellRequests.feature_names()
-        if feature_names == None:
+        if not ShellRequests.ping():
+            Logger.log("Vixen Shell is not running", "WARNING")
             return
+
+        feature_names = get_root_feature_names()
 
         if feature_name in feature_names:
             Logger.log(
@@ -208,45 +196,65 @@ class SetupManager:
 
         if Cli.Input.get_confirm():
             if vx_add_extra_feature(feature_name):
-                ShellRequests.load_feature(feature_name)
-
                 print()
-                Logger.log(f"'{feature_name}' extra feature added successfully")
+
+                if ShellRequests.load_feature(feature_name):
+                    Logger.log(f"'{feature_name}' feature added successfully")
+                else:
+                    Logger.log(f"Unable to load '{feature_name}' feature", "WARNING")
+                    SetupManager.remove_feature(feature_name, True)
+                    Logger.log(
+                        f"Add feature '{feature_name}' to Vixen Shell",
+                        "WARNING",
+                        "FAILED",
+                    )
         else:
             Logger.log("Operation avorted", "WARNING")
 
     @staticmethod
     @use_sudo(True)
-    def remove_feature():
+    def remove_feature(feature_name: str = None, skip_confirm: bool = False):
         from .setup import vx_remove_feature
         from .requests import ShellRequests
+        from .utils import get_root_feature_names
 
-        feature_names = ShellRequests.feature_names()
-        if feature_names == None:
+        if not ShellRequests.ping():
+            Logger.log("Vixen Shell is not running", "WARNING")
             return
 
-        Logger.log("Please type the name of the feature you want to remove")
+        feature_names = get_root_feature_names()
 
-        feature_name = Cli.Input.get_answer(
-            [
-                Cli.Input.Filter(
-                    type="include",
-                    values=feature_names,
-                    reason="You must type the name of an existing feature in Vixen Shell",
-                )
-            ]
-        )
+        if not feature_name:
+            Logger.log("Please type the name of the feature you want to remove")
 
-        if feature_name:
-            Logger.log(
-                f"Are you sure you want to remove '{feature_name}' feature?", "WARNING"
+            feature_name = Cli.Input.get_answer(
+                [
+                    Cli.Input.Filter(
+                        type="include",
+                        values=feature_names,
+                        reason="You must type the name of an existing feature in Vixen Shell",
+                    )
+                ]
             )
 
-            if Cli.Input.get_confirm():
-                ShellRequests.unload_feature(feature_name)
+        if feature_name:
 
+            def remove_feature():
                 if vx_remove_feature(feature_name):
                     print()
                     Logger.log(f"'{feature_name}' feature removed successfully")
+
+            if not skip_confirm:
+                Logger.log(
+                    f"Are you sure you want to remove '{feature_name}' feature?",
+                    "WARNING",
+                )
+
+                if Cli.Input.get_confirm():
+                    ShellRequests.unload_feature(feature_name)
+                    remove_feature()
+                else:
+                    Logger.log("Operation avorted", "WARNING")
+
             else:
-                Logger.log("Operation avorted", "WARNING")
+                remove_feature()

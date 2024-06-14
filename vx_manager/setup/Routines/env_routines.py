@@ -44,18 +44,12 @@ def setup_environment(library_path: str):
                 command=Commands.folder_remove_build(library_path),
             ),
             # ---------------------------------------------- - - -
-            # Backup Package List
+            # Create shared Vixen folder
             #
             RoutineTask(
                 purpose="Create shared Vixen folder",
                 command=Commands.folder_create("/usr/share/vixen"),
                 undo_command=Commands.folder_remove(f"/usr/share/vixen"),
-            ),
-            RoutineTask(
-                purpose="Freeze environment dependencies",
-                command=Commands.env_freeze(
-                    VX_ENV, "/usr/share/vixen/vixen_requirements.txt"
-                ),
             ),
             # ---------------------------------------------- - - -
             # Install Vxm
@@ -111,7 +105,7 @@ def update_environment():
                 undo_command=Commands.folder_remove(download_path),
             ),
             # ---------------------------------------------- - - -
-            # Backup current setup
+            # Backup current environment
             #
             RoutineTask(
                 purpose="Backup current environment",
@@ -141,7 +135,7 @@ def update_environment():
                 ],
             ),
             # ---------------------------------------------- - - -
-            # Clean current setup
+            # Clean current environment
             #
             RoutineTask(
                 purpose="Clean current environment",
@@ -170,58 +164,6 @@ def update_environment():
                 command=Commands.env_install(VX_ENV, download_path),
             ),
             # ---------------------------------------------- - - -
-            # Backup Vixen Package List
-            #
-            RoutineTask(
-                purpose="Freeze environment dependencies",
-                command=Commands.env_freeze(
-                    VX_ENV, "/usr/share/vixen/vixen_requirements.txt"
-                ),
-            ),
-            # ---------------------------------------------- - - -
-            # Restore Feature Requirements
-            #
-            RoutineTask(
-                purpose="Restore feature dependencies",
-                command=Commands.env_dependencies(
-                    VX_ENV, "/usr/share/vixen/feature_requirements.txt"
-                ),
-                skip_on={
-                    "callback": Commands.Checkers.file(
-                        "/usr/share/vixen/feature_requirements.txt", False
-                    ),
-                    "message": "Feature requirements not found",
-                },
-            ),
-            # ---------------------------------------------- - - -
-            # Update Feature Requirements
-            #
-            RoutineTask(
-                purpose="List feature dependencies",
-                command=Commands.env_freeze(
-                    VX_ENV, "/tmp/vx_update/tmp_vx_requirements.txt"
-                ),
-                skip_on={
-                    "callback": Commands.Checkers.file(
-                        "/usr/share/vixen/feature_requirements.txt", False
-                    ),
-                    "message": "Feature requirements not found",
-                },
-            ),
-            RoutineTask(
-                purpose="Update feature requirements",
-                command=Commands.env_freeze_added(
-                    "/tmp/vx_update/tmp_vx_requirements.txt",
-                    "/usr/share/vixen/feature_requirements.txt",
-                ),
-                skip_on={
-                    "callback": Commands.Checkers.file(
-                        "/usr/share/vixen/feature_requirements.txt", False
-                    ),
-                    "message": "Feature requirements not found",
-                },
-            ),
-            # ---------------------------------------------- - - -
             # Install Vxm
             #
             RoutineTask(
@@ -243,84 +185,6 @@ def update_environment():
             RoutineTask(
                 purpose="Clean up temporary files",
                 command=Commands.folder_remove("/tmp/vx_update"),
-            ),
-        ],
-    ).run()
-
-
-def install_environment_package(package_name: str):
-    return Routine(
-        purpose="Install environment python package",
-        tasks=[
-            # ---------------------------------------------- - - -
-            # Install Package
-            #
-            RoutineTask(
-                purpose=f"Install '{package_name}'",
-                command=Commands.env_install(VX_ENV, package_name),
-                undo_command=Commands.env_remove(VX_ENV, package_name),
-                show_output=True,
-            ),
-            # ---------------------------------------------- - - -
-            # Update Feature Requirements
-            #
-            RoutineTask(
-                purpose="List new feature dependencies",
-                command=Commands.env_freeze(VX_ENV, "/tmp/tmp_vx_requirements.txt"),
-                undo_command=Commands.file_remove("/tmp/tmp_vx_requirements.txt"),
-            ),
-            RoutineTask(
-                purpose="Update feature requirements",
-                command=Commands.env_freeze_added(
-                    "/tmp/tmp_vx_requirements.txt",
-                    "/usr/share/vixen/feature_requirements.txt",
-                ),
-            ),
-            # ---------------------------------------------- - - -
-            # Clean tmp
-            #
-            RoutineTask(
-                purpose="Clean up temporary files",
-                command=Commands.file_remove("/tmp/tmp_vx_requirements.txt"),
-            ),
-        ],
-    ).run()
-
-
-def uninstall_environment_package(package_name: str):
-    return Routine(
-        purpose="Uninstall environment python package",
-        tasks=[
-            # ---------------------------------------------- - - -
-            # Remove Package
-            #
-            RoutineTask(
-                purpose=f"Uninstall '{package_name}'",
-                command=Commands.env_remove(VX_ENV, package_name),
-                undo_command=Commands.env_install(VX_ENV, package_name),
-                show_output=True,
-            ),
-            # ---------------------------------------------- - - -
-            # Update Feature Requirements
-            #
-            RoutineTask(
-                purpose="List new feature dependencies",
-                command=Commands.env_freeze(VX_ENV, "/tmp/tmp_vx_requirements.txt"),
-                undo_command=Commands.file_remove("/tmp/tmp_vx_requirements.txt"),
-            ),
-            RoutineTask(
-                purpose="Update feature requirements",
-                command=Commands.env_freeze_added(
-                    "/tmp/tmp_vx_requirements.txt",
-                    "/usr/share/vixen/feature_requirements.txt",
-                ),
-            ),
-            # ---------------------------------------------- - - -
-            # Clean tmp
-            #
-            RoutineTask(
-                purpose="Clean up temporary files",
-                command=Commands.file_remove("/tmp/tmp_vx_requirements.txt"),
             ),
         ],
     ).run()

@@ -37,6 +37,20 @@ def is_sup_version(current_version, new_version):
     return True
 
 
+def get_root_feature_names():
+    root_params_directory = "/usr/share/vixen/features"
+
+    feature_names: list[str] = []
+
+    for item in os.listdir(root_params_directory):
+        path = f"{root_params_directory}/{item}"
+
+        if os.path.isdir(path):
+            feature_names.append(item)
+
+    return feature_names
+
+
 def get_vite_process(directory: str):
     def vite_process():
         process = subprocess.Popen(

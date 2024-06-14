@@ -54,6 +54,10 @@ class Utils:
             feature_name = Utils.get_dev_feature_name(entry)
         else:
             feature_name = entry
+            feature_deps_path = f"/usr/share/vixen/{feature_name}.libs"
+
+            if os.path.exists(feature_deps_path) and os.path.isdir(feature_deps_path):
+                sys_path = [f"/usr/share/vixen/{feature_name}.libs"]
 
         try:
             if sys_path:

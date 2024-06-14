@@ -29,6 +29,7 @@ class RoutineTask:
         undo_command: str | Callable[[], bool] = None,
         requirements: List[Requirement] = None,
         skip_on: Skipper = None,
+        show_skipped: bool = False,
         show_output: bool = False,
         spinner: bool = True,
     ):
@@ -39,6 +40,7 @@ class RoutineTask:
         self.undo_command = undo_command
         self.requirements = requirements
         self.skip_on = skip_on
+        self.show_skipped = show_skipped
         self.show_output = show_output
         self.spinner = Cli.Spinner() if spinner and not show_output else None
 
@@ -73,24 +75,25 @@ class RoutineTask:
         return True
 
     def exec(self) -> bool:
-        Logger.log(self.purpose + " ...")
+        if self.skip_on and self.skip_on["callback"]():
+            if self.show_skipped:
+                Logger.log(
+                    f"{self.purpose}: {self.skip_on['message']}",
+                    "WARNING",
+                    "SKIPPED",
+                    above=True,
+                )
+
+            self.is_skipped = True
+            self.is_done = True
+        else:
+            Logger.log(self.purpose + " ...")
 
         if not self.check_requirements():
             Logger.log(self.purpose, "WARNING", "FAILED")
             return False
 
         self.set_spinner(True)
-
-        if self.skip_on and self.skip_on["callback"]():
-            Logger.log(
-                f"{self.purpose}: {self.skip_on['message']}",
-                "WARNING",
-                "SKIPPED",
-                above=True,
-            )
-
-            self.is_skipped = True
-            self.is_done = True
 
         if not self.is_done:
             if self.show_output:

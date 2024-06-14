@@ -21,21 +21,6 @@ def handle_path(args):
 def handle_args(args):
     path = handle_path(args)
 
-    if args.env:
-        if args.env == "install":
-            if not args.package:
-                print("Missing [--package PACKAGE] option")
-                return
-
-            Manager.Setup.install_package(args.package)
-
-        if args.env == "uninstall":
-            if not args.package:
-                print("Missing [--package PACKAGE] option")
-                return
-
-            Manager.Setup.uninstall_package(args.package)
-
     if args.setup:
         if args.setup == "update":
             Manager.Setup.update()
@@ -55,7 +40,7 @@ def handle_args(args):
         if args.dev == "run":
             Manager.Shell.dev(path)
 
-        if args.dev == "new":
+        if args.dev == "create":
             Manager.Setup.create_feature(path)
 
     elif args.features:
@@ -122,12 +107,10 @@ if __name__ == "__main__":
 
     root_args = parser.add_mutually_exclusive_group(required=True)
 
-    root_args.add_argument(
-        "--env",
-        type=str,
-        choices=["install", "uninstall"],
-        help="Vixen environment controls.",
-    )
+    # ---------------------------------------------- - - -
+    # Root Arguments
+    #
+
     root_args.add_argument(
         "--setup",
         type=str,
@@ -141,7 +124,7 @@ if __name__ == "__main__":
         help="Vixen Shell controls.",
     )
     root_args.add_argument(
-        "--dev", type=str, choices=["run", "new"], help="Devs controls."
+        "--dev", type=str, choices=["run", "create"], help="Devs controls."
     )
     root_args.add_argument(
         "--features",
@@ -156,17 +139,14 @@ if __name__ == "__main__":
         help="Feature frames controls.",
     )
 
+    # ---------------------------------------------- - - -
+    # Additional arguments
+    #
     parser.add_argument(
         "--path",
         type=str,
         default="",
         help="Optional path (--dev run/new, --features add)",
-    )
-    parser.add_argument(
-        "--package",
-        type=str,
-        default="",
-        help="Environment package (--env install/uninstall)",
     )
     parser.add_argument(
         "--feature",

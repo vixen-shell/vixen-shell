@@ -114,11 +114,6 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
                     f"{path}/vx-feature-{project_name}"
                 ),
             ),
-            # Project Virtual Environment
-            RoutineTask(
-                purpose="Setup virtual environment",
-                command=Commands.env_create(f"{path}/vx-feature-{project_name}/.venv"),
-            ),
             # Clean temporary files
             RoutineTask(
                 purpose="Clean temporary files",
@@ -176,6 +171,36 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                         f"{dev_dir}/user/{feature_name}.json", False
                     ),
                     "message": "User config file not found",
+                },
+            ),
+            # ---------------------------------------------- - - -
+            # Feature Dependencies
+            #
+            RoutineTask(
+                purpose="Init feature dependencies",
+                command=Commands.folder_create(f"/usr/share/vixen/{feature_name}.libs"),
+                undo_command=Commands.folder_remove(
+                    f"/usr/share/vixen/{feature_name}.libs"
+                ),
+                skip_on={
+                    "callback": Commands.Checkers.file(
+                        f"{dev_dir}/requirements.txt", False
+                    ),
+                    "message": "Requirements not found",
+                },
+            ),
+            RoutineTask(
+                purpose="Install feature dependencies",
+                command=Commands.env_dependencies(
+                    "/opt/vixen-env",
+                    f"{dev_dir}/requirements.txt",
+                    f"/usr/share/vixen/{feature_name}.libs",
+                ),
+                skip_on={
+                    "callback": Commands.Checkers.file(
+                        f"{dev_dir}/requirements.txt", False
+                    ),
+                    "message": "Requirements not found",
                 },
             ),
             # ---------------------------------------------- - - -
@@ -261,6 +286,19 @@ def vx_remove_feature(feature_name: str):
                         False,
                     ),
                     "message": "User config file not found",
+                },
+            ),
+            # ---------------------------------------------- - - -
+            # Feature Dependencies
+            #
+            RoutineTask(
+                purpose="Remove feature dependencies",
+                command=Commands.folder_remove(f"/usr/share/vixen/{feature_name}.libs"),
+                skip_on={
+                    "callback": Commands.Checkers.folder(
+                        f"/usr/share/vixen/{feature_name}.libs", False
+                    ),
+                    "message": "Dependencies not found",
                 },
             ),
             # ---------------------------------------------- - - -
