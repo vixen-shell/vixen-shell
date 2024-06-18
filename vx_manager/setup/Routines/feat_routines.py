@@ -261,7 +261,7 @@ def vx_add_extra_feature(feature_name: str):
 
 
 def vx_remove_feature(feature_name: str):
-    front_end = os.path.exists(f"/var/opt/vx-front-main/src/{feature_name}")
+    front_end = os.path.exists(f"/var/opt/vx-front-main/src/features/{feature_name}")
 
     return Routine(
         purpose=f"Remove feature '{feature_name}'",
