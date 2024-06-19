@@ -16,7 +16,9 @@ from .feat_routines import (
 def setup(library_path: str):
     from ...utils import get_vx_package_version, write_json
 
-    result = setup_environment(library_path) and setup_front() and setup_config()
+    result = (
+        setup_environment(library_path) and setup_front() and setup_config(library_path)
+    )
 
     if result:
         write_json(

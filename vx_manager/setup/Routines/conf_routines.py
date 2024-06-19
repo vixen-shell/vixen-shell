@@ -2,7 +2,7 @@ import os
 from ..classes import Routine, RoutineTask, Commands
 
 
-def setup_config():
+def setup_config(library_path: str):
     return Routine(
         purpose="Setup Vixen Shell features",
         tasks=[
@@ -11,8 +11,10 @@ def setup_config():
             #
             RoutineTask(
                 purpose="Create root modules folder",
-                command=Commands.folder_create("/usr/share/vixen/features"),
-                undo_command=Commands.folder_remove(f"/usr/share/vixen"),
+                command=Commands.folder_copy(
+                    f"{library_path}/extras/root/features", "/usr/share/vixen"
+                ),
+                undo_command=Commands.folder_remove(f"/usr/share/vixen/features"),
             ),
             # ---------------------------------------------- - - -
             # User config
