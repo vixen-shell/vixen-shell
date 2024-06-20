@@ -6,7 +6,7 @@ from vx_feature_utils import (
     LayerFrameParams,
 )
 from ..layerise import Edges, Levels, Margins, layerise_window
-from ..Gtk_imports import Gtk
+from ..Gtk_imports import Gdk, Gtk
 
 anchor_key_values = {
     "top_start": [Edges.top, Edges.left],
@@ -62,10 +62,15 @@ def set_margins(margin_params: MarginParams | None):
 def layerise_frame(
     frame: Gtk.Window, namespace: str, layer_frame_params: LayerFrameParams
 ):
-    frame.set_app_paintable(True)
+    monitor_geometry = (
+        Gdk.Display.get_default()
+        .get_monitor(layer_frame_params.monitor_id or 0)
+        .get_geometry()
+    )
 
     frame.set_size_request(
-        layer_frame_params.width or -1, layer_frame_params.height or -1
+        layer_frame_params.width or monitor_geometry.width,
+        layer_frame_params.height or monitor_geometry.height,
     )
 
     layerise_window(

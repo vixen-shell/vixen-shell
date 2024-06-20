@@ -21,14 +21,13 @@ def webview(uri: str, dev_mode: bool):
     def on_context_menu(webview, context_menu, event, hit_test_result):
         return False if dev_mode else True
 
-    settings = WebKit2.Settings()
-    settings.set_property("enable-developer-extras", True)
-    settings.set_property(
-        "hardware_acceleration_policy", WebKit2.HardwareAccelerationPolicy.ALWAYS
-    )
-
     webview = WebKit2.WebView()
-    webview.set_settings(settings)
+
+    if dev_mode:
+        settings = WebKit2.Settings()
+        settings.set_property("enable-developer-extras", True)
+        webview.set_settings(settings)
+
     webview.set_background_color(Gdk.RGBA(red=0, green=0, blue=0, alpha=0.0))
     webview.connect("context-menu", on_context_menu)
     webview.load_uri(uri)
@@ -58,18 +57,24 @@ class FrameView:
 
         def process():
             self.frame = Gtk.Window()
-            self.frame.set_app_paintable(True)
-            self.frame.add(webview(self.frame_uri, self.dev_mode))
+
+            def on_load_changed(webview, load_event):
+                if load_event == WebKit2.LoadEvent.FINISHED:
+                    GLib.timeout_add(200, self.frame.queue_draw)
+
+            web_view = webview(self.frame_uri, self.dev_mode)
+            web_view.connect("load-changed", on_load_changed)
+            self.frame.add(web_view)
+
             self.frame.connect(
                 "delete-event", lambda frame, event: (self.hide(), True)[1]
             )
 
             if bool(frame_params.layer_frame):
-                self.frame.set_name("layer_frame")
+                self.frame.set_app_paintable(True)
                 layerise_frame(self.frame, frame_params.name, frame_params.layer_frame)
             else:
                 self.frame.set_title(frame_params.name)
-                self.frame.set_name("window_frame")
 
             self.frame.realize()
 
