@@ -41,7 +41,8 @@ class Feature:
 
     def __init__(self, content: Utils.FeatureContent):
         self.content = content
-        self.state_clients: list[WebSocket] = []
+        self.state_websockets: list[WebSocket] = []
+        self.websockets: list[WebSocket] = []
 
         self.frames = FrameHandler(
             feature_name=content.feature_name,
@@ -72,7 +73,10 @@ class Feature:
     async def stop(self):
         self.content.shutdown_sequence()
 
-        for websocket in self.state_clients:
+        for websocket in self.state_websockets:
+            await websocket.close()
+
+        for websocket in self.websockets:
             await websocket.close()
 
         self.frames.cleanup()

@@ -53,10 +53,11 @@ def get_root_feature_names():
 
 def get_vite_process(directory: str):
     def vite_process():
-        process = subprocess.Popen(
+        sub_process = subprocess.Popen(
             f"{directory}/node_modules/.bin/vite {directory}", shell=True
         )
-        process.wait()
+
+        sub_process.wait()
 
     class ProcessReference:
         def __init__(self):
@@ -74,10 +75,11 @@ def get_vite_process(directory: str):
             try:
                 self.process.join()
             except KeyboardInterrupt:
-                self.process.terminate()
+                self.terminate()
 
         def terminate(self):
             self.process.terminate()
+            self.process.join()
 
     if not os.path.exists(f"{directory}/node_modules"):
         Logger.log("Node modules not found", "ERROR")

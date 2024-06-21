@@ -27,12 +27,13 @@ class ShellManager:
         feature = DevFeature(directory)
         vite_process = None
 
-        if os.path.exists(f"{directory}/package.json"):
+        if feature.has_front_package:
             vite_process = get_vite_process(directory)
             if not vite_process:
                 return
 
         def signal_handler(sig, frame):
+            os.system("clear")
             Logger.log("Exit Vixen Shell Dev Mode ...")
 
             if vite_process and vite_process.is_alive:
@@ -47,42 +48,57 @@ class ShellManager:
 
         signal.signal(signal.SIGINT, signal_handler)
 
-        if feature.load():
-            if vite_process and not vite_process.is_alive:
+        if vite_process:
+            if feature.load():
+                Logger.log(f"Load feature '{feature.name}'", suffix="SUCCESS")
+
                 vite_process.start()
+                feature.start()
+                vite_process.join()
 
-            os.system("clear")
-            Logger.log(f"Load feature '{feature.name}'", suffix="SUCCESS")
-            feature.start()
+                os.system("clear")
+                if feature.unload():
+                    Logger.log(f"Unload feature '{feature.name}'", suffix="SUCCESS")
+                    sys.exit(0)
 
-            while True:
-                Logger.log("(r and ENTER) to reload feature, (Ctrl+C) to exit")
+                Logger.log("Unload feature", "ERROR", "FAILED")
+                sys.exit(1)
 
-                choice = Cli.Input.get_answer(
-                    [
-                        Cli.Input.Filter(
-                            type="include",
-                            values=["r"],
-                            reason="(r and ENTER) to reload feature, (Ctrl+C) to exit",
-                        )
-                    ],
-                    "",
-                )
+            else:
+                Logger.log("Load feature", "ERROR", suffix="FAILED")
 
-                if choice == "r":
-                    if not feature.reload():
-                        Logger.log("Reload feature", "ERROR", "FAILED")
-                        break
+        if not vite_process:
+            if feature.load():
+                os.system("clear")
+                Logger.log(f"Load feature '{feature.name}'", suffix="SUCCESS")
 
-                    os.system("clear")
-                    Logger.log(f"Reload feature '{feature.name}'", suffix="SUCCESS")
-                    feature.start()
+                feature.start()
 
-            if vite_process and vite_process.is_alive:
-                vite_process.terminate()
+                while True:
+                    Logger.log("(r and ENTER) to reload feature, (Ctrl+C) to exit")
 
-        else:
-            Logger.log("Load feature", "ERROR", suffix="FAILED")
+                    choice = Cli.Input.get_answer(
+                        [
+                            Cli.Input.Filter(
+                                type="include",
+                                values=["r"],
+                                reason="(r and ENTER) to reload feature, (Ctrl+C) to exit",
+                            )
+                        ],
+                        "",
+                    )
+
+                    if choice == "r":
+                        if not feature.reload():
+                            Logger.log("Reload feature", "ERROR", "FAILED")
+                            break
+
+                        os.system("clear")
+                        Logger.log(f"Reload feature '{feature.name}'", suffix="SUCCESS")
+                        feature.start()
+
+            else:
+                Logger.log("Load feature", "ERROR", suffix="FAILED")
 
     @staticmethod
     @use_sudo(False)

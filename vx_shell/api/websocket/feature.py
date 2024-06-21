@@ -39,8 +39,10 @@ def get_feature(feature_name: str):
 #
 
 
-@api.websocket("/feature/{feature_name}/sockets/{handler_name}")
-async def feature_sockets(websocket: WebSocket, feature_name: str, handler_name: str):
+@api.websocket("/feature/{feature_name}/sockets/{target_feature_name}/{handler_name}")
+async def feature_sockets(
+    websocket: WebSocket, feature_name: str, target_feature_name: str, handler_name: str
+):
     await websocket.accept()
     error = None
 
@@ -50,16 +52,26 @@ async def feature_sockets(websocket: WebSocket, feature_name: str, handler_name:
         error = str(exception)
 
     try:
-        socket_handler = feature.content.get("socket", handler_name)
+        target_feature = get_feature(target_feature_name)
+    except Exception as exception:
+        error = str(exception)
+
+    try:
+        socket_handler = target_feature.content.get("socket", handler_name)
     except KeyError as key_error:
-        error = f"{key_error} not found in '{feature_name}' feature websocket handlers"
+        error = f"{key_error} not found in '{target_feature_name}' feature websocket handlers"
 
     if error:
         await websocket.send_json(OutputEvent(id="ERROR", data={"message": error}))
         await websocket.close(reason=error)
         return
 
-    await socket_handler(websocket)
+    feature.websockets.append(websocket)
+
+    try:
+        await socket_handler(websocket)
+    finally:
+        feature.websockets.remove(websocket)
 
 
 # ---------------------------------------------- - - -
@@ -92,10 +104,10 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
         await websocket.close(reason=error)
         return
 
-    feature.state_clients.append(websocket)
+    feature.state_websockets.append(websocket)
 
     async def dispatch_event(event: OutputEvent):
-        for websocket in feature.state_clients:
+        for websocket in feature.state_websockets:
             await websocket.send_json(event)
 
     try:
@@ -178,7 +190,7 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
                 )
 
     except:
-        feature.state_clients.remove(websocket)
+        feature.state_websockets.remove(websocket)
 
 
 # ---------------------------------------------- - - -
@@ -216,8 +228,10 @@ class DataHandler:
         return self.handler(*self.handler_args)
 
 
-@api.websocket("/feature/{feature_name}/data_streamer")
-async def feature_data_streamer(websocket: WebSocket, feature_name: str):
+@api.websocket("/feature/{feature_name}/data_streamer/{target_feature_name}")
+async def feature_data_streamer(
+    websocket: WebSocket, feature_name: str, target_feature_name: str
+):
     await websocket.accept()
     error = None
 
@@ -226,10 +240,17 @@ async def feature_data_streamer(websocket: WebSocket, feature_name: str):
     except Exception as exception:
         error = str(exception)
 
+    try:
+        target_feature = get_feature(target_feature_name)
+    except Exception as exception:
+        error = str(exception)
+
     if error:
         await websocket.send_json(OutputEvent(id="ERROR", data={"message": error}))
         await websocket.close(reason=error)
         return
+
+    feature.websockets.append(websocket)
 
     try:
         while True:
@@ -242,7 +263,7 @@ async def feature_data_streamer(websocket: WebSocket, feature_name: str):
                     data_handlers: dict[str, DataHandler] = {}
                     for data_handler in init_data.data_handlers:
                         data_handlers[data_handler.name] = DataHandler(
-                            feature.content.get("data", data_handler.name),
+                            target_feature.content.get("data", data_handler.name),
                             data_handler.args,
                         )
 
@@ -262,7 +283,7 @@ async def feature_data_streamer(websocket: WebSocket, feature_name: str):
                     OutputEvent(
                         id="ERROR",
                         data={
-                            "message": f"{key_error} not found in '{feature_name}' feature data handlers"
+                            "message": f"{key_error} not found in '{target_feature_name}' feature data handlers"
                         },
                     )
                 )
@@ -276,4 +297,4 @@ async def feature_data_streamer(websocket: WebSocket, feature_name: str):
                 )
 
     except:
-        pass
+        feature.websockets.remove(websocket)
