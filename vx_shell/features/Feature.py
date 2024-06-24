@@ -1,3 +1,4 @@
+import asyncio
 from vx_feature_utils import Utils
 from fastapi import WebSocket
 from .FrameHandler import FrameHandler
@@ -63,11 +64,46 @@ class Feature:
 
     @check_is_started(False)
     def start(self):
-        self.frames.init(self.content.dev_mode)
+        async def process():
+            if self.content.start_after:
+                from .Features import Features
 
-        self.content.startup_sequence()
-        self.is_started = True
-        Logger.log(f"[{self.content.feature_name}]: feature started")
+                def get_expected_deps():
+                    deps: list[str] = self.content.start_after.copy()
+
+                    for dep_name in self.content.start_after:
+                        dep_feature = Features.get(dep_name)
+
+                        if bool(dep_feature and dep_feature.is_started):
+                            if dep_name in deps:
+                                deps.remove(dep_name)
+
+                    return deps
+
+                expected_deps = get_expected_deps()
+
+                if expected_deps:
+                    Logger.log(f"[{self.content.feature_name}]: await {expected_deps}")
+
+                while expected_deps:
+                    check_deps = get_expected_deps()
+
+                    if check_deps != expected_deps:
+                        expected_deps = check_deps
+
+                        if expected_deps:
+                            Logger.log(
+                                f"[{self.content.feature_name}]: await {expected_deps}"
+                            )
+
+                    await asyncio.sleep(0.5)
+
+            self.content.startup_sequence()
+            self.frames.init(self.content.dev_mode)
+            self.is_started = True
+            Logger.log(f"[{self.content.feature_name}]: feature started")
+
+        asyncio.create_task(process())
 
     @check_is_started(True)
     async def stop(self):

@@ -44,27 +44,27 @@ async def feature_sockets(
     websocket: WebSocket, feature_name: str, target_feature_name: str, handler_name: str
 ):
     await websocket.accept()
-    error = None
+
+    async def revoke_websocket(message: str):
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": message}))
+        await websocket.close(reason=message)
 
     try:
         feature = get_feature(feature_name)
     except Exception as exception:
-        error = str(exception)
+        return await revoke_websocket(str(exception))
 
     try:
         target_feature = get_feature(target_feature_name)
     except Exception as exception:
-        error = str(exception)
+        return await revoke_websocket(str(exception))
 
     try:
         socket_handler = target_feature.content.get("socket", handler_name)
     except KeyError as key_error:
-        error = f"{key_error} not found in '{target_feature_name}' feature websocket handlers"
-
-    if error:
-        await websocket.send_json(OutputEvent(id="ERROR", data={"message": error}))
-        await websocket.close(reason=error)
-        return
+        return await revoke_websocket(
+            f"{key_error} not found in '{target_feature_name}' feature websocket handlers"
+        )
 
     feature.websockets.append(websocket)
 
@@ -89,20 +89,18 @@ class InputStateEvent(BaseModel):
 @api.websocket("/feature/{feature_name}/state")
 async def feature_state_socket(websocket: WebSocket, feature_name: str):
     await websocket.accept()
-    error = None
+
+    async def revoke_websocket(message: str):
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": message}))
+        await websocket.close(reason=message)
 
     try:
         feature = get_feature(feature_name)
     except Exception as exception:
-        error = str(exception)
+        return await revoke_websocket(str(exception))
 
     if not feature.content.params.state_is_enable:
-        error = f"'{feature_name}' feature state is disable"
-
-    if error:
-        await websocket.send_json(OutputEvent(id="ERROR", data={"message": error}))
-        await websocket.close(reason=error)
-        return
+        return await revoke_websocket(f"'{feature_name}' feature state is disable")
 
     feature.state_websockets.append(websocket)
 
@@ -233,22 +231,20 @@ async def feature_data_streamer(
     websocket: WebSocket, feature_name: str, target_feature_name: str
 ):
     await websocket.accept()
-    error = None
+
+    async def revoke_websocket(message: str):
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": message}))
+        await websocket.close(reason=message)
 
     try:
         feature = get_feature(feature_name)
     except Exception as exception:
-        error = str(exception)
+        return await revoke_websocket(str(exception))
 
     try:
         target_feature = get_feature(target_feature_name)
     except Exception as exception:
-        error = str(exception)
-
-    if error:
-        await websocket.send_json(OutputEvent(id="ERROR", data={"message": error}))
-        await websocket.close(reason=error)
-        return
+        return await revoke_websocket(str(exception))
 
     feature.websockets.append(websocket)
 

@@ -11,12 +11,12 @@ class Utils:
 
     @staticmethod
     def define_feature_content(
-        root_params_dict: root_FeatureParams_dict = {},
+        root_params_dict: root_FeatureParams_dict = {}, start_after: list[str] = []
     ) -> FeatureContentReference:
         from inspect import stack, getmodule
 
         return Utils.FeatureContent(
-            getmodule(stack()[1][0]).__package__, root_params_dict
+            getmodule(stack()[1][0]).__package__, root_params_dict, start_after
         )
 
     @staticmethod
