@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+from collections import defaultdict
 from .param import LayerFrameParams, LayerFrameParams_dict
 from typing import TypedDict
 from .types import *
@@ -34,8 +35,24 @@ class user_FrameParams_dict(TypedDict):
     show_on_startup: bool
     layer_frame: LayerFrameParams_dict
 
+    @staticmethod
+    def get_structure():
+        return {
+            "template": "VALUE",
+            "show_on_startup": "VALUE",
+            "layer_frame": LayerFrameParams_dict.get_structure(),
+        }
+
 
 class user_FeatureParams_dict(TypedDict):
     autostart: bool
     frames: dict[str, user_FrameParams_dict]
     state: dict
+
+    @staticmethod
+    def get_structure():
+        return {
+            "autostart": "VALUE",
+            "frames": defaultdict(lambda: user_FrameParams_dict.get_structure()),
+            "state": "VALUE",
+        }

@@ -52,9 +52,10 @@ class FeatureParams(BaseModel):
             root_params.model_copy(), user_params.model_copy(), user_params_filepath
         )
 
-        param_dict = params_builder.build()
-        param_dict["root"] = root_params.model_dump(exclude_none=True)
-        param_dict["user"] = user_params.model_dump(exclude_none=True)
+        param_dict, new_root_params_dict = params_builder.build()
+
+        param_dict["root"] = new_root_params_dict
+        param_dict["user"] = user_params
         param_dict["user_filepath"] = user_params_filepath
         param_dict["dev_mode"] = dev_mode
 

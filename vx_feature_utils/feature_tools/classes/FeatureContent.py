@@ -5,6 +5,7 @@ from ...feature_params import (
     root_FeatureParams_dict,
     FeatureParams,
     ParamsError,
+    ParamsHandler,
 )
 
 USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
@@ -53,6 +54,10 @@ class FeatureContent:
                 user_params_filepath=user_params_filepath,
                 dev_mode=self.dev_mode,
             )
+
+            if not entry in ["hyprland", "system"]:
+                params_handler = ParamsHandler(self.params)
+                params_handler.frames["main"].layer_frame.anchor_edge.value = "bottom"
 
         except ParamsError as params_error:
             raise Exception(f"[{self.feature_name}]: {str(params_error)}")

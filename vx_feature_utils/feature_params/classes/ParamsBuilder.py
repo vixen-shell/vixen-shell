@@ -78,7 +78,7 @@ class ParamsBuilder:
         params_dict: FeatureParams_dict = user_params_dict
         return params_dict
 
-    def handle_param(self, path: tuple[str], callback=None):
+    def __handle_param(self, path: tuple[str], callback=None):
         def get_value(_dict: dict):
             for key in path:
                 try:
@@ -112,35 +112,48 @@ class ParamsBuilder:
             else:
                 if not callback:
 
-                    if user_value is not None:
-                        raise ParamsError(
-                            title=f"Validation error in '{self._user_params_filepath}'",
-                            message="Field already defined in root parameters",
-                            details=ParamsErrorDetails(loc=path),
-                        )
+                    if not isinstance(root_value, list):
+                        if user_value is not None:
+                            raise ParamsError(
+                                title=f"Validation error in '{self._user_params_filepath}'",
+                                message="Field already defined in root parameters",
+                                details=ParamsErrorDetails(loc=path),
+                            )
 
-                    set_param_value(root_value)
+                        set_param_value(root_value)
+                    else:
+                        if user_value is not None:
+                            if not user_value in root_value:
+                                raise ParamsError(
+                                    title=f"Validation error in '{self._user_params_filepath}'",
+                                    message=f"Field defined in root parameters, user value can be {root_value}",
+                                    details=ParamsErrorDetails(loc=path),
+                                )
+
+                            set_param_value(user_value)
+                        else:
+                            set_param_value(root_value[0])
 
                 else:
                     callback()
 
-    def build(self) -> FeatureParams_dict:
+    def build(self) -> tuple[FeatureParams_dict, root_FeatureParams_dict]:
         def handle_frames():
             for key, frame in self._root_params_dict["frames"].items():
                 self.__build_frame(key, frame)
 
-        self.handle_param(("frames",), handle_frames)
-        self.handle_param(("autostart",))
-        self.handle_param(("state",))
+        self.__handle_param(("frames",), handle_frames)
+        self.__handle_param(("autostart",))
+        self.__handle_param(("state",))
 
-        return self._params_dict
+        return self._params_dict, self._root_params_dict
 
     def __build_frame(self, frame_key: str, frame: root_FrameParams_dict):
-        self.handle_param(("frames", frame_key, "name"))
-        self.handle_param(("frames", frame_key, "route"))
-        self.handle_param(("frames", frame_key, "show_on_startup"))
+        self.__handle_param(("frames", frame_key, "name"))
+        self.__handle_param(("frames", frame_key, "route"))
+        self.__handle_param(("frames", frame_key, "show_on_startup"))
 
-        self.handle_param(
+        self.__handle_param(
             ("frames", frame_key, "layer_frame"),
             lambda: self.__build_layer_frame(frame_key, frame["layer_frame"]),
         )
@@ -150,20 +163,20 @@ class ParamsBuilder:
     ):
         for key in layer_frame.keys():
             if key == "margins":
-                self.handle_param(
+                self.__handle_param(
                     ("frames", frame_key, "layer_frame", "margins"),
                     lambda: self.__build_layer_frame_margins(
                         frame_key, layer_frame["margins"]
                     ),
                 )
             else:
-                self.handle_param(("frames", frame_key, "layer_frame", key))
+                self.__handle_param(("frames", frame_key, "layer_frame", key))
 
     def __build_layer_frame_margins(
         self, frame_key: str, layer_frame_margins: root_MarginParams_dict
     ):
         for key in layer_frame_margins.keys():
-            self.handle_param(("frames", frame_key, "layer_frame", "margins", key))
+            self.__handle_param(("frames", frame_key, "layer_frame", "margins", key))
 
 
 # class _ParamsBuilder:

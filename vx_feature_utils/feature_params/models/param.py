@@ -50,6 +50,15 @@ class MarginParams_dict(TypedDict):
     bottom: int
     left: int
 
+    @staticmethod
+    def get_structure():
+        return {
+            "top": "VALUE",
+            "right": "VALUE",
+            "bottom": "VALUE",
+            "left": "VALUE",
+        }
+
 
 class LayerFrameParams_dict(TypedDict):
     monitor_id: int
@@ -61,6 +70,20 @@ class LayerFrameParams_dict(TypedDict):
     margins: MarginParams_dict
     width: int
     height: int
+
+    @staticmethod
+    def get_structure():
+        return {
+            "monitor_id": "VALUE",
+            "auto_exclusive_zone": "VALUE",
+            "exclusive_zone": "VALUE",
+            "level": "VALUE",
+            "anchor_edge": "VALUE",
+            "alignment": "VALUE",
+            "margins": MarginParams_dict.get_structure(),
+            "width": "VALUE",
+            "height": "VALUE",
+        }
 
 
 class FrameParams_dict(TypedDict):

@@ -36,9 +36,9 @@ class Features:
             try:
                 Features.load(name)
 
-            except Exception as exception:
-                Logger.log(str(exception), "WARNING")
-                show_dialog_box(str(exception), "WARNING")
+            except:
+                # Logger.log(str(exception), "WARNING")
+                pass
 
         Logger.log(
             f"{'No' if len(Features.dict) == 0 else len(Features.dict)} features initialized"
@@ -50,6 +50,7 @@ class Features:
             name, feature = Feature.load(entry)
         except Exception as exception:
             Logger.log(str(exception), "ERROR")
+            show_dialog_box(str(exception), "WARNING")
             raise exception
 
         if Features.exists(name):
