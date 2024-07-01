@@ -1,6 +1,8 @@
 from fastapi import Response, Path, Body
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict
+from vx_feature_utils import ParamDataHandler
+from typing import Any
 from ..api import api
 from ...globals import ModelResponses, Models
 from ...features import Features
@@ -103,13 +105,104 @@ async def feature_state(
             message=f"Feature '{feature_name}' is not started"
         )
 
-    if not feature.content.params.state_is_enable:
+    if not ParamDataHandler.state_is_enable(feature_name):
         return start_responses(response, 200)(
             name=feature_name, is_started=True, state=None
         )
 
     return state_responses(response, 200)(
-        name=feature_name, is_started=True, state=feature.content.params.state
+        name=feature_name,
+        is_started=True,
+        state=ParamDataHandler.get_value(f"{feature_name}.state"),
+    )
+
+
+# ---------------------------------------------- - - -
+# FEATURE GET PARAM
+#
+
+get_param_responses = ModelResponses(
+    {200: dict, 404: Models.Commons.Error, 409: Models.Commons.Error}
+)
+
+
+@api.get(
+    "/feature/{feature_name}/get_param/{param_path}",
+    description="Get a feature param",
+    responses=get_param_responses.responses,
+)
+async def get_feature_param(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+    param_path: str = Path(description="Param path"),
+):
+    if not Features.exists(feature_name):
+        return get_param_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    if not feature.is_started:
+        return get_param_responses(response, 409)(
+            message=f"Feature '{feature_name}' is not started"
+        )
+
+    try:
+        param_value = ParamDataHandler.get_value(f"{feature_name}.{param_path}")
+    except Exception as exception:
+        return get_param_responses(response, 409)(message=str(exception))
+
+    return get_param_responses(response, 200)(
+        {"feature_name": feature_name, param_path: param_value}
+    )
+
+
+# ---------------------------------------------- - - -
+# FEATURE SET PARAM
+#
+
+set_param_responses = ModelResponses(
+    {200: dict, 404: Models.Commons.Error, 409: Models.Commons.Error}
+)
+
+
+class SetParamData(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    value: Any
+
+
+@api.post(
+    "/feature/{feature_name}/set_param/{param_path}",
+    description="Get a feature param",
+    responses=set_param_responses.responses,
+)
+async def set_feature_param(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+    param_path: str = Path(description="Param path"),
+    param_data: SetParamData = Body(description="Param value"),
+):
+    if not Features.exists(feature_name):
+        return set_param_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    if not feature.is_started:
+        return set_param_responses(response, 409)(
+            message=f"Feature '{feature_name}' is not started"
+        )
+
+    try:
+        ParamDataHandler.set_value(f"{feature_name}.{param_path}", param_data.value)
+    except Exception as exception:
+        return set_param_responses(response, 409)(message=str(exception))
+
+    return set_param_responses(response, 200)(
+        {"feature_name": feature_name, param_path: param_data.value}
     )
 
 

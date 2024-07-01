@@ -1,18 +1,19 @@
-from vx_feature_utils import FeatureParams
+from vx_feature_utils import ParamDataHandler
 from typing import Dict, List
 from .frame_view import FrameView
 
 
 class FrameHandler:
-    def __init__(self, feature_name: str, feature_params: FeatureParams):
+    def __init__(self, feature_name: str):
         self.feature_name = feature_name
-        self.frames_params = feature_params.frames
         self.frames: Dict[str, FrameView] = {}
 
     def init(self, dev_mode: bool = False):
-        if self.frames_params:
-            for id, param in self.frames_params.items():
-                self.frames[id] = FrameView(self.feature_name, param, dev_mode)
+        frame_ids = ParamDataHandler.get_frame_ids(self.feature_name)
+
+        if frame_ids:
+            for id in frame_ids:
+                self.frames[id] = FrameView(self.feature_name, id, dev_mode)
 
     def open(self, id: str):
         self.frames[id].show()

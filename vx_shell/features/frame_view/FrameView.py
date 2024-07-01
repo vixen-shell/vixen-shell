@@ -1,5 +1,5 @@
-from vx_feature_utils import FrameParams
-from .layerise_frame import layerise_frame
+from vx_feature_utils import ParamDataHandler
+from .layerise_frame import layerise_frame, set_layer_frame
 from ..Gtk_imports import GLib, Gtk, Gdk, WebKit2
 from ...globals import FRONT_PORT, FRONT_DEV_PORT
 
@@ -46,12 +46,14 @@ class FrameView:
     def __init__(
         self,
         feature_name: str,
-        frame_params: FrameParams,
+        frame_id: str,
         dev_mode: bool = False,
     ):
         self.is_first_render = True
         self.feature_name = feature_name
-        self.route = frame_params.route
+        self.route = ParamDataHandler.get_value(
+            f"{feature_name}.frames.{frame_id}.route"
+        )
         self.dev_mode = dev_mode
         self.frame_uri = get_frame_uri(self.feature_name, self.route, self.dev_mode)
 
@@ -70,17 +72,54 @@ class FrameView:
                 "delete-event", lambda frame, event: (self.hide(), True)[1]
             )
 
-            if bool(frame_params.layer_frame):
+            if ParamDataHandler.node_is_define(
+                f"{feature_name}.frames.{frame_id}.layer_frame"
+            ):
                 self.frame.set_app_paintable(True)
-                layerise_frame(self.frame, frame_params.name, frame_params.layer_frame)
+                layerise_frame(
+                    self.frame,
+                    ParamDataHandler.get_value(
+                        f"{feature_name}.frames.{frame_id}.name"
+                    ),
+                )
+                set_layer_frame(self.frame, feature_name, frame_id)
+
+                def on_layer_frame_params_changes(value):
+                    def process():
+                        set_layer_frame(self.frame, feature_name, frame_id)
+
+                    GLib.idle_add(process)
+
+                for param_key in [
+                    "monitor_id",
+                    "auto_exclusive_zone",
+                    "exclusive_zone",
+                    "level",
+                    "anchor_edge",
+                    "alignment",
+                    "margins.top",
+                    "margins.right",
+                    "margins.bottom",
+                    "margins.left",
+                    "width",
+                    "height",
+                ]:
+                    ParamDataHandler.add_param_listener(
+                        f"{feature_name}.frames.{frame_id}.layer_frame.{param_key}",
+                        on_layer_frame_params_changes,
+                    )
             else:
-                self.frame.set_title(frame_params.name)
+                self.frame.set_title(
+                    ParamDataHandler.get_value(f"{feature_name}.frames.{frame_id}.name")
+                )
 
             self.frame.realize()
 
         GLib.idle_add(process)
 
-        if frame_params.show_on_startup:
+        if ParamDataHandler.get_value(
+            f"{feature_name}.frames.{frame_id}.show_on_startup"
+        ):
             self.show()
 
     @property

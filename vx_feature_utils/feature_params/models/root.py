@@ -43,7 +43,7 @@ class root_FeatureParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     autostart: bool | Disable | None = None
-    frames: dict[str, root_FrameParams] | Disable | None = None
+    frames: dict[str, root_FrameParams] | Disable = "disable"
     templates: dict[str, root_FrameParams] | None = None
     state: Disable | None = None
 

@@ -2,6 +2,7 @@ import asyncio, json
 from typing import TypedDict, Optional
 from fastapi import WebSocket
 from pydantic import BaseModel, ConfigDict, ValidationError
+from vx_feature_utils import ParamDataHandler
 from ..api import api
 from ...features import Features
 from ...logger import Logger
@@ -99,10 +100,11 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
     except Exception as exception:
         return await revoke_websocket(str(exception))
 
-    if not feature.content.params.state_is_enable:
+    if not ParamDataHandler.state_is_enable(feature_name):
         return await revoke_websocket(f"'{feature_name}' feature state is disable")
 
     feature.state_websockets.append(websocket)
+    feature_state = ParamDataHandler.get_state(feature_name)
 
     async def dispatch_event(event: OutputEvent):
         for websocket in feature.state_websockets:
@@ -121,7 +123,7 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
                     if not key:
                         raise ErrorEvent("GET", "Missing item key")
 
-                    if not key in feature.content.params.state:
+                    if not key in feature_state:
                         raise ErrorEvent(
                             event="GET",
                             message="Key not found",
@@ -133,7 +135,7 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
                             id="UPDATE",
                             data={
                                 "key": key,
-                                "value": feature.content.params.state[key],
+                                "value": feature_state[key],
                             },
                         )
                     )
@@ -146,14 +148,14 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
                     if not key:
                         raise ErrorEvent("SET", "Missing item key")
 
-                    if not key in feature.content.params.state:
+                    if not key in feature_state:
                         raise ErrorEvent(
                             event="SET",
                             message="Key not found",
                             data={"key": key},
                         )
 
-                    feature.content.params.state[key] = input_event.data.get("value")
+                    feature_state[key] = input_event.data.get("value")
 
                     await dispatch_event(
                         OutputEvent(
@@ -163,11 +165,9 @@ async def feature_state_socket(websocket: WebSocket, feature_name: str):
                     )
 
                 if input_event.id == "SAVE":
-                    feature.content.params.save_state()
+                    ParamDataHandler.save_params(feature_name)
 
-                    await dispatch_event(
-                        OutputEvent(id="SAVE", data=feature.content.params.state)
-                    )
+                    await dispatch_event(OutputEvent(id="SAVE", data=feature_state))
 
             except ErrorEvent as error_event:
                 Logger.log(

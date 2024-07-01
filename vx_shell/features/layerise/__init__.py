@@ -91,6 +91,27 @@ def layerise_window(
 ):
     init_for_window(window)
     set_namespace(window, namespace)
+
+    set_layer(
+        window,
+        monitor_id,
+        auto_exclusive_zone,
+        exclusive_zone,
+        level,
+        anchor_edges,
+        margins,
+    )
+
+
+def set_layer(
+    window: Gtk.Window,
+    monitor_id: int | None = None,
+    auto_exclusive_zone: bool = False,
+    exclusive_zone: int | None = None,
+    level: Levels | None = None,
+    anchor_edges: List[Edges] | None = None,
+    margins: Margins | None = None,
+):
     set_monitor(window, monitor_id)
     set_exclusive_zone(window, auto_exclusive_zone, exclusive_zone)
     set_level(window, level)

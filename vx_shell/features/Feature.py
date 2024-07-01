@@ -1,5 +1,5 @@
 import asyncio
-from vx_feature_utils import Utils
+from vx_feature_utils import Utils, ParamDataHandler
 from fastapi import WebSocket
 from .FrameHandler import FrameHandler
 from .Gtk_dialog import show_dialog_box
@@ -19,7 +19,10 @@ class Feature:
 
             utils.init(Logger, feature, Features, show_dialog_box)
 
-        if content.params.autostart and not content.dev_mode:
+        if (
+            ParamDataHandler.get_value(f"{content.feature_name}.autostart")
+            and not content.dev_mode
+        ):
             feature.start()
 
         return content.feature_name, feature
@@ -45,10 +48,7 @@ class Feature:
         self.state_websockets: list[WebSocket] = []
         self.websockets: list[WebSocket] = []
 
-        self.frames = FrameHandler(
-            feature_name=content.feature_name,
-            feature_params=content.params,
-        )
+        self.frames = FrameHandler(feature_name=content.feature_name)
 
         self.is_started = False
 

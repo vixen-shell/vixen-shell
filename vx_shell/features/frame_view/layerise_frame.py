@@ -1,12 +1,6 @@
-from vx_feature_utils import (
-    LevelKeys,
-    AnchorEdgeKeys,
-    AlignmentKeys,
-    MarginParams,
-    LayerFrameParams,
-)
-from ..layerise import Edges, Levels, Margins, layerise_window
-from ..Gtk_imports import Gdk, Gtk
+from vx_feature_utils import LevelKeys, AnchorEdgeKeys, AlignmentKeys, ParamDataHandler
+from ..layerise import Edges, Levels, Margins, layerise_window, set_layer
+from ..Gtk_imports import Gtk
 
 anchor_key_values = {
     "top_start": [Edges.top, Edges.left],
@@ -48,40 +42,69 @@ def set_anchor_edges(
     return anchor_key_values.get(f"{anchor_edge_key}_{alignment_key}")
 
 
-def set_margins(margin_params: MarginParams | None):
-    if margin_params:
+def set_margins(feature_name: str, frame_id: str):
+    if ParamDataHandler.node_is_define(
+        f"{feature_name}.frames.{frame_id}.layer_frame.margins"
+    ):
         return Margins(
-            margin_params.get("top"),
-            margin_params.get("right"),
-            margin_params.get("bottom"),
-            margin_params.get("left"),
+            ParamDataHandler.get_value(
+                f"{feature_name}.frames.{frame_id}.layer_frame.margins.top"
+            ),
+            ParamDataHandler.get_value(
+                f"{feature_name}.frames.{frame_id}.layer_frame.margins.right"
+            ),
+            ParamDataHandler.get_value(
+                f"{feature_name}.frames.{frame_id}.layer_frame.margins.bottom"
+            ),
+            ParamDataHandler.get_value(
+                f"{feature_name}.frames.{frame_id}.layer_frame.margins.left"
+            ),
         )
     return None
 
 
-def layerise_frame(
-    frame: Gtk.Window, namespace: str, layer_frame_params: LayerFrameParams
-):
-    monitor_geometry = (
-        Gdk.Display.get_default()
-        .get_monitor(layer_frame_params.monitor_id or 0)
-        .get_geometry()
-    )
-
-    frame.set_size_request(
-        layer_frame_params.width or monitor_geometry.width,
-        layer_frame_params.height or monitor_geometry.height,
-    )
-
+def layerise_frame(frame: Gtk.Window, namespace: str):
     layerise_window(
         window=frame,
         namespace=namespace,
-        monitor_id=layer_frame_params.monitor_id,
-        auto_exclusive_zone=layer_frame_params.auto_exclusive_zone,
-        exclusive_zone=layer_frame_params.exclusive_zone,
-        level=set_level(layer_frame_params.level),
-        anchor_edges=set_anchor_edges(
-            layer_frame_params.anchor_edge, layer_frame_params.alignment
+    )
+
+
+def set_layer_frame(frame: Gtk.Window, feature_name: str, frame_id: str):
+    frame.set_size_request(
+        ParamDataHandler.get_value(
+            f"{feature_name}.frames.{frame_id}.layer_frame.width"
+        )
+        or -1,
+        ParamDataHandler.get_value(
+            f"{feature_name}.frames.{frame_id}.layer_frame.height"
+        )
+        or -1,
+    )
+
+    set_layer(
+        window=frame,
+        monitor_id=ParamDataHandler.get_value(
+            f"{feature_name}.frames.{frame_id}.layer_frame.monitor_id"
         ),
-        margins=set_margins(layer_frame_params.margins),
+        auto_exclusive_zone=ParamDataHandler.get_value(
+            f"{feature_name}.frames.{frame_id}.layer_frame.auto_exclusive_zone"
+        ),
+        exclusive_zone=ParamDataHandler.get_value(
+            f"{feature_name}.frames.{frame_id}.layer_frame.exclusive_zone"
+        ),
+        level=set_level(
+            ParamDataHandler.get_value(
+                f"{feature_name}.frames.{frame_id}.layer_frame.level"
+            )
+        ),
+        anchor_edges=set_anchor_edges(
+            ParamDataHandler.get_value(
+                f"{feature_name}.frames.{frame_id}.layer_frame.anchor_edge"
+            ),
+            ParamDataHandler.get_value(
+                f"{feature_name}.frames.{frame_id}.layer_frame.alignment"
+            ),
+        ),
+        margins=set_margins(feature_name, frame_id),
     )

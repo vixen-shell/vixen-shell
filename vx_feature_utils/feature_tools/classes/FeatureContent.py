@@ -3,9 +3,9 @@ from typing import Callable, Literal, Any
 from abc import ABC, abstractmethod
 from ...feature_params import (
     root_FeatureParams_dict,
-    FeatureParams,
     ParamsError,
-    ParamsHandler,
+    ParamData,
+    ParamDataHandler,
 )
 
 USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
@@ -37,8 +37,6 @@ class FeatureContent:
         self.sys_path: list[str] = None
         self.dev_mode = False
 
-        self.params: FeatureParams = None
-
         self.contents = Contents()
 
     def init_params(self, entry: str):
@@ -49,15 +47,14 @@ class FeatureContent:
                 user_params_filepath = f"{entry}/user/{self.feature_name}.json"
                 self.dev_mode = True
 
-            self.params = FeatureParams.create(
-                root_params_dict=self.root_params_dict,
-                user_params_filepath=user_params_filepath,
-                dev_mode=self.dev_mode,
+            ParamDataHandler.add_param_data(
+                self.feature_name,
+                ParamData(
+                    root_params_dict=self.root_params_dict,
+                    user_params_filepath=user_params_filepath,
+                    dev_mode=self.dev_mode,
+                ),
             )
-
-            if not entry in ["hyprland", "system"]:
-                params_handler = ParamsHandler(self.params)
-                params_handler.frames["main"].layer_frame.anchor_edge.value = "bottom"
 
         except ParamsError as params_error:
             raise Exception(f"[{self.feature_name}]: {str(params_error)}")

@@ -1,6 +1,6 @@
 from typing import Any
 from pydantic import BaseModel, ConfigDict, ValidationError
-from .ParamsBuilder import ParamsBuilder
+from .RootBuilder import RootBuilder
 from .ParamsError import ParamsValidationError
 
 from ..models import (
@@ -48,7 +48,7 @@ class FeatureParams(BaseModel):
                 validation_error=validation_error,
             )
 
-        params_builder = ParamsBuilder(
+        params_builder = RootBuilder(
             root_params.model_copy(), user_params.model_copy(), user_params_filepath
         )
 
