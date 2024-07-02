@@ -3,7 +3,7 @@ from typing import Callable, Literal, Any
 from abc import ABC, abstractmethod
 from ...feature_params import (
     root_FeatureParams_dict,
-    ParamsError,
+    ParamsValueError,
     ParamData,
     ParamDataHandler,
 )
@@ -56,7 +56,7 @@ class FeatureContent:
                 ),
             )
 
-        except ParamsError as params_error:
+        except ParamsValueError as params_error:
             raise Exception(f"[{self.feature_name}]: {str(params_error)}")
 
     def add_handler(self, content_type: ContentType):

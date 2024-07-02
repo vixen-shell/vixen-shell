@@ -5,4 +5,4 @@ LevelKeys = Literal["background", "bottom", "overlay", "top"]
 AnchorEdgeKeys = Literal["top", "right", "bottom", "left", "full"]
 AlignmentKeys = Literal["start", "center", "end", "stretch"]
 
-ParamState = Literal["DISABLED", "ROOT", "RESTRICTED", "USER"]
+ParamPermission = Literal["DISABLED", "ROOT", "RESTRICTED", "USER"]

@@ -75,6 +75,7 @@ class FrameView:
             if ParamDataHandler.node_is_define(
                 f"{feature_name}.frames.{frame_id}.layer_frame"
             ):
+
                 self.frame.set_app_paintable(True)
                 layerise_frame(
                     self.frame,
@@ -90,24 +91,10 @@ class FrameView:
 
                     GLib.idle_add(process)
 
-                for param_key in [
-                    "monitor_id",
-                    "auto_exclusive_zone",
-                    "exclusive_zone",
-                    "level",
-                    "anchor_edge",
-                    "alignment",
-                    "margins.top",
-                    "margins.right",
-                    "margins.bottom",
-                    "margins.left",
-                    "width",
-                    "height",
-                ]:
-                    ParamDataHandler.add_param_listener(
-                        f"{feature_name}.frames.{frame_id}.layer_frame.{param_key}",
-                        on_layer_frame_params_changes,
-                    )
+                ParamDataHandler.add_layer_frame_param_listener(
+                    feature_name, frame_id, on_layer_frame_params_changes
+                )
+
             else:
                 self.frame.set_title(
                     ParamDataHandler.get_value(f"{feature_name}.frames.{frame_id}.name")

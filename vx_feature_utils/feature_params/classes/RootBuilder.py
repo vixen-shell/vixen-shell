@@ -1,4 +1,4 @@
-from .ParamsError import ParamsError, ParamsErrorDetails
+from .ParamsError import ParamsValueError, ParamsErrorDetails
 
 from ..models import (
     root_FeatureParams,
@@ -31,7 +31,7 @@ class RootBuilder:
 
         if user_frames is not None:
             if root_frames == "disable" or (not root_frames and not root_templates):
-                raise ParamsError(
+                raise ParamsValueError(
                     title=f"Validation error in '{self._user_params_filepath}'",
                     message="Cannot contain 'frames' fields on this feature",
                     details=ParamsErrorDetails(loc=("frames",)),
@@ -46,7 +46,7 @@ class RootBuilder:
                     frame_template = frame.get("template")
 
                     if not frame_template:
-                        raise ParamsError(
+                        raise ParamsValueError(
                             title=f"Missing parameters in '{self._user_params_filepath}'",
                             message="A custom frame must reference a frame template to be valid",
                             details=ParamsErrorDetails(
@@ -55,7 +55,7 @@ class RootBuilder:
                         )
 
                     if not frame_template in valid_template_keys:
-                        raise ParamsError(
+                        raise ParamsValueError(
                             title=f"Validation error in '{self._user_params_filepath}'",
                             message=f"The '{frame_template}' frame template does not exist in the root parameters",
                             details=ParamsErrorDetails(

@@ -1,72 +1,14 @@
 import copy
 from typing import Literal, Any, Callable
 from pydantic import ValidationError
-from ..classes import RootBuilder, ParamsValidationError
-from ..utils import read_json, write_json
+from ..classes import ParamData, ParamsValidationError, ParamPermissionError
+from ..utils import write_json
 from ..models import (
     root_FeatureParams_dict,
     user_FeatureParams_dict,
-    root_FeatureParams,
     user_FeatureParams,
+    ParamPermission,
 )
-
-Permission = Literal["DISABLED", "ROOT", "RESTRICTED", "USER"]
-
-
-class ParamData:
-    def __init__(
-        self,
-        root_params_dict: root_FeatureParams_dict,
-        user_params_filepath: str,
-        dev_mode: bool = False,
-    ) -> None:
-        try:
-            root_params = root_FeatureParams(**root_params_dict)
-        except ValidationError as validation_error:
-            raise ParamsValidationError(
-                title="Validation error in root parameters",
-                validation_error=validation_error,
-            )
-
-        try:
-            user_params = user_FeatureParams(**read_json(user_params_filepath) or {})
-        except ValidationError as validation_error:
-            raise ParamsValidationError(
-                title=f"Validation error in '{user_params_filepath}'",
-                validation_error=validation_error,
-            )
-
-        params_builder = RootBuilder(
-            root_params.model_copy(), user_params.model_copy(), user_params_filepath
-        )
-
-        new_root_params_dict = params_builder.build()
-
-        self.root: root_FeatureParams_dict = new_root_params_dict
-        self.user: user_FeatureParams_dict = user_params.model_dump(exclude_none=True)
-        self.user_filepath: str = user_params_filepath
-        self.dev_mode: bool = dev_mode
-
-        print(self.user["state"])
-
-
-class ParamException(Exception):
-    def __init__(self, path: str, type: Permission | Literal["NODE", "VALUE"]) -> None:
-        if type == "DISABLED":
-            message = "Disabled parameter, cannot define user value"
-        if type == "ROOT":
-            message = "Root definition, cannot define user value"
-        if type == "RESTRICTED":
-            message = "Root definition, bad user value"
-        if type == "NODE":
-            message = "The path returns a node"
-        if type == "VALUE":
-            message = "The path returns a value"
-
-        message = f"{message} ({path})"
-
-        super().__init__(message)
-        self.param_type = type
 
 
 def get_dict(node: dict, path_keys: list[str]) -> dict | Any | None:
@@ -89,7 +31,7 @@ def break_path(path: str):
     return feature_name, path_keys
 
 
-def get_permission(feature_name: str, path_keys: list[str]) -> Permission:
+def get_permission(feature_name: str, path_keys: list[str]) -> ParamPermission:
     node = ParamDataHandler.select_data(feature_name, "ROOT")
 
     for key in path_keys:
@@ -114,7 +56,8 @@ def is_value(path_keys: str) -> bool:
 
 class ParamDataHandler:
     __data_dict: dict[str, ParamData] = {}
-    __listeners: dict[str, list[Callable[[Any], None]]] = {}
+    __param_listeners: dict[str, list[Callable[[Any], None]]] = {}
+    __layer_frame_param_listeners: dict[str, list[Callable[[Any], None]]] = {}
 
     @staticmethod
     def add_param_data(feature_name: str, param_data: ParamData):
@@ -126,22 +69,47 @@ class ParamDataHandler:
 
     @staticmethod
     def add_param_listener(path: str, listener: Callable[[Any], None]):
-        path_listeners = ParamDataHandler.__listeners.get(path)
+        path_listeners = ParamDataHandler.__param_listeners.get(path)
 
         if path_listeners:
             path_listeners.append(listener)
         else:
-            ParamDataHandler.__listeners[path] = [listener]
+            ParamDataHandler.__param_listeners[path] = [listener]
+
+    @staticmethod
+    def add_layer_frame_param_listener(
+        feature_name: str, frame_id: str, listener: Callable[[Any], None]
+    ):
+        frame_path = f"{feature_name}.frames.{frame_id}.layer_frame"
+        path_listeners = ParamDataHandler.__layer_frame_param_listeners.get(frame_path)
+
+        if path_listeners:
+            path_listeners.append(listener)
+        else:
+            ParamDataHandler.__layer_frame_param_listeners[frame_path] = [listener]
 
     @staticmethod
     def remove_param_listener(path: str, listener: Callable[[Any], None]):
-        path_listeners = ParamDataHandler.__listeners.get(path)
+        path_listeners = ParamDataHandler.__param_listeners.get(path)
 
         if path_listeners:
             path_listeners.remove(listener)
 
             if len(path_listeners) == 0:
-                ParamDataHandler.__listeners.pop(path)
+                ParamDataHandler.__param_listeners.pop(path)
+
+    @staticmethod
+    def remove_layer_frame_param_listener(
+        feature_name: str, frame_id: str, listener: Callable[[Any], None]
+    ):
+        frame_path = f"{feature_name}.frames.{frame_id}.layer_frame"
+        path_listeners = ParamDataHandler.__layer_frame_param_listeners.get(frame_path)
+
+        if path_listeners:
+            path_listeners.remove(listener)
+
+            if len(path_listeners) == 0:
+                ParamDataHandler.__layer_frame_param_listeners.pop(frame_path)
 
     @staticmethod
     def select_data(
@@ -154,7 +122,7 @@ class ParamDataHandler:
         feature_name, path_keys = break_path(path)
 
         if is_value(path_keys):
-            raise ParamException(path, "VALUE")
+            raise ParamPermissionError(path, "VALUE")
 
         permission = get_permission(feature_name, path_keys)
 
@@ -206,7 +174,7 @@ class ParamDataHandler:
         feature_name, path_keys = break_path(path)
 
         if not is_value(path_keys):
-            raise ParamException(path, "NODE")
+            raise ParamPermissionError(path, "NODE")
 
         permission = get_permission(feature_name, path_keys)
 
@@ -233,18 +201,18 @@ class ParamDataHandler:
         feature_name, path_keys = break_path(path)
 
         if not is_value(path_keys):
-            raise ParamException(path, "NODE")
+            raise ParamPermissionError(path, "NODE")
 
         permission = get_permission(feature_name, path_keys)
 
         if permission in ["DISABLED", "ROOT"]:
-            raise ParamException(path, permission)
+            raise ParamPermissionError(path, permission)
 
         if permission == "RESTRICTED":
             if not value in get_dict(
                 ParamDataHandler.select_data(feature_name, "ROOT"), path_keys
             ):
-                raise ParamException(path, permission)
+                raise ParamPermissionError(path, permission)
 
         user_dict = copy.deepcopy(ParamDataHandler.__data_dict[feature_name].user)
         set_dict(user_dict, path_keys, value)
@@ -254,11 +222,20 @@ class ParamDataHandler:
                 **user_dict
             ).model_dump(exclude_none=True)
 
-            if path in ParamDataHandler.__listeners:
-                param_listeners = ParamDataHandler.__listeners[path]
+            if path in ParamDataHandler.__param_listeners:
+                param_listeners = ParamDataHandler.__param_listeners[path]
 
                 for listener in param_listeners:
                     listener(value)
+
+            for key in ParamDataHandler.__layer_frame_param_listeners.keys():
+                if path.startswith(key):
+                    layer_frame_param_listeners = (
+                        ParamDataHandler.__layer_frame_param_listeners[key]
+                    )
+
+                    for listener in layer_frame_param_listeners:
+                        listener(value)
 
         except ValidationError as validation_error:
             raise ParamsValidationError(
