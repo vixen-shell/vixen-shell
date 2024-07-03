@@ -66,7 +66,7 @@ class ParamDataHandler:
         ParamDataHandler.__data_dict.pop(feature_name)
 
     @staticmethod
-    def add_param_listener(path: str, listener: Callable[[Any], None]):
+    def add_param_listener(path: str, listener: Callable[[str, Any], None]):
         feature_name, _ = break_path(path)
         param_listeners = ParamDataHandler.__data_dict[feature_name].param_listeners
         listeners = param_listeners.get(path)
@@ -147,7 +147,7 @@ class ParamDataHandler:
         write_json(data.user_filepath, data.user)
 
     @staticmethod
-    def get_value(path: str):
+    def get_value(path: str) -> Any | None:
         feature_name, path_keys = break_path(path)
 
         if not is_value(path_keys):
