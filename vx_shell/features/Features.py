@@ -1,5 +1,5 @@
 import sys
-from vx_feature_utils import Utils
+from vx_feature_utils import Utils, ParamDataHandler
 from typing import List, Dict
 from .Feature import Feature
 from .Gtk_main_loop import Gtk_main_loop
@@ -103,6 +103,7 @@ class Features:
         if feature_module:
             sys.modules.pop(feature.content.feature_name)
 
+        ParamDataHandler.remove_param_data(name)
         del Features.dict[name]
         Logger.log(f"[{name}]: feature unloaded")
 

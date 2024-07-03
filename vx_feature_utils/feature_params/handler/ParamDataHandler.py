@@ -56,8 +56,6 @@ def is_value(path_keys: str) -> bool:
 
 class ParamDataHandler:
     __data_dict: dict[str, ParamData] = {}
-    __param_listeners: dict[str, list[Callable[[Any], None]]] = {}
-    __layer_frame_param_listeners: dict[str, list[Callable[[Any], None]]] = {}
 
     @staticmethod
     def add_param_data(feature_name: str, param_data: ParamData):
@@ -69,47 +67,26 @@ class ParamDataHandler:
 
     @staticmethod
     def add_param_listener(path: str, listener: Callable[[Any], None]):
-        path_listeners = ParamDataHandler.__param_listeners.get(path)
+        feature_name, _ = break_path(path)
+        param_listeners = ParamDataHandler.__data_dict[feature_name].param_listeners
+        listeners = param_listeners.get(path)
 
-        if path_listeners:
-            path_listeners.append(listener)
+        if listeners:
+            listeners.append(listener)
         else:
-            ParamDataHandler.__param_listeners[path] = [listener]
-
-    @staticmethod
-    def add_layer_frame_param_listener(
-        feature_name: str, frame_id: str, listener: Callable[[Any], None]
-    ):
-        frame_path = f"{feature_name}.frames.{frame_id}.layer_frame"
-        path_listeners = ParamDataHandler.__layer_frame_param_listeners.get(frame_path)
-
-        if path_listeners:
-            path_listeners.append(listener)
-        else:
-            ParamDataHandler.__layer_frame_param_listeners[frame_path] = [listener]
+            param_listeners[path] = [listener]
 
     @staticmethod
     def remove_param_listener(path: str, listener: Callable[[Any], None]):
-        path_listeners = ParamDataHandler.__param_listeners.get(path)
+        feature_name, _ = break_path(path)
+        param_listeners = ParamDataHandler.__data_dict[feature_name].param_listeners
+        listeners = param_listeners.get(path)
 
-        if path_listeners:
-            path_listeners.remove(listener)
+        if listeners:
+            listeners.remove(listener)
 
-            if len(path_listeners) == 0:
-                ParamDataHandler.__param_listeners.pop(path)
-
-    @staticmethod
-    def remove_layer_frame_param_listener(
-        feature_name: str, frame_id: str, listener: Callable[[Any], None]
-    ):
-        frame_path = f"{feature_name}.frames.{frame_id}.layer_frame"
-        path_listeners = ParamDataHandler.__layer_frame_param_listeners.get(frame_path)
-
-        if path_listeners:
-            path_listeners.remove(listener)
-
-            if len(path_listeners) == 0:
-                ParamDataHandler.__layer_frame_param_listeners.pop(frame_path)
+            if len(listeners) == 0:
+                param_listeners.pop(path)
 
     @staticmethod
     def select_data(
@@ -222,23 +199,22 @@ class ParamDataHandler:
                 **user_dict
             ).model_dump(exclude_none=True)
 
-            if path in ParamDataHandler.__param_listeners:
-                param_listeners = ParamDataHandler.__param_listeners[path]
-
-                for listener in param_listeners:
-                    listener(value)
-
-            for key in ParamDataHandler.__layer_frame_param_listeners.keys():
-                if path.startswith(key):
-                    layer_frame_param_listeners = (
-                        ParamDataHandler.__layer_frame_param_listeners[key]
-                    )
-
-                    for listener in layer_frame_param_listeners:
-                        listener(value)
+            ParamDataHandler.__handle_listeners(path, value)
 
         except ValidationError as validation_error:
             raise ParamsValidationError(
                 title="Validation error",
                 validation_error=validation_error,
             )
+
+    @staticmethod
+    def __handle_listeners(path: str, value: Any):
+        feature_name, _ = break_path(path)
+        param_listeners = ParamDataHandler.__data_dict[feature_name].param_listeners
+
+        for key in param_listeners.keys():
+            if path.startswith(key):
+                listeners = param_listeners[key]
+
+                for listener in listeners:
+                    listener(path, value)

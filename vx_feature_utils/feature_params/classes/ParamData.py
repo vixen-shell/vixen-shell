@@ -1,4 +1,5 @@
 from pydantic import ValidationError
+from typing import Callable, Any
 from .RootBuilder import RootBuilder
 from .ParamsError import ParamsValidationError
 from ..utils import read_json
@@ -43,3 +44,5 @@ class ParamData:
         self.user: user_FeatureParams_dict = user_params.model_dump(exclude_none=True)
         self.user_filepath: str = user_params_filepath
         self.dev_mode: bool = dev_mode
+
+        self.param_listeners: dict[str, list[Callable[[str, Any], None]]] = {}

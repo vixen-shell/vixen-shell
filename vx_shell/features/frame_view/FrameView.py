@@ -60,12 +60,12 @@ class FrameView:
         def process():
             self.frame = Gtk.Window()
 
-            def on_load_changed(webview, load_event):
+            def on_load_changes(webview, load_event):
                 if load_event == WebKit2.LoadEvent.FINISHED:
                     GLib.timeout_add(200, self.frame.queue_draw)
 
             web_view = webview(self.frame_uri, self.dev_mode)
-            web_view.connect("load-changed", on_load_changed)
+            web_view.connect("load-changed", on_load_changes)
             self.frame.add(web_view)
 
             self.frame.connect(
@@ -85,14 +85,15 @@ class FrameView:
                 )
                 set_layer_frame(self.frame, feature_name, frame_id)
 
-                def on_layer_frame_params_changes(value):
+                def on_layer_frame_params_changes(path, value):
                     def process():
                         set_layer_frame(self.frame, feature_name, frame_id)
 
                     GLib.idle_add(process)
 
-                ParamDataHandler.add_layer_frame_param_listener(
-                    feature_name, frame_id, on_layer_frame_params_changes
+                ParamDataHandler.add_param_listener(
+                    f"{feature_name}.frames.{frame_id}.layer_frame",
+                    on_layer_frame_params_changes,
                 )
 
             else:
