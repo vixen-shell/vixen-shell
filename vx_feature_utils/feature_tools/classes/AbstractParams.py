@@ -89,4 +89,4 @@ def get_params_references(feature_name: str):
             path = f"{feature_name}.{param_path}"
             ParamDataHandler.set_value(path, value)
 
-    return ParamHandlerReference
+    return ParamHandlerReference()

@@ -62,7 +62,11 @@ class FrameView:
 
             def on_load_changes(webview, load_event):
                 if load_event == WebKit2.LoadEvent.FINISHED:
-                    GLib.timeout_add(200, self.frame.queue_draw)
+
+                    def redraw():
+                        GLib.idle_add(self.frame.queue_draw)
+
+                    GLib.timeout_add(200, redraw)
 
             web_view = webview(self.frame_uri, self.dev_mode)
             web_view.connect("load-changed", on_load_changes)

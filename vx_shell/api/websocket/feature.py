@@ -62,6 +62,7 @@ async def feature_sockets(
 
     try:
         socket_handler = target_feature.content.get("socket", handler_name)
+        on_open, loop_content, on_close = socket_handler(websocket)
     except KeyError as key_error:
         return await revoke_websocket(
             f"{key_error} not found in '{target_feature_name}' feature websocket handlers"
@@ -70,8 +71,19 @@ async def feature_sockets(
     feature.websockets.append(websocket)
 
     try:
-        await socket_handler(websocket)
-    finally:
+        if on_open:
+            await on_open()
+
+        while True:
+            if loop_content:
+                await loop_content()
+            else:
+                await websocket.receive_text()
+
+    except:
+        if on_close:
+            await on_close()
+
         feature.websockets.remove(websocket)
 
 

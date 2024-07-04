@@ -54,16 +54,8 @@ class ShellManager:
 
                 vite_process.start()
                 feature.start()
+
                 vite_process.join()
-
-                os.system("clear")
-                if feature.unload():
-                    Logger.log(f"Unload feature '{feature.name}'", suffix="SUCCESS")
-                    sys.exit(0)
-
-                Logger.log("Unload feature", "ERROR", "FAILED")
-                sys.exit(1)
-
             else:
                 Logger.log("Load feature", "ERROR", suffix="FAILED")
 
