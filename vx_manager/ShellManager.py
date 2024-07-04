@@ -32,21 +32,18 @@ class ShellManager:
             if not vite_process:
                 return
 
-        def signal_handler(sig, frame):
+        def exit_dev_mode():
             os.system("clear")
-            Logger.log("Exit Vixen Shell Dev Mode ...")
-
-            if vite_process and vite_process.is_alive:
-                vite_process.terminate()
+            exit_code = 0
 
             if feature.unload():
                 Logger.log(f"Unload feature '{feature.name}'", suffix="SUCCESS")
-                sys.exit(0)
+            else:
+                Logger.log("Unload feature", "ERROR", "FAILED")
+                exit_code = 1
 
-            Logger.log("Unload feature", "ERROR", "FAILED")
-            sys.exit(1)
-
-        signal.signal(signal.SIGINT, signal_handler)
+            Logger.log("Exit Vixen Shell Dev Mode ...")
+            sys.exit(exit_code)
 
         if vite_process:
             if feature.load():
@@ -56,10 +53,17 @@ class ShellManager:
                 feature.start()
 
                 vite_process.join()
+                exit_dev_mode()
             else:
                 Logger.log("Load feature", "ERROR", suffix="FAILED")
 
         if not vite_process:
+
+            def signal_handler(sig, frame):
+                exit_dev_mode()
+
+            signal.signal(signal.SIGINT, signal_handler)
+
             if feature.load():
                 os.system("clear")
                 Logger.log(f"Load feature '{feature.name}'", suffix="SUCCESS")
