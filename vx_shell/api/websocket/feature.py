@@ -67,7 +67,7 @@ async def feature_sockets(
         if not callable(handler_func):
             raise TypeError(type_msg_error)
 
-        socket_handler: Utils.SocketHandler = handler_func()
+        socket_handler: Utils.SocketHandler = handler_func(websocket)
 
         if not isinstance(socket_handler, Utils.SocketHandler):
             raise TypeError(type_msg_error)
@@ -83,11 +83,11 @@ async def feature_sockets(
     feature.websockets.append(websocket)
 
     try:
-        await socket_handler.on_opening(websocket)
+        await socket_handler.on_opening()
         while True:
-            await socket_handler.on_loop_iteration(websocket)
+            await socket_handler.on_loop_iteration()
     except:
-        await socket_handler.on_closing(websocket)
+        await socket_handler.on_closing()
         feature.websockets.remove(websocket)
 
 
