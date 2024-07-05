@@ -80,7 +80,7 @@ async def feature_sockets(
     except TypeError as type_error:
         return await revoke_websocket(str(type_error))
 
-    feature.websockets.append(websocket)
+    feature.feature_websockets.append(websocket)
 
     try:
         await socket_handler.on_opening()
@@ -88,7 +88,7 @@ async def feature_sockets(
             await socket_handler.on_loop_iteration()
     except:
         await socket_handler.on_closing()
-        feature.websockets.remove(websocket)
+        feature.feature_websockets.remove(websocket)
 
 
 # ---------------------------------------------- - - -
@@ -262,7 +262,7 @@ async def feature_data_streamer(
     except Exception as exception:
         return await revoke_websocket(str(exception))
 
-    feature.websockets.append(websocket)
+    feature.feature_websockets.append(websocket)
 
     try:
         while True:
@@ -309,4 +309,4 @@ async def feature_data_streamer(
                 )
 
     except:
-        feature.websockets.remove(websocket)
+        feature.feature_websockets.remove(websocket)

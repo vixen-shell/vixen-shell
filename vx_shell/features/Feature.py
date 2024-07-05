@@ -46,7 +46,7 @@ class Feature:
     def __init__(self, content: Utils.FeatureContent):
         self.content = content
         self.state_websockets: list[WebSocket] = []
-        self.websockets: list[WebSocket] = []
+        self.feature_websockets: list[WebSocket] = []
 
         self.frames = FrameHandler(feature_name=content.feature_name)
 
@@ -109,10 +109,12 @@ class Feature:
     async def stop(self):
         self.content.shutdown_sequence()
 
-        for websocket in self.state_websockets:
+        state_websockets = self.state_websockets.copy()
+        for websocket in state_websockets:
             await websocket.close()
 
-        for websocket in self.websockets:
+        feature_websockets = self.feature_websockets.copy()
+        for websocket in feature_websockets:
             await websocket.close()
 
         self.frames.cleanup()
