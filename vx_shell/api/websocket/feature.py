@@ -1,8 +1,8 @@
 import asyncio, json
-from typing import TypedDict, Optional
+from typing import TypedDict, Optional, Callable
 from fastapi import WebSocket
 from pydantic import BaseModel, ConfigDict, ValidationError
-from vx_feature_utils import ParamDataHandler
+from vx_feature_utils import ParamDataHandler, Utils
 from ..api import api
 from ...features import Features
 from ...logger import Logger
@@ -61,29 +61,33 @@ async def feature_sockets(
         return await revoke_websocket(str(exception))
 
     try:
-        socket_handler = target_feature.content.get("socket", handler_name)
-        on_open, loop_content, on_close = socket_handler(websocket)
+        handler_func: Callable = target_feature.content.get("socket", handler_name)
+        type_msg_error = "The handler must be a function that returns an instance of class 'SocketHandler'"
+
+        if not callable(handler_func):
+            raise TypeError(type_msg_error)
+
+        socket_handler: Utils.SocketHandler = handler_func()
+
+        if not isinstance(socket_handler, Utils.SocketHandler):
+            raise TypeError(type_msg_error)
+
     except KeyError as key_error:
         return await revoke_websocket(
             f"{key_error} not found in '{target_feature_name}' feature websocket handlers"
         )
 
+    except TypeError as type_error:
+        return await revoke_websocket(str(type_error))
+
     feature.websockets.append(websocket)
 
     try:
-        if on_open:
-            await on_open()
-
+        await socket_handler.on_opening(websocket)
         while True:
-            if loop_content:
-                await loop_content()
-            else:
-                await websocket.receive_text()
-
+            await socket_handler.on_loop_iteration(websocket)
     except:
-        if on_close:
-            await on_close()
-
+        await socket_handler.on_closing(websocket)
         feature.websockets.remove(websocket)
 
 

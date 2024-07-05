@@ -6,6 +6,8 @@ from .AbstractParams import AbstractParams, get_params_references
 
 
 class FeatureUtils:
+    from .SocketHandler import SocketHandler
+
     def init(self, logger, current_feature, features, show_dialog_box):
         self.Logger: AbstractLogger = get_logger_reference(logger)
         self.CurrentFeature: AbstractFeature = get_feature_references(current_feature)

@@ -3,7 +3,12 @@ from ..feature_params import root_FeatureParams_dict
 
 
 class Utils:
-    from .classes import FeatureUtils, FeatureContent, FeatureContentReference
+    from .classes import (
+        FeatureUtils,
+        FeatureContent,
+        FeatureContentReference,
+        SocketHandler,
+    )
 
     @staticmethod
     def define_feature_utils():
