@@ -1,4 +1,5 @@
 from fastapi import Response, Body
+from pydantic import BaseModel, ConfigDict
 from ..api import api
 from ...globals import ModelResponses, Models
 from ...features import Features
@@ -23,6 +24,14 @@ async def feature_names(response: Response):
 # LOAD FEATURE
 #
 
+
+class LoadFeatureEntry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    entry: str
+    tty_path: str = None
+
+
 load_feature_responses = ModelResponses(
     {200: Models.Features.Base, 409: Models.Commons.Error}
 )
@@ -35,10 +44,15 @@ load_feature_responses = ModelResponses(
 )
 async def load_dev_feature(
     response: Response,
-    entry: str = Body(description="Feature name or feature development directory"),
+    entry: LoadFeatureEntry = Body(
+        description="Feature name or feature development directory"
+    ),
 ):
+    feature_entry = entry.entry
+    tty_path = entry.tty_path
+
     try:
-        name, is_started = Features.load(entry)
+        name, is_started = Features.load(feature_entry, tty_path)
         return load_feature_responses(response, 200)(name=name, is_started=is_started)
     except KeyError as error:
         return load_feature_responses(response, 409)(message=str(error))

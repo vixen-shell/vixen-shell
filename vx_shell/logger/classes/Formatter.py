@@ -15,3 +15,14 @@ class Formatter(logging.Formatter):
         message = Cli.String.level_brackets(message, "DEBUG")
 
         return levelname + message
+
+
+class DevFormatter(logging.Formatter):
+    def format(self, record):
+        message = record.getMessage()
+
+        levelname = Cli.String.level(record.levelname, record.levelname)
+        levelname += ":" + Cli.String.spaces(9 - len(record.levelname))
+        message = Cli.String.level_brackets(message, "DEBUG")
+
+        return "\n" + levelname + message + "\n"

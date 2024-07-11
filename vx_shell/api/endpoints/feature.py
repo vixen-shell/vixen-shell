@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 from vx_feature_utils import ParamDataHandler
 from typing import Any
 from ..api import api
+from ...logger import Logger
 from ...globals import ModelResponses, Models
 from ...features import Features
 
@@ -232,7 +233,11 @@ class DataHandler:
         self.handler_args = handler_args
 
     def get_data(self):
-        return self.handler(*self.handler_args)
+        try:
+            return self.handler(*self.handler_args)
+        except Exception as exception:
+            Logger.log_exception(exception)
+            raise exception
 
 
 @api.post(

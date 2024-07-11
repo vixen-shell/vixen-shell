@@ -1,4 +1,4 @@
-import os, time, subprocess, multiprocessing, json, re, packaging
+import os, sys, time, subprocess, multiprocessing, json, re, packaging
 from .logger import Logger
 
 
@@ -123,6 +123,13 @@ def get_dev_feature_name(directory: str) -> str | None:
     return folders[0]
 
 
+def get_current_tty():
+    try:
+        return os.ttyname(sys.stdout.fileno())
+    except Exception as e:
+        raise RuntimeError("Impossible de récupérer le terminal actuel") from e
+
+
 class DevFeature:
     from .requests import ShellRequests as request
 
@@ -135,7 +142,7 @@ class DevFeature:
         return os.path.exists(f"{self.directory}/package.json")
 
     def load(self) -> bool:
-        self.name = self.request.load_feature(self.directory)
+        self.name = self.request.load_feature(self.directory, get_current_tty())
         return bool(self.name)
 
     def start(self) -> bool:

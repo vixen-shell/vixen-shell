@@ -81,8 +81,13 @@ class ShellRequests:
 
     @staticmethod
     @check_ping(True)
-    def load_feature(entry: str) -> str | None:
-        response = request_post(f"/features/load", entry)
+    def load_feature(entry: str, tty_path: str = None) -> str | None:
+        load_entry = {"entry": entry}
+
+        if tty_path:
+            load_entry["tty_path"] = tty_path
+
+        response = request_post(f"/features/load", load_entry)
 
         if not response.status_code == 200:
             handle_error_response(response)

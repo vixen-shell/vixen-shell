@@ -35,16 +35,18 @@ class FeatureContent:
         self.start_after = start_after
 
         self.sys_path: list[str] = None
+        self.tty_path: str = None
         self.dev_mode = False
 
         self.contents = Contents()
 
-    def init_params(self, entry: str):
+    def init_params(self, entry: str, tty_path: str = None):
         user_params_filepath = f"{USER_PARAMS_DIRECTORY}/{self.feature_name}.json"
 
         try:
             if not entry == self.feature_name:
                 user_params_filepath = f"{entry}/user/{self.feature_name}.json"
+                self.tty_path = tty_path
                 self.dev_mode = True
 
             ParamDataHandler.add_param_data(

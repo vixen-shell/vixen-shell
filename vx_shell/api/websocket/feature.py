@@ -1,6 +1,7 @@
 import asyncio, json
 from typing import TypedDict, Optional, Callable
 from fastapi import WebSocket
+from fastapi.websockets import WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, ValidationError
 from vx_feature_utils import ParamDataHandler, Utils
 from ..api import api
@@ -46,19 +47,20 @@ async def feature_sockets(
 ):
     await websocket.accept()
 
-    async def revoke_websocket(message: str):
-        await websocket.send_json(OutputEvent(id="ERROR", data={"message": message}))
-        await websocket.close(reason=message)
+    async def revoke_websocket(e: Exception):
+        Logger.log_exception(e)
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": str(e)}))
+        await websocket.close(reason=str(e))
 
     try:
         feature = get_feature(feature_name)
     except Exception as exception:
-        return await revoke_websocket(str(exception))
+        return await revoke_websocket(exception)
 
     try:
         target_feature = get_feature(target_feature_name)
     except Exception as exception:
-        return await revoke_websocket(str(exception))
+        return await revoke_websocket(exception)
 
     try:
         handler_func: Callable = target_feature.content.get("socket", handler_name)
@@ -74,20 +76,41 @@ async def feature_sockets(
 
     except KeyError as key_error:
         return await revoke_websocket(
-            f"{key_error} not found in '{target_feature_name}' feature websocket handlers"
+            Exception(
+                f"{key_error} not found in '{target_feature_name}' feature websocket handlers"
+            )
         )
 
     except TypeError as type_error:
-        return await revoke_websocket(str(type_error))
+        return await revoke_websocket(type_error)
+
+    except Exception as exception:
+        return await revoke_websocket(exception)
 
     feature.feature_websockets.append(websocket)
 
     try:
-        await socket_handler.on_opening()
+        try:
+            await socket_handler.on_opening()
+        except Exception as exception:
+            await revoke_websocket(exception)
+            raise exception
+
         while True:
-            await socket_handler.on_loop_iteration()
+            try:
+                await socket_handler.on_loop_iteration()
+            except WebSocketDisconnect:
+                raise
+            except Exception as exception:
+                await revoke_websocket(exception)
+                raise exception
+
     except:
-        await socket_handler.on_closing()
+        try:
+            await socket_handler.on_closing()
+        except Exception as exception:
+            Logger.log_exception(exception)
+
         feature.feature_websockets.remove(websocket)
 
 
@@ -239,7 +262,11 @@ class DataHandler:
         self.handler_args = handler_args
 
     def get_data(self):
-        return self.handler(*self.handler_args)
+        try:
+            return self.handler(*self.handler_args)
+        except Exception as exception:
+            Logger.log_exception(exception)
+            raise exception
 
 
 @api.websocket("/feature/{feature_name}/data_streamer/{target_feature_name}")

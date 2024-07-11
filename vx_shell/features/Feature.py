@@ -8,9 +8,9 @@ from ..logger import Logger
 
 class Feature:
     @staticmethod
-    def load(entry: str):
+    def load(entry: str, tty_path: str = None):
         content, utils = Utils.get_feature_content(entry)
-        content.init_params(entry)
+        content.init_params(entry, tty_path)
 
         feature = Feature(content)
 

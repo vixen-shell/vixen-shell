@@ -12,11 +12,13 @@ class DevMode:
 
     @staticmethod
     def enable(feature: Feature):
+        Logger.add_handler(feature.content.tty_path, "WARNING", True)
         DevMode.feature_names.append(feature.content.feature_name)
         Logger.log(f"[Dev mode]: feature '{feature.content.feature_name}' enabled")
 
     @staticmethod
     def disable(feature: Feature):
+        Logger.remove_handler(feature.content.tty_path)
         DevMode.feature_names.remove(feature.content.feature_name)
         Logger.log(f"[Dev mode]: feature '{feature.content.feature_name}' disabled")
 
@@ -35,9 +37,7 @@ class Features:
         for name in Utils.get_root_feature_names():
             try:
                 Features.load(name)
-
             except:
-                # Logger.log(str(exception), "WARNING")
                 pass
 
         Logger.log(
@@ -45,9 +45,9 @@ class Features:
         )
 
     @staticmethod
-    def load(entry: str):
+    def load(entry: str, tty_path: str = None):
         try:
-            name, feature = Feature.load(entry)
+            name, feature = Feature.load(entry, tty_path)
         except Exception as exception:
             Logger.log(str(exception), "ERROR")
             show_dialog_box(str(exception), "WARNING")
