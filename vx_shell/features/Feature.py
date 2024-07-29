@@ -98,7 +98,11 @@ class Feature:
 
                     await asyncio.sleep(0.5)
 
-            self.content.startup_sequence()
+            try:
+                self.content.startup_sequence()
+            except Exception as exception:
+                Logger.log_exception(exception)
+
             self.frames.init(self.content.dev_mode)
             self.is_started = True
             Logger.log(f"[{self.content.feature_name}]: feature started")
@@ -107,7 +111,10 @@ class Feature:
 
     @check_is_started(True)
     async def stop(self):
-        self.content.shutdown_sequence()
+        try:
+            self.content.shutdown_sequence()
+        except Exception as exception:
+            Logger.log_exception(exception)
 
         state_websockets = self.state_websockets.copy()
         for websocket in state_websockets:

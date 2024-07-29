@@ -51,6 +51,20 @@ def get_root_feature_names():
     return feature_names
 
 
+def get_dev_feature_name(directory: str) -> str | None:
+    def folder_list(path):
+        return [
+            name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))
+        ]
+
+    folders = folder_list(f"{directory}/root")
+
+    if len(folders) != 1:
+        return None
+
+    return folders[0]
+
+
 def get_vite_process(directory: str):
     def vite_process():
         sub_process = subprocess.Popen(
@@ -107,20 +121,6 @@ def use_sudo(value: bool):
         return wrapper
 
     return decorator
-
-
-def get_dev_feature_name(directory: str) -> str | None:
-    def folder_list(path):
-        return [
-            name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))
-        ]
-
-    folders = folder_list(f"{directory}/root")
-
-    if len(folders) != 1:
-        return None
-
-    return folders[0]
 
 
 def get_current_tty():

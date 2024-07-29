@@ -72,12 +72,17 @@ class SetupManager:
             Logger.log("Vixen Shell is not running", "WARNING")
             return
 
-        feature_names = get_root_feature_names()
+        feature_names = get_root_feature_names() + [
+            "vx_cli",
+            "vx_feature_utils",
+            "vx_manager",
+            "vx_shell",
+        ]
 
         Logger.log("You are about to create a new development project", "WARNING")
 
         folder_list = [
-            folder_name
+            folder_name.removeprefix("vx-feature-")
             for folder_name in os.listdir(parent_dir)
             if os.path.isdir(os.path.join(parent_dir, folder_name))
         ]
@@ -94,7 +99,7 @@ class SetupManager:
                 Cli.Input.Filter(
                     type="exclude",
                     values=folder_list,
-                    reason="A folder with this name already exists in the current folder",
+                    reason="A project with this name already exists in the current folder",
                 ),
             ]
         )
@@ -129,7 +134,12 @@ class SetupManager:
             Logger.log("Vixen Shell is not running", "WARNING")
             return
 
-        feature_names = get_root_feature_names()
+        feature_names = get_root_feature_names() + [
+            "vx_cli",
+            "vx_feature_utils",
+            "vx_manager",
+            "vx_shell",
+        ]
 
         feature_name = get_dev_feature_name(dev_dir)
         if not feature_name:
@@ -180,7 +190,12 @@ class SetupManager:
             Logger.log("Vixen Shell is not running", "WARNING")
             return
 
-        feature_names = get_root_feature_names()
+        feature_names = get_root_feature_names() + [
+            "vx_cli",
+            "vx_feature_utils",
+            "vx_manager",
+            "vx_shell",
+        ]
 
         if feature_name in feature_names:
             Logger.log(
