@@ -61,7 +61,7 @@ class FeatureContent:
         except ParamsValueError as params_error:
             raise Exception(f"[{self.feature_name}]: {str(params_error)}")
 
-    def add_handler(self, content_type: ContentType):
+    def spread(self, content_type: ContentType):
         def decorator(callback: Callable):
             try:
                 sub_contents: dict = getattr(self.contents, content_type)
@@ -119,7 +119,7 @@ class FeatureContent:
 
 class FeatureContentReference(ABC):
     @abstractmethod
-    def add_handler(self, content_type: ContentType) -> Callable[[Callable], Callable]:
+    def spread(self, content_type: ContentType) -> Callable[[Callable], Callable]:
         pass
 
     @abstractmethod
