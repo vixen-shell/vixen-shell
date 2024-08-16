@@ -1,4 +1,4 @@
-from vx_feature_utils import LevelKeys, AnchorEdgeKeys, AlignmentKeys, ParamDataHandler
+from vx_features import LevelKeys, AnchorEdgeKeys, AlignmentKeys, ParamDataHandler
 from ..layerise import Edges, Levels, Margins, layerise_window, set_layer
 from ..Gtk_imports import Gtk
 

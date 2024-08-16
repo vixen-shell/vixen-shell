@@ -3,7 +3,7 @@ from typing import TypedDict, Optional, Callable
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, ValidationError
-from vx_feature_utils import ParamDataHandler, Utils
+from vx_features import ParamDataHandler, SocketHandler
 from ..api import api
 from ...features import Features
 from ...logger import Logger
@@ -63,15 +63,17 @@ async def feature_sockets(
         return await revoke_websocket(exception)
 
     try:
-        handler_func: Callable = target_feature.content.get("socket", handler_name)
+        handler_func: Callable = target_feature.get_shared_content(
+            "socket", handler_name
+        )
         type_msg_error = "The handler must be a function that returns an instance of class 'SocketHandler'"
 
         if not callable(handler_func):
             raise TypeError(type_msg_error)
 
-        socket_handler: Utils.SocketHandler = handler_func(websocket)
+        socket_handler: SocketHandler = handler_func(websocket)
 
-        if not isinstance(socket_handler, Utils.SocketHandler):
+        if not isinstance(socket_handler, SocketHandler):
             raise TypeError(type_msg_error)
 
     except KeyError as key_error:
@@ -302,7 +304,9 @@ async def feature_data_streamer(
                     data_handlers: dict[str, DataHandler] = {}
                     for data_handler in init_data.data_handlers:
                         data_handlers[data_handler.name] = DataHandler(
-                            target_feature.content.get("data", data_handler.name),
+                            target_feature.get_shared_content(
+                                "data", data_handler.name
+                            ),
                             data_handler.args,
                         )
 

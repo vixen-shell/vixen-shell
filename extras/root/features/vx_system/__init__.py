@@ -1,9 +1,6 @@
-from vx_feature_utils import Utils
+from vx_root import feature
 
-# utils = Utils.define_feature_utils()
-content = Utils.define_feature_content(
-    {"autostart": True, "frames": "disable", "state": "disable"}
-)
+feature().init({"autostart": True, "frames": "disable", "state": "disable"})
 
 
 class VXSystem:

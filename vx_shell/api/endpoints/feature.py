@@ -1,7 +1,7 @@
 from fastapi import Response, Path, Body
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict
-from vx_feature_utils import ParamDataHandler
+from vx_features import ParamDataHandler
 from typing import Any
 from ..api import api
 from ...logger import Logger
@@ -263,7 +263,7 @@ async def get_data(
     for handler in data_handlers:
         try:
             handlers[handler.name] = DataHandler(
-                feature.content.get("data", handler.name),
+                feature.get_shared_content("data", handler.name),
                 handler.args,
             )
         except KeyError as key_error:
@@ -333,7 +333,8 @@ async def get_action(
 
     try:
         handler = ActionHandler(
-            feature.content.get("action", action_handler.name), action_handler.args
+            feature.get_shared_content("action", action_handler.name),
+            action_handler.args,
         )
     except KeyError as key_error:
         return feature_action_responses(response, 404)(
@@ -400,7 +401,7 @@ async def get_file(
 
     try:
         handler = FileHandler(
-            feature.content.get("file", file_handler.name), file_handler.args
+            feature.get_shared_content("file", file_handler.name), file_handler.args
         )
     except KeyError as key_error:
         return feature_file_responses(response, 404)(

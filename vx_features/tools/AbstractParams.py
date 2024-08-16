@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Any
-from ...feature_params import ParamDataHandler
+from ..params import ParamDataHandler
 
 
 class AbstractParams(ABC):

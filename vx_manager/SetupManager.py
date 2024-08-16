@@ -72,12 +72,7 @@ class SetupManager:
             Logger.log("Vixen Shell is not running", "WARNING")
             return
 
-        feature_names = get_root_feature_names() + [
-            "vx_cli",
-            "vx_feature_utils",
-            "vx_manager",
-            "vx_shell",
-        ]
+        feature_names = get_root_feature_names()
 
         Logger.log("You are about to create a new development project", "WARNING")
 
@@ -134,12 +129,7 @@ class SetupManager:
             Logger.log("Vixen Shell is not running", "WARNING")
             return
 
-        feature_names = get_root_feature_names() + [
-            "vx_cli",
-            "vx_feature_utils",
-            "vx_manager",
-            "vx_shell",
-        ]
+        feature_names = get_root_feature_names()
 
         feature_name = get_dev_feature_name(dev_dir)
         if not feature_name:
@@ -190,12 +180,7 @@ class SetupManager:
             Logger.log("Vixen Shell is not running", "WARNING")
             return
 
-        feature_names = get_root_feature_names() + [
-            "vx_cli",
-            "vx_feature_utils",
-            "vx_manager",
-            "vx_shell",
-        ]
+        feature_names = get_root_feature_names()
 
         if feature_name in feature_names:
             Logger.log(

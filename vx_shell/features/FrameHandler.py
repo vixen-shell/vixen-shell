@@ -1,4 +1,4 @@
-from vx_feature_utils import ParamDataHandler
+from vx_features import ParamDataHandler
 from typing import Dict, List
 from .frame_view import FrameView
 

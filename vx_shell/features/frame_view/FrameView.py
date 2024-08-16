@@ -1,4 +1,4 @@
-from vx_feature_utils import ParamDataHandler
+from vx_features import ParamDataHandler
 from .layerise_frame import layerise_frame, set_layer_frame
 from ..Gtk_imports import GLib, Gtk, Gdk, WebKit2
 from ...globals import FRONT_PORT, FRONT_DEV_PORT

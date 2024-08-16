@@ -1,5 +1,11 @@
-import sys
-from vx_feature_utils import Utils, ParamDataHandler
+# import sys
+from vx_features import (
+    ParamDataHandler,
+    get_root_feature_names,
+    RootModule,
+    RootFeature,
+    RootUtils,
+)
 from typing import List, Dict
 from .Feature import Feature
 from .Gtk_main_loop import Gtk_main_loop
@@ -12,19 +18,19 @@ class DevMode:
 
     @staticmethod
     def enable(feature: Feature):
-        Logger.add_handler(feature.content.tty_path, "WARNING", True)
-        DevMode.feature_names.append(feature.content.feature_name)
-        Logger.log(f"[Dev mode]: feature '{feature.content.feature_name}' enabled")
+        Logger.add_handler(feature.tty_path, "WARNING", True)
+        DevMode.feature_names.append(feature.feature_name)
+        Logger.log(f"[Dev mode]: feature '{feature.feature_name}' enabled")
 
     @staticmethod
     def disable(feature: Feature):
-        Logger.remove_handler(feature.content.tty_path)
-        DevMode.feature_names.remove(feature.content.feature_name)
-        Logger.log(f"[Dev mode]: feature '{feature.content.feature_name}' disabled")
+        Logger.remove_handler(feature.tty_path)
+        DevMode.feature_names.remove(feature.feature_name)
+        Logger.log(f"[Dev mode]: feature '{feature.feature_name}' disabled")
 
     @staticmethod
     def include(feature: Feature):
-        return feature.content.feature_name in DevMode.feature_names
+        return feature.feature_name in DevMode.feature_names
 
 
 class Features:
@@ -34,7 +40,7 @@ class Features:
     def init():
         Gtk_main_loop.run()
 
-        for name in Utils.get_root_feature_names():
+        for name in get_root_feature_names():
             try:
                 Features.load(name)
             except:
@@ -57,7 +63,7 @@ class Features:
             suffix = " (Dev mode)" if DevMode.include(feature) else ""
             raise KeyError(f"Feature '{name}' already loaded{suffix}")
 
-        if feature.content.dev_mode:
+        if feature.dev_mode:
             DevMode.enable(feature)
 
         Features.dict[name] = feature
@@ -78,34 +84,41 @@ class Features:
         if DevMode.include(feature):
             DevMode.disable(feature)
 
-        if feature.content.sys_path:
-            modules_to_remove = []
+        del Features.dict[name]
 
-            for module in sys.modules.values():
-                try:
-                    file = getattr(module, "__file__", None)
-                    if not file or not isinstance(file, str):
-                        continue
-                except AttributeError:
-                    continue
-
-                if any(path in file for path in feature.content.sys_path):
-                    modules_to_remove.append(module.__name__)
-
-            for module_name in modules_to_remove:
-                sys.modules.pop(module_name)
-
-            for path in feature.content.sys_path:
-                while path in sys.path:
-                    sys.path.remove(path)
-
-        feature_module = sys.modules.get(feature.content.feature_name)
-        if feature_module:
-            sys.modules.pop(feature.content.feature_name)
+        RootUtils.del_instance(name)
+        RootFeature.del_instance(name)
+        RootModule.del_instance(name)
 
         ParamDataHandler.remove_param_data(name)
-        del Features.dict[name]
+
         Logger.log(f"[{name}]: feature unloaded")
+
+        # UNLOAD MODULE
+        # if feature.content.sys_path:
+        #     modules_to_remove = []
+
+        #     for module in sys.modules.values():
+        #         try:
+        #             file = getattr(module, "__file__", None)
+        #             if not file or not isinstance(file, str):
+        #                 continue
+        #         except AttributeError:
+        #             continue
+
+        #         if any(path in file for path in feature.content.sys_path):
+        #             modules_to_remove.append(module.__name__)
+
+        #     for module_name in modules_to_remove:
+        #         sys.modules.pop(module_name)
+
+        #     for path in feature.content.sys_path:
+        #         while path in sys.path:
+        #             sys.path.remove(path)
+
+        # feature_module = sys.modules.get(feature.content.feature_name)
+        # if feature_module:
+        #     sys.modules.pop(feature.content.feature_name)
 
     @staticmethod
     async def stop():
