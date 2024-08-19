@@ -6,6 +6,8 @@ from ..utils import feature_name_from
 
 
 class RootUtils:
+    from .SocketHandler import SocketHandler
+
     _instances = {}
 
     @classmethod

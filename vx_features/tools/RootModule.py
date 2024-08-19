@@ -22,8 +22,8 @@ class RootModule:
                 while path in sys.path:
                     sys.path.remove(path)
 
-            instance = None
             del cls._instances[feature_name]
+            del instance
 
     def __new__(cls, entry: str):
         feature_name = feature_name_from(entry)
@@ -38,12 +38,11 @@ class RootModule:
             self.name = feature_name_from(entry)
             self.dev_mode = is_dev_feature(entry)
 
-            if self.dev_mode:
-                self.sys_path = [f"{entry}/root"] + glob(
-                    f"{entry}/.venv/lib/python*/site-packages"
-                )
-            else:
-                self.sys_path = glob(f"/usr/share/vixen/{self.name}.libs")
+            self.sys_path = (
+                [f"{entry}/root"] + glob(f"{entry}/.venv/lib/python*/site-packages")
+                if self.dev_mode
+                else glob(f"/usr/share/vixen/{self.name}.libs")
+            )
 
             sys.path.extend(self.sys_path)
             import_module(self.name)
