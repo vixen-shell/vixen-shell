@@ -12,7 +12,7 @@ class Log(TypedDict):
 LogListener = Callable[[Log], None]
 
 
-class AbstractLogger(ABC):
+class AbsLogger(ABC):
     @abstractmethod
     def log(self, message: str, level: LogLevel = "INFO"):
         pass
@@ -33,7 +33,7 @@ class AbstractLogger(ABC):
 
 
 def get_logger_reference(logger):
-    class LoggerReference(AbstractLogger):
+    class LoggerReference(AbsLogger):
         def log(self, message: str, level: LogLevel = "INFO"):
             logger.log(message, level)
 

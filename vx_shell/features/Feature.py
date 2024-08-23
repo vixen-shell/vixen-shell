@@ -1,22 +1,13 @@
 import os, asyncio
 from typing import Callable
 from vx_features import (
-    RootModule,
-    RootFeature,
-    RootUtils,
     ParamDataHandler,
-    ParamData,
-    ParamsValueError,
-    root_FeatureParams_dict,
     FeatureSharedContent,
     FeatureContentType,
     FeatureLifespan,
-    is_dev_feature,
-    get_feature_references,
 )
 from fastapi import WebSocket
 from .FrameHandler import FrameHandler
-from .Gtk_dialog import show_dialog_box
 from ..logger import Logger
 
 USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
@@ -25,10 +16,10 @@ USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
 class Feature:
     @staticmethod
     def load(entry: str, tty_path: str = None):
-        RootModule(entry)
-        feature = Feature(entry, tty_path)
+        from .FeatureLoader import FeatureLoader
 
-        return feature.feature_name, feature
+        feature_loader = FeatureLoader(entry, tty_path)
+        return feature_loader.load()
 
     def check_is_started(value: bool):
         def decorator(method):
@@ -46,66 +37,31 @@ class Feature:
 
         return decorator
 
-    def __init__(self, entry: str, tty_path: str = None):
-        self.__init_root(entry)
-        self.tty_path: str = tty_path
-        self.dev_mode: bool = is_dev_feature(entry)
-        self.__init_params(entry)
-
+    def __init__(
+        self,
+        feature_name: str,
+        required_features: list[str],
+        shared_content: FeatureSharedContent,
+        lifespan: FeatureLifespan,
+        dev_mode: bool,
+    ):
+        self.dev_mode = dev_mode
+        # -------------------------------------------- - - -
+        self.feature_name = feature_name
+        self.required_features = required_features
+        self.shared_content = shared_content
+        self.lifespan = lifespan
         # -------------------------------------------- - - -
         self.state_websockets: list[WebSocket] = []
         self.feature_websockets: list[WebSocket] = []
         self.frames = FrameHandler(feature_name=self.feature_name)
         self.is_started = False
-
         # -------------------------------------------- - - -
         if (
             ParamDataHandler.get_value(f"{self.feature_name}.autostart")
             and not self.dev_mode
         ):
             self.start()
-
-    def __init_root(self, entry: str):
-        root_feature = RootFeature(entry)
-        root_utils = RootUtils(entry)
-
-        self.feature_name: str = None
-        self.root_params: root_FeatureParams_dict = None
-        self.required_features: list[str] = None
-        self.shared_content: FeatureSharedContent = None
-        self.lifespan: FeatureLifespan = None
-
-        self.__dict__ = {
-            key.removeprefix("_RootFeature__"): root_feature.__dict__[key]
-            for key in root_feature.__dict__
-            if key.startswith("_RootFeature__")
-        }
-
-        root_feature.current = get_feature_references(self)
-
-        from .Features import Features
-
-        root_utils.init(Logger, Features, show_dialog_box)
-
-    def __init_params(self, entry: str):
-        user_params_filepath = (
-            f"{entry}/user/{self.feature_name}.json"
-            if self.dev_mode
-            else f"{USER_PARAMS_DIRECTORY}/{self.feature_name}.json"
-        )
-
-        try:
-            ParamDataHandler.add_param_data(
-                feature_name=self.feature_name,
-                param_data=ParamData(
-                    root_params_dict=self.root_params,
-                    user_params_filepath=user_params_filepath,
-                    dev_mode=self.dev_mode,
-                ),
-            )
-
-        except ParamsValueError as param_error:
-            raise Exception(f"[{self.feature_name}]: {str(param_error)}")
 
     @property
     @check_is_started(True)
@@ -157,7 +113,7 @@ class Feature:
                     await asyncio.sleep(0.5)
 
             try:
-                self.lifespan.startup()
+                self.lifespan.startup_sequence()
             except Exception as exception:
                 Logger.log_exception(exception)
 
@@ -170,7 +126,7 @@ class Feature:
     @check_is_started(True)
     async def stop(self):
         try:
-            self.lifespan.shutdown()
+            self.lifespan.shutdown_sequence()
         except Exception as exception:
             Logger.log_exception(exception)
 

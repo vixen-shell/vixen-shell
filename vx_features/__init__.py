@@ -1,12 +1,8 @@
-from .tools import (
-    RootModule,
+from .RootFeature import (
     RootFeature,
-    RootUtils,
-    SocketHandler,
     FeatureLifespan,
     FeatureSharedContent,
     FeatureContentType,
-    get_feature_references,
 )
 from .params import (
     LevelKeys,
@@ -17,8 +13,4 @@ from .params import (
     ParamData,
     ParamsValueError,
 )
-from .utils import (
-    is_dev_feature,
-    feature_name_from,
-    get_root_feature_names,
-)
+from .utils import FeatureUtils

@@ -1,6 +1,13 @@
 from vx_root import feature
 
-feature().init({"autostart": True, "frames": "disable", "state": "disable"})
+feature = feature()
+
+feature.init({"autostart": True, "frames": "disable", "state": "disable"})
+
+
+@feature.on_startup
+def on_startup():
+    print("HELLO !!!")
 
 
 class VXSystem:

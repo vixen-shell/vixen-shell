@@ -77,7 +77,7 @@ class ParamDataHandler:
             param_listeners[path] = [listener]
 
     @staticmethod
-    def remove_param_listener(path: str, listener: Callable[[Any], None]):
+    def remove_param_listener(path: str, listener: Callable[[str, Any], None]):
         feature_name, _ = break_path(path)
         param_listeners = ParamDataHandler.__data_dict[feature_name].param_listeners
         listeners = param_listeners.get(path)

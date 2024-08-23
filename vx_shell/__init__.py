@@ -6,18 +6,11 @@ Description       : vixen shell api library.
 License           : GPL3
 """
 
-import sys
-
 
 def run_shell():
+    from sys import path
     from .api import api
     from .servers import ApiServer
 
-    sys.path.extend(
-        [
-            "/usr/share/vixen/root_utils",
-            "/usr/share/vixen/features",
-        ],
-    )
-
+    path.append("/usr/share/vixen/features")
     ApiServer.start(api)

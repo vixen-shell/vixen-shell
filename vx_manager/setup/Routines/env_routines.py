@@ -51,13 +51,6 @@ def setup_environment(library_path: str):
                 command=Commands.folder_create("/usr/share/vixen"),
                 undo_command=Commands.folder_remove(f"/usr/share/vixen"),
             ),
-            RoutineTask(
-                purpose="Install root utils package",
-                command=Commands.folder_copy(
-                    f"{library_path}/extras/root/root_utils", "/usr/share/vixen"
-                ),
-                undo_command=Commands.folder_remove(f"/usr/share/vixen/root_utils"),
-            ),
             # ---------------------------------------------- - - -
             # Install Vxm
             #

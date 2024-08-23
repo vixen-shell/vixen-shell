@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Any
-from ..params import ParamDataHandler
 
 
-class AbstractParams(ABC):
+class AbsParams(ABC):
     @abstractmethod
     def add_param_listener(
         self, param_path: str, listener: Callable[[str, Any], None]
@@ -18,11 +17,6 @@ class AbstractParams(ABC):
 
     @abstractmethod
     def node_is_define(self, node_path: str) -> bool:
-        pass
-
-    @property
-    @abstractmethod
-    def frame_ids(self) -> list[str]:
         pass
 
     @property
@@ -48,8 +42,8 @@ class AbstractParams(ABC):
         pass
 
 
-def get_params_references(feature_name: str):
-    class ParamHandlerReference(AbstractParams):
+def get_params_reference(feature_name: str, ParamDataHandler):
+    class ParamHandlerReference(AbsParams):
         def add_param_listener(
             self, param_path: str, listener: Callable[[str, Any], None]
         ) -> None:
@@ -65,10 +59,6 @@ def get_params_references(feature_name: str):
         def node_is_define(self, node_path: str) -> bool:
             path = f"{feature_name}.{node_path}"
             return ParamDataHandler.node_is_define(path)
-
-        @property
-        def frame_ids(self) -> list[str]:
-            return ParamDataHandler.get_frame_ids(feature_name)
 
         @property
         def state_is_enable(self) -> bool:

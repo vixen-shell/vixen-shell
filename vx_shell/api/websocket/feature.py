@@ -3,7 +3,8 @@ from typing import TypedDict, Optional, Callable
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, ValidationError
-from vx_features import ParamDataHandler, SocketHandler
+from vx_features import ParamDataHandler
+from vx_root import SocketHandler
 from ..api import api
 from ...features import Features
 from ...logger import Logger

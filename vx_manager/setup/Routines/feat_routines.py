@@ -1,4 +1,5 @@
-import os, glob
+import os
+from glob import glob
 from ..classes import Commands, Routine, RoutineTask
 from ...utils import write_json
 
@@ -15,9 +16,12 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             write_json(
                 f"{tmp_project_dir}/.vscode/settings.json",
                 {
-                    "python.analysis.extraPaths": glob.glob(
+                    "python.analysis.extraPaths": glob(
                         "/opt/vixen-env/lib/python*/site-packages"
-                    )
+                    ),
+                    "python.autoComplete.extraPaths": glob(
+                        "/opt/vixen-env/lib/python*/site-packages"
+                    ),
                 },
             )
             return True

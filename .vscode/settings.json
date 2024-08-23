@@ -1,4 +1,0 @@
-{
-    "python.analysis.extraPaths": ["./extras/root/root_utils"],
-    "python.autoComplete.extraPaths": ["./extras/root/root_utils"]
-}
