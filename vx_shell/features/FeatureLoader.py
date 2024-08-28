@@ -2,6 +2,7 @@ import os, sys
 from importlib import import_module
 from vx_features import (
     FeatureUtils,
+    RootContents,
     RootFeature,
     ParamDataHandler,
     ParamData,
@@ -41,14 +42,26 @@ class FeatureLoader:
             self.is_dev_feature = FeatureUtils.is_dev_feature(entry)
             self.sys_path = FeatureUtils.sys_path_from(entry)
             self.user_params_filepath = FeatureUtils.user_params_file_from(entry)
+            self.feature = None
 
             self.is_loaded = False
+
+    def __load_tty(self):
+        if self.tty_path:
+            Logger.add_handler(self.tty_path, "WARNING", True)
+
+    def __unload_tty(self):
+        if self.tty_path:
+            Logger.remove_handler(self.tty_path)
 
     def __load_module(self):
         sys.path.extend(self.sys_path)
         import_module(self.feature_name)
 
     def __unload_module(self):
+        RootContents.del_instance(self.feature_name)
+        RootFeature.del_instance(self.feature_name)
+
         for module_name in list(sys.modules):
             if module_name.startswith(self.feature_name):
                 del sys.modules[module_name]
@@ -57,11 +70,7 @@ class FeatureLoader:
             while path in sys.path:
                 sys.path.remove(path)
 
-    def __init_tty(self):
-        if self.tty_path:
-            Logger.add_handler(self.tty_path, "WARNING", True)
-
-    def __init_feature_params(self):
+    def __load_feature_params(self):
         root_params = RootFeature(self.feature_name).root_params
 
         if not root_params:
@@ -82,57 +91,54 @@ class FeatureLoader:
         except ParamsValueError as param_error:
             raise Exception(f"[{self.feature_name}]: {str(param_error)}")
 
-    def load(self):
+    def __unload_feature_params(self):
+        ParamDataHandler.remove_param_data(self.feature_name)
+
+    def __load_feature(self):
         from .Feature import Feature
 
-        if self.is_loaded:
-            raise Exception(f"Feature '{self.feature_name}' already loaded")
+        self.feature = Feature(
+            feature_name=self.feature_name,
+            dev_mode=self.is_dev_feature,
+        )
 
-        try:
-            self.__init_tty()
-            self.__load_module()
-            self.__init_feature_params()
+    def __unload_feature(self):
+        self.feature = None
 
+    def __init_feature_utils(self):
+        if self.feature:
             root_feature = RootFeature(self.feature_name)
 
-            feature = Feature(
-                feature_name=self.feature_name,
-                required_features=root_feature.required_features,
-                shared_content=root_feature.shared_content,
-                lifespan=root_feature.lifespan,
-                dev_mode=self.is_dev_feature,
-            )
-
-            root_feature.frames = get_frames_reference(feature)
+            root_feature.frames = get_frames_reference(self.feature)
             root_feature.params = get_params_reference(
                 self.feature_name, ParamDataHandler
             )
             root_feature.logger = get_logger_reference(Logger)
             root_feature.dialog = show_dialog_box
 
-            self.is_loaded = True
-
-            return self.feature_name, feature
-
-        except Exception as exception:
-            Logger.log(str(exception), "ERROR")
-            show_dialog_box(str(exception), "WARNING")
-            raise exception
-
-    def unload(self):
-        if not self.is_loaded:
-            raise Exception(f"Feature '{self.feature_name}' is not loaded")
+    def load(self):
+        if self.is_loaded:
+            raise Exception(f"Feature '{self.feature_name}' already loaded")
 
         try:
-            RootFeature.del_instance(self.feature_name)
-            ParamDataHandler.remove_param_data(self.feature_name)
-            self.__unload_module()
-
-            if self.tty_path:
-                Logger.remove_handler(self.tty_path)
-
-            self.is_loaded = False
+            self.__load_tty()
+            self.__load_module()
+            self.__load_feature_params()
+            self.__load_feature()
+            self.__init_feature_utils()
 
         except Exception as exception:
-            Logger.log(str(exception), "ERROR")
+            Logger.log_exception(exception)
+            self.unload()
             raise exception
+
+        self.is_loaded = True
+        return self.feature_name, self.feature
+
+    def unload(self):
+        self.__unload_feature()
+        self.__unload_feature_params()
+        self.__unload_module()
+        self.__unload_tty()
+
+        self.is_loaded = False

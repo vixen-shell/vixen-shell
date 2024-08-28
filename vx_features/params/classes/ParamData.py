@@ -3,7 +3,7 @@ from typing import Callable, Any
 from .RootBuilder import RootBuilder
 from .ParamsError import ParamsValidationError
 from ..utils import read_json
-from ..models import (
+from vx_types import (
     root_FeatureParams_dict,
     user_FeatureParams_dict,
     root_FeatureParams,

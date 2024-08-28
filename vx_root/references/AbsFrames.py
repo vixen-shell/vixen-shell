@@ -35,6 +35,6 @@ def get_frames_reference(feature):
             return feature.open_frame(frame_id)
 
         def close(self, id: str):
-            feature.close_frame(id)
+            return feature.close_frame(id)
 
     return FeatureReference()

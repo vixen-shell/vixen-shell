@@ -1,20 +1,10 @@
-from typing import Literal, Callable, Any
-from vx_root import SocketHandler
+from typing import Literal, Callable
+from vx_shell.logger import Logger
 from vx_root.references.AbsFrames import AbsFrames
 from vx_root.references.AbsParams import AbsParams
 from vx_root.references.AbsLogger import AbsLogger
-from .params import root_FeatureParams_dict
+from vx_types import root_FeatureParams_dict
 from .utils import FeatureUtils
-
-FeatureContentType = Literal["action", "data", "file", "socket"]
-
-
-class FeatureSharedContent:
-    def __init__(self):
-        self.action: dict[str, Callable[[], None]] = {}
-        self.data: dict[str, Callable[[], Any]] = {}
-        self.file: dict[str, Callable[[], str]] = {}
-        self.socket: dict[str, Callable[[], SocketHandler]] = {}
 
 
 class FeatureLifespan:
@@ -54,7 +44,6 @@ class RootFeature:
             self.name: str = FeatureUtils.feature_name_from(entry)
             self.root_params: root_FeatureParams_dict | None = None
             self.required_features: list[str] = []
-            self.shared_content = FeatureSharedContent()
             self.lifespan = FeatureLifespan()
 
             self.frames: AbsFrames = None
@@ -74,48 +63,24 @@ class RootFeature:
     def set_required_features(self, value: list[str]):
         self.required_features = value
 
-    def share(self, content_type: FeatureContentType):
-        def decorator(callback: Callable):
-            try:
-                sub_contents: dict[str, Callable] = getattr(
-                    self.shared_content, content_type
-                )
-
-            except AttributeError:
-                raise ValueError(
-                    f"Invalid content type: '{content_type}', "
-                    f"in file: {callback.__code__.co_filename}, "
-                    f"at line: {callback.__code__.co_firstlineno}"
-                )
-
-            if sub_contents.get(callback.__name__):
-                raise Exception(
-                    f"{content_type.capitalize()} content '{callback.__name__}' already shared"
-                )
-
-            sub_contents[callback.__name__] = callback
-            return callback
-
-        return decorator
-
     def on_startup(self, callback: Callable[[], None]):
         if self.lifespan.startup_callback:
-            raise Exception(
+            Logger.log(
                 "Startup sequence already defined "
-                f"in file: {callback.__code__.co_filename}, "
-                f"at line: {callback.__code__.co_firstlineno}"
+                f"in file: {self.lifespan.startup_callback.__code__.co_filename}, "
+                f"at line: {self.lifespan.startup_callback.__code__.co_firstlineno}",
+                "WARNING",
             )
-
-        self.lifespan.startup_callback = callback
-        return callback
+        else:
+            self.lifespan.startup_callback = callback
 
     def on_shutdown(self, callback: Callable[[], None]):
         if self.lifespan.shutdown_callback:
-            raise Exception(
+            Logger.log(
                 "Shutdown sequence already defined "
-                f"in file: {callback.__code__.co_filename}, "
-                f"at line: {callback.__code__.co_firstlineno}"
+                f"in file: {self.lifespan.shutdown_callback.__code__.co_filename}, "
+                f"at line: {self.lifespan.shutdown_callback.__code__.co_firstlineno}",
+                "WARNING",
             )
-
-        self.lifespan.shutdown_callback = callback
-        return callback
+        else:
+            self.lifespan.shutdown_callback = callback

@@ -1,7 +1,7 @@
 import json
 from pydantic import ValidationError
 from typing import TypedDict, Any, Literal
-from ..models import ParamPermission
+from vx_types import ParamPermission
 
 
 class ParamsErrorDetails(TypedDict):

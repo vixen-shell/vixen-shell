@@ -1,14 +1,9 @@
 from .RootFeature import (
     RootFeature,
     FeatureLifespan,
-    FeatureSharedContent,
-    FeatureContentType,
 )
+from .RootContents import RootContents
 from .params import (
-    LevelKeys,
-    AnchorEdgeKeys,
-    AlignmentKeys,
-    root_FeatureParams_dict,
     ParamDataHandler,
     ParamData,
     ParamsValueError,

@@ -1,1 +1,2 @@
-from .RootFeatureReference import RootFeatureReference
+from .AbsRootContents import AbsRootContents, get_root_contents_reference
+from .AbsRootFeature import AbsRootFeature, get_root_feature_reference

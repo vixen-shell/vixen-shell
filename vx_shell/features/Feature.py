@@ -1,10 +1,8 @@
 import os, asyncio
-from typing import Callable
 from vx_features import (
     ParamDataHandler,
-    FeatureSharedContent,
-    FeatureContentType,
-    FeatureLifespan,
+    RootContents,
+    RootFeature,
 )
 from fastapi import WebSocket
 from .FrameHandler import FrameHandler
@@ -37,28 +35,21 @@ class Feature:
 
         return decorator
 
-    def __init__(
-        self,
-        feature_name: str,
-        required_features: list[str],
-        shared_content: FeatureSharedContent,
-        lifespan: FeatureLifespan,
-        dev_mode: bool,
-    ):
+    def __init__(self, feature_name: str, dev_mode: bool):
+        self.feature_name = feature_name
         self.dev_mode = dev_mode
         # -------------------------------------------- - - -
-        self.feature_name = feature_name
-        self.required_features = required_features
-        self.shared_content = shared_content
-        self.lifespan = lifespan
+        self.contents = RootContents(feature_name)
+        self.required_features = RootFeature(feature_name).required_features
+        self.lifespan = RootFeature(feature_name).lifespan
         # -------------------------------------------- - - -
         self.state_websockets: list[WebSocket] = []
         self.feature_websockets: list[WebSocket] = []
-        self.frames = FrameHandler(feature_name=self.feature_name)
+        self.frames = FrameHandler(feature_name=feature_name)
         self.is_started = False
         # -------------------------------------------- - - -
         if (
-            ParamDataHandler.get_value(f"{self.feature_name}.autostart")
+            ParamDataHandler.get_value(f"{feature_name}.autostart")
             and not self.dev_mode
         ):
             self.start()
@@ -72,11 +63,6 @@ class Feature:
     @check_is_started(True)
     def active_frame_ids(self):
         return self.frames.active_frame_ids
-
-    @check_is_started(True)
-    def get_shared_content(self, content_type: FeatureContentType, handler_name: str):
-        sub_contents: dict[str, Callable] = getattr(self.shared_content, content_type)
-        return sub_contents[handler_name]
 
     @check_is_started(False)
     def start(self):

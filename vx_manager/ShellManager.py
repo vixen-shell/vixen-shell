@@ -33,7 +33,7 @@ class ShellManager:
                 return
 
         def exit_dev_mode():
-            os.system("clear")
+            # os.system("clear")
             exit_code = 0
 
             if feature.unload():
@@ -65,7 +65,7 @@ class ShellManager:
             signal.signal(signal.SIGINT, signal_handler)
 
             if feature.load():
-                os.system("clear")
+                # os.system("clear")
                 Logger.log(f"Load feature '{feature.name}'", suffix="SUCCESS")
 
                 feature.start()
@@ -89,7 +89,7 @@ class ShellManager:
                             Logger.log("Reload feature", "ERROR", "FAILED")
                             break
 
-                        os.system("clear")
+                        # os.system("clear")
                         Logger.log(f"Reload feature '{feature.name}'", suffix="SUCCESS")
                         feature.start()
 

@@ -1,6 +1,6 @@
 from .ParamsError import ParamsValueError, ParamsErrorDetails
 
-from ..models import (
+from vx_types import (
     root_FeatureParams,
     root_FeatureParams_dict,
     user_FeatureParams,

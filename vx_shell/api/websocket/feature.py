@@ -64,9 +64,7 @@ async def feature_sockets(
         return await revoke_websocket(exception)
 
     try:
-        handler_func: Callable = target_feature.get_shared_content(
-            "socket", handler_name
-        )
+        handler_func: Callable = target_feature.contents.get("socket", handler_name)
         type_msg_error = "The handler must be a function that returns an instance of class 'SocketHandler'"
 
         if not callable(handler_func):
@@ -305,9 +303,7 @@ async def feature_data_streamer(
                     data_handlers: dict[str, DataHandler] = {}
                     for data_handler in init_data.data_handlers:
                         data_handlers[data_handler.name] = DataHandler(
-                            target_feature.get_shared_content(
-                                "data", data_handler.name
-                            ),
+                            target_feature.contents.get("data", data_handler.name),
                             data_handler.args,
                         )
 

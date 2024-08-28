@@ -3,7 +3,7 @@ from typing import Literal, Any, Callable
 from pydantic import ValidationError
 from ..classes import ParamData, ParamsValidationError, ParamPermissionError
 from ..utils import write_json
-from ..models import (
+from vx_types import (
     root_FeatureParams_dict,
     user_FeatureParams_dict,
     user_FeatureParams,
@@ -63,7 +63,8 @@ class ParamDataHandler:
 
     @staticmethod
     def remove_param_data(feature_name: str):
-        ParamDataHandler.__data_dict.pop(feature_name)
+        if feature_name in ParamDataHandler.__data_dict:
+            ParamDataHandler.__data_dict.pop(feature_name)
 
     @staticmethod
     def add_param_listener(path: str, listener: Callable[[str, Any], None]):
