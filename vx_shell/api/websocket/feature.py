@@ -4,7 +4,7 @@ from fastapi import WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, ValidationError
 from vx_features import ParamDataHandler
-from vx_root import SocketHandler
+from vx_root.root_utils.classes import SocketHandler
 from ..api import api
 from ...features import Features
 from ...logger import Logger
