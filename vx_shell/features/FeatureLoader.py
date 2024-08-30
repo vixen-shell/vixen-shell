@@ -1,5 +1,9 @@
 import os, sys
 from importlib import import_module
+from vx_root.references.AbsFrames import get_frames_reference
+from vx_root.references.AbsParams import get_params_reference
+from ..logger import Logger
+
 from vx_features import (
     FeatureUtils,
     RootContents,
@@ -9,12 +13,6 @@ from vx_features import (
     ParamsValueError,
 )
 
-from vx_root.references.AbsFrames import get_frames_reference
-from vx_root.references.AbsParams import get_params_reference
-from vx_root.references.AbsLogger import get_logger_reference
-
-from .Gtk_dialog import show_dialog_box
-from ..logger import Logger
 
 USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
 
@@ -113,8 +111,6 @@ class FeatureLoader:
             root_feature.params = get_params_reference(
                 self.feature_name, ParamDataHandler
             )
-            root_feature.logger = get_logger_reference(Logger)
-            root_feature.dialog = show_dialog_box
 
     def load(self):
         if self.is_loaded:

@@ -4,7 +4,6 @@ from typing import Literal, Callable
 from vx_types import root_FeatureParams_dict
 from .AbsFrames import AbsFrames
 from .AbsParams import AbsParams
-from .AbsLogger import AbsLogger
 
 
 class AbsRootFeature(ABC):
@@ -21,20 +20,6 @@ class AbsRootFeature(ABC):
     @property
     @abstractmethod
     def params(self) -> AbsParams:
-        pass
-
-    @property
-    @abstractmethod
-    def logger(self) -> AbsLogger:
-        pass
-
-    @abstractmethod
-    def dialog(
-        self,
-        message: str,
-        level: Literal["INFO", "WARNING"] = "INFO",
-        title: str = "Vixen Shell",
-    ) -> None:
         pass
 
     @abstractmethod
@@ -94,20 +79,6 @@ def get_root_feature_reference(root_feature):
         @restricted()
         def params(self) -> AbsParams:
             return root_feature.params
-
-        @property
-        @restricted(root_feature.name)
-        def logger(self) -> AbsLogger:
-            return root_feature.logger
-
-        @restricted(root_feature.name)
-        def dialog(
-            self,
-            message: str,
-            level: Literal["INFO", "WARNING"] = "INFO",
-            title: str = "Vixen Shell",
-        ) -> None:
-            return root_feature.dialog(message, level, title)
 
         @restricted(root_feature.name)
         def init(self, value: root_FeatureParams_dict) -> None:

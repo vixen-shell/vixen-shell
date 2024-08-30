@@ -1,10 +1,10 @@
 from .references import AbsRootFeature, AbsRootContents
-from .classes import SocketHandler
+from .root_utils import utils
 
 
 def feature(feature_name: str = None) -> AbsRootFeature:
     from .references import get_root_feature_reference
-    from vx_features import RootFeature, RootContents
+    from vx_features import RootFeature
     from inspect import stack, getmodule
 
     package_name = getmodule(stack()[1].frame).__package__

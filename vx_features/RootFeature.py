@@ -1,8 +1,7 @@
-from typing import Literal, Callable
+from typing import Callable
 from vx_shell.logger import Logger
 from vx_root.references.AbsFrames import AbsFrames
 from vx_root.references.AbsParams import AbsParams
-from vx_root.references.AbsLogger import AbsLogger
 from vx_types import root_FeatureParams_dict
 from .utils import FeatureUtils
 
@@ -48,14 +47,6 @@ class RootFeature:
 
             self.frames: AbsFrames = None
             self.params: AbsParams = None
-            self.logger: AbsLogger = None
-
-    def dialog(
-        self,
-        message: str,
-        level: Literal["INFO", "WARNING"] = "INFO",
-        title: str = "Vixen Shell",
-    ) -> None: ...
 
     def init(self, value: root_FeatureParams_dict):
         self.root_params = value
