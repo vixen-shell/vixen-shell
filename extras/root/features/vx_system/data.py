@@ -1,22 +1,24 @@
 import os, psutil
-from vx_root import content
+from vx_root import root_content
+
+content = root_content()
 
 
-@content().dispatch("data")
+@content.dispatch("data")
 def user_name() -> str:
     return os.getlogin()
 
 
-@content().dispatch("data")
+@content.dispatch("data")
 def user_directory() -> str:
     return os.path.expanduser("~")
 
 
-@content().dispatch("data")
+@content.dispatch("data")
 def cpu_usage(percpu: bool = False) -> float | list[float]:
     return psutil.cpu_percent(percpu=percpu)
 
 
-@content().dispatch("data")
+@content.dispatch("data")
 def ram_usage() -> float:
     return psutil.virtual_memory().percent

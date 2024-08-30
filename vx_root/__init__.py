@@ -2,7 +2,7 @@ from .references import AbsRootFeature, AbsRootContents
 from .root_utils import utils
 
 
-def feature(feature_name: str = None) -> AbsRootFeature:
+def root_feature(feature_name: str = None) -> AbsRootFeature:
     from .references import get_root_feature_reference
     from vx_features import RootFeature
     from inspect import stack, getmodule
@@ -27,7 +27,7 @@ def feature(feature_name: str = None) -> AbsRootFeature:
     return get_root_feature_reference(RootFeature(feature_name))
 
 
-def content(feature_name: str = None) -> AbsRootContents:
+def root_content(feature_name: str = None) -> AbsRootContents:
     from .references import get_root_contents_reference
     from vx_features import RootContents
     from inspect import stack, getmodule

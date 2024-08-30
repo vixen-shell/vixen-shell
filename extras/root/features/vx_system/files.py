@@ -2,10 +2,10 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
-from vx_root import content
+from vx_root import root_content
 
 
-@content().dispatch("file")
+@root_content().dispatch("file")
 def icon(icon_name: str):
     icon_theme = Gtk.IconTheme.get_default()
 

@@ -1,6 +1,6 @@
 import subprocess, threading
 from typing import TypedDict
-from vx_root import content
+from vx_root import root_content
 
 
 class ProcessInfos(TypedDict):
@@ -9,7 +9,7 @@ class ProcessInfos(TypedDict):
     args: list[str]
 
 
-@content().dispatch("task")
+@root_content().dispatch("task")
 def run(command: str, args: list[str] = [], wait_process: bool = False) -> ProcessInfos:
     process = subprocess.Popen(
         [command] + args,
