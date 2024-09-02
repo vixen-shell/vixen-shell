@@ -99,20 +99,31 @@ class Feature:
                     await asyncio.sleep(0.5)
 
             try:
-                self.lifespan.startup_sequence()
+                startup = self.lifespan.startup_sequence()
             except Exception as exception:
                 Logger.log_exception(exception)
 
-            self.frames.init(self.dev_mode)
-            self.is_started = True
-            Logger.log(f"[{self.feature_name}]: feature started")
+            if startup == True:
+                self.frames.init(self.dev_mode)
+                self.is_started = True
+                Logger.log(f"[{self.feature_name}]: feature started")
+            else:
+                Logger.log(
+                    f"[{self.feature_name}]: startup sequence return 'False'. "
+                    "Unable to start feature!",
+                    "WARNING",
+                )
 
         asyncio.create_task(process())
 
     @check_is_started(True)
-    async def stop(self):
+    async def stop(self) -> bool:
         try:
-            self.lifespan.shutdown_sequence()
+            if self.lifespan.shutdown_sequence() == False:
+                Logger.log(
+                    f"[{self.feature_name}]: shutdown sequence return 'False'!",
+                    "WARNING",
+                )
         except Exception as exception:
             Logger.log_exception(exception)
 

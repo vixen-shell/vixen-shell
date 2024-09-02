@@ -18,10 +18,12 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
                 {
                     "python.analysis.extraPaths": glob(
                         "/opt/vixen-env/lib/python*/site-packages"
-                    ),
+                    )
+                    + ["/usr/share/vixen/features"],
                     "python.autoComplete.extraPaths": glob(
                         "/opt/vixen-env/lib/python*/site-packages"
-                    ),
+                    )
+                    + ["/usr/share/vixen/features"],
                 },
             )
             return True

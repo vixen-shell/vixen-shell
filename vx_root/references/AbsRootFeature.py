@@ -31,11 +31,11 @@ class AbsRootFeature(ABC):
         pass
 
     @abstractmethod
-    def on_startup(self, callback: Callable[[], None]) -> Callable[[], None]:
+    def on_startup(self, callback: Callable[[], bool]) -> None:
         pass
 
     @abstractmethod
-    def on_shutdown(self, callback: Callable[[], None]) -> Callable[[], None]:
+    def on_shutdown(self, callback: Callable[[], bool]) -> None:
         pass
 
 
@@ -89,11 +89,11 @@ def get_root_feature_reference(root_feature):
             return root_feature.set_required_features(value)
 
         @restricted(root_feature.name)
-        def on_startup(self, callback: Callable[[], None]) -> Callable[[], None]:
+        def on_startup(self, callback: Callable[[], bool]) -> None:
             return root_feature.on_startup(callback)
 
         @restricted(root_feature.name)
-        def on_shutdown(self, callback: Callable[[], None]) -> Callable[[], None]:
+        def on_shutdown(self, callback: Callable[[], bool]) -> None:
             return root_feature.on_shutdown(callback)
 
     return RootFeatureReference()

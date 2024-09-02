@@ -8,16 +8,18 @@ from .utils import FeatureUtils
 
 class FeatureLifespan:
     def __init__(self):
-        self.startup_callback: Callable[[], None] | None = None
-        self.shutdown_callback: Callable[[], None] | None = None
+        self.startup_callback: Callable[[], bool] | None = None
+        self.shutdown_callback: Callable[[], bool] | None = None
 
-    def startup_sequence(self):
+    def startup_sequence(self) -> bool:
         if self.startup_callback:
-            self.startup_callback()
+            return self.startup_callback()
+        return True
 
-    def shutdown_sequence(self):
+    def shutdown_sequence(self) -> bool:
         if self.shutdown_callback:
-            self.shutdown_callback()
+            return self.shutdown_callback()
+        return True
 
 
 class RootFeature:
@@ -54,7 +56,7 @@ class RootFeature:
     def set_required_features(self, value: list[str]):
         self.required_features = value
 
-    def on_startup(self, callback: Callable[[], None]):
+    def on_startup(self, callback: Callable[[], bool]):
         if self.lifespan.startup_callback:
             Logger.log(
                 "Startup sequence already defined "
@@ -65,7 +67,7 @@ class RootFeature:
         else:
             self.lifespan.startup_callback = callback
 
-    def on_shutdown(self, callback: Callable[[], None]):
+    def on_shutdown(self, callback: Callable[[], bool]):
         if self.lifespan.shutdown_callback:
             Logger.log(
                 "Shutdown sequence already defined "
