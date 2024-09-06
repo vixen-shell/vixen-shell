@@ -11,6 +11,9 @@ def run_shell():
     from sys import path
     from .api import api
     from .servers import ApiServer
+    from .ImportHook import ImportHook
+
+    ImportHook.init()
 
     path.append("/usr/share/vixen/features")
     ApiServer.start(api)
