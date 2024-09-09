@@ -21,10 +21,30 @@ from gi.repository import Gtk
 
 
 @api.get(
-    "/prefer_dark_theme",
-    description="Return the 'gtk-application-prefer-dark-theme' gtk property",
+    "/gtk_default_font",
+    description="Return the gtk default font name and size",
 )
-async def prefer_dark_theme():
+async def gtk_default_font():
     settings = Gtk.Settings.get_default()
+    default_font = settings.get_property("gtk-font-name").rsplit(" ", 1)
 
-    return JSONResponse(settings.get_property("gtk-application-prefer-dark-theme"))
+    font_family = default_font[0]
+    font_size = int(default_font[1])
+
+    return JSONResponse(
+        {
+            "font_family": font_family,
+            "font_size": font_size,
+        }
+    )
+
+
+@api.get(
+    "/gtk_dark_theme",
+    description="Return the gtk 'prefer-dark-theme' property",
+)
+async def gtk_dark_theme():
+    settings = Gtk.Settings.get_default()
+    dark_theme = settings.get_property("gtk-application-prefer-dark-theme")
+
+    return JSONResponse(dark_theme)
