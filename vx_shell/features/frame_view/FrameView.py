@@ -17,6 +17,11 @@ def get_frame_uri(feature_name: str, route: str, dev_mode: bool):
     return f"http://localhost:{get_front_port(dev_mode)}/?{get_params()}"
 
 
+def get_background_color(widget):
+    context = widget.get_style_context()
+    return context.get_background_color(Gtk.StateFlags.NORMAL)
+
+
 def webview(uri: str, dev_mode: bool):
     def on_context_menu(webview, context_menu, event, hit_test_result):
         return False if dev_mode else True
@@ -25,10 +30,15 @@ def webview(uri: str, dev_mode: bool):
 
     if dev_mode:
         settings = WebKit2.Settings()
+        settings.set_enable_accelerated_2d_canvas(True)
+        settings.set_enable_webgl(True)
+        settings.set_enable_media_stream(True)
+        settings.set_hardware_acceleration_policy(
+            WebKit2.HardwareAccelerationPolicy.ALWAYS
+        )
         settings.set_property("enable-developer-extras", True)
         webview.set_settings(settings)
 
-    webview.set_background_color(Gdk.RGBA(red=0, green=0, blue=0, alpha=0.0))
     webview.connect("context-menu", on_context_menu)
     webview.load_uri(uri)
 
@@ -79,8 +89,9 @@ class FrameView:
             if ParamDataHandler.node_is_define(
                 f"{feature_name}.frames.{frame_id}.layer_frame"
             ):
-
-                self.frame.set_app_paintable(True)
+                web_view.set_background_color(
+                    Gdk.RGBA(red=0, green=0, blue=0, alpha=0.0)
+                )
                 layerise_frame(
                     self.frame,
                     ParamDataHandler.get_value(
@@ -101,6 +112,7 @@ class FrameView:
                 )
 
             else:
+                web_view.set_background_color(get_background_color(self.frame))
                 self.frame.set_title(
                     ParamDataHandler.get_value(f"{feature_name}.frames.{frame_id}.name")
                 )

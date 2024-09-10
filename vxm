@@ -11,6 +11,8 @@ License           : GPL3
 import os, argparse
 
 os.environ["GDK_BACKEND"] = "wayland"
+os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "0"
+
 from vx_manager import Manager
 
 
@@ -30,6 +32,10 @@ def handle_args(args):
 
     elif args.shell:
         if args.shell == "open":
+            if args.nouveau:
+                print("nouveau: DMABUF Renderer disabled\n")
+                os.environ["WEBKIT_DISABLE_DMABUF_RENDERER"] = "1"
+
             Manager.Shell.open()
 
         if args.shell == "close":
@@ -158,6 +164,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--extra", type=str, default="", help="Extra feature name (--features add)"
+    )
+    parser.add_argument(
+        "--nouveau",
+        action="store_true",
+        help="Use if your video driver is 'nouveau' (--shell open)",
     )
 
     handle_args(parser.parse_args())

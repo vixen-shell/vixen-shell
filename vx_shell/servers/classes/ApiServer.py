@@ -22,4 +22,8 @@ class ApiServer:
 
         Logger.init()
         FrontServer.start()
-        ApiServer.server.run()
+
+        try:
+            ApiServer.server.run()
+        except KeyboardInterrupt:
+            ApiServer.server.should_exit = True
