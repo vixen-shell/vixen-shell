@@ -1,48 +1,12 @@
 from vx_features import ParamDataHandler
+from .webview import webview
 from .layerise_frame import layerise_frame, set_layer_frame
-from ..Gtk_imports import GLib, Gtk, Gdk, WebKit2
-from ...globals import FRONT_PORT, FRONT_DEV_PORT
-
-
-def get_frame_uri(feature_name: str, route: str, dev_mode: bool):
-    def get_front_port(dev_mode: bool):
-        return FRONT_PORT if not dev_mode else FRONT_DEV_PORT
-
-    def get_params():
-        feature_param = f"feature={feature_name}"
-        route_param = f"route={route}"
-
-        return f"{feature_param}&{route_param}"
-
-    return f"http://localhost:{get_front_port(dev_mode)}/?{get_params()}"
+from ..Gtk_imports import GLib, Gtk, Gdk
 
 
 def get_background_color(widget):
     context = widget.get_style_context()
     return context.get_background_color(Gtk.StateFlags.NORMAL)
-
-
-def webview(uri: str, dev_mode: bool):
-    def on_context_menu(webview, context_menu, event, hit_test_result):
-        return False if dev_mode else True
-
-    webview = WebKit2.WebView()
-
-    if dev_mode:
-        settings = WebKit2.Settings()
-        settings.set_enable_accelerated_2d_canvas(True)
-        settings.set_enable_webgl(True)
-        settings.set_enable_media_stream(True)
-        settings.set_hardware_acceleration_policy(
-            WebKit2.HardwareAccelerationPolicy.ALWAYS
-        )
-        settings.set_property("enable-developer-extras", True)
-        webview.set_settings(settings)
-
-    webview.connect("context-menu", on_context_menu)
-    webview.load_uri(uri)
-
-    return webview
 
 
 def fade_in(window, current_opacity):
@@ -60,27 +24,15 @@ class FrameView:
         dev_mode: bool = False,
     ):
         self.is_first_render = True
-        self.feature_name = feature_name
-        self.route = ParamDataHandler.get_value(
+
+        self.dev_mode = dev_mode
+        self.feature_name: str = feature_name
+        self.route: str = ParamDataHandler.get_value(
             f"{feature_name}.frames.{frame_id}.route"
         )
-        self.dev_mode = dev_mode
-        self.frame_uri = get_frame_uri(self.feature_name, self.route, self.dev_mode)
 
         def process():
             self.frame = Gtk.Window()
-
-            def on_load_changes(webview, load_event):
-                if load_event == WebKit2.LoadEvent.FINISHED:
-
-                    def redraw():
-                        GLib.idle_add(self.frame.queue_draw)
-
-                    GLib.timeout_add(200, redraw)
-
-            web_view = webview(self.frame_uri, self.dev_mode)
-            web_view.connect("load-changed", on_load_changes)
-            self.frame.add(web_view)
 
             self.frame.connect(
                 "delete-event", lambda frame, event: (self.hide(), True)[1]
@@ -89,9 +41,14 @@ class FrameView:
             if ParamDataHandler.node_is_define(
                 f"{feature_name}.frames.{frame_id}.layer_frame"
             ):
-                web_view.set_background_color(
-                    Gdk.RGBA(red=0, green=0, blue=0, alpha=0.0)
+                self.webview = webview(
+                    self.feature_name,
+                    self.route,
+                    self.dev_mode,
+                    Gdk.RGBA(red=0, green=0, blue=0, alpha=0.0),
                 )
+                self.frame.add(self.webview)
+
                 layerise_frame(
                     self.frame,
                     ParamDataHandler.get_value(
@@ -112,7 +69,14 @@ class FrameView:
                 )
 
             else:
-                web_view.set_background_color(get_background_color(self.frame))
+                self.webview = webview(
+                    self.feature_name,
+                    self.route,
+                    self.dev_mode,
+                    get_background_color(self.frame),
+                )
+                self.frame.add(self.webview)
+
                 self.frame.set_title(
                     ParamDataHandler.get_value(f"{feature_name}.frames.{frame_id}.name")
                 )
