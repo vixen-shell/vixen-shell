@@ -1,4 +1,5 @@
 from vx_features import ParamDataHandler
+from vx_root.root_utils.classes import ContextMenu
 from typing import Dict, List
 from .frame_view import FrameView
 
@@ -20,6 +21,9 @@ class FrameHandler:
 
     def close(self, id: str):
         self.frames[id].hide()
+
+    def popup_context_menu(self, frame_id: str, context_menu: ContextMenu):
+        self.frames[frame_id].popup_context_menu(context_menu)
 
     def cleanup(self):
         for frame in self.frames.values():

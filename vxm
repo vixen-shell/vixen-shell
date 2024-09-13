@@ -32,8 +32,8 @@ def handle_args(args):
 
     elif args.shell:
         if args.shell == "open":
-            if args.nouveau:
-                print("nouveau: DMABUF Renderer disabled\n")
+            if args.no_dmabuf:
+                print("DMABUF Renderer disabled\n")
                 os.environ["WEBKIT_DISABLE_DMABUF_RENDERER"] = "1"
 
             Manager.Shell.open()
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         "--extra", type=str, default="", help="Extra feature name (--features add)"
     )
     parser.add_argument(
-        "--nouveau",
+        "--no-dmabuf",
         action="store_true",
         help="Use if your video driver is 'nouveau' (--shell open)",
     )

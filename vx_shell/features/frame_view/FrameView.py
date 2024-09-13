@@ -1,4 +1,5 @@
 from vx_features import ParamDataHandler
+from vx_root.root_utils.classes import ContextMenu
 from .webview import webview
 from .layerise_frame import layerise_frame, set_layer_frame
 from ..Gtk_imports import GLib, Gtk, Gdk
@@ -30,6 +31,11 @@ class FrameView:
         self.route: str = ParamDataHandler.get_value(
             f"{feature_name}.frames.{frame_id}.route"
         )
+        self.last_webview_press_event = None
+
+        def on_webview_press_event(widget, event):
+            self.last_webview_press_event = event.copy()
+            return False
 
         def process():
             self.frame = Gtk.Window()
@@ -81,6 +87,7 @@ class FrameView:
                     ParamDataHandler.get_value(f"{feature_name}.frames.{frame_id}.name")
                 )
 
+            self.webview.connect("button-press-event", on_webview_press_event)
             self.frame.realize()
 
         GLib.idle_add(process)
@@ -109,5 +116,11 @@ class FrameView:
         def process():
             if self.is_visible:
                 self.frame.hide()
+
+        GLib.idle_add(process)
+
+    def popup_context_menu(self, context_menu: ContextMenu):
+        def process():
+            context_menu.menu.popup_at_pointer(self.last_webview_press_event)
 
         GLib.idle_add(process)

@@ -5,6 +5,7 @@ from vx_features import (
     RootFeature,
 )
 from fastapi import WebSocket
+from vx_root.root_utils.classes import ContextMenu
 from .FrameHandler import FrameHandler
 from ..logger import Logger
 
@@ -148,3 +149,7 @@ class Feature:
     @check_is_started(True)
     def close_frame(self, id: str):
         self.frames.close(id)
+
+    @check_is_started(True)
+    def popup_context_menu(self, frame_id: str, context_menu: ContextMenu):
+        self.frames.popup_context_menu(frame_id, context_menu)

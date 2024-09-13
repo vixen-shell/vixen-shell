@@ -24,7 +24,7 @@ def get_root_utils_reference():
     Logger_reference = get_logger_reference(Logger)
 
     class RootUtilsReference(AbsRootUtils):
-        from ..classes import SocketHandler
+        from ..classes import ContextMenu, SocketHandler
 
         @property
         def logger(self) -> AbsLogger:

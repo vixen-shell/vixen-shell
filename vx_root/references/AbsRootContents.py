@@ -5,29 +5,10 @@ from vx_types import FeatureContentType
 
 
 class AbsRootContents(ABC):
-    @property
-    @abstractmethod
-    def task(self) -> object:
-        pass
-
-    @property
-    @abstractmethod
-    def data(self) -> object:
-        pass
-
-    @property
-    @abstractmethod
-    def file(self) -> object:
-        pass
-
     @abstractmethod
     def dispatch(
         self, content_type: FeatureContentType, name: str = None
     ) -> Callable[[Callable], Callable]:
-        pass
-
-    @abstractmethod
-    def get(self, content_type: FeatureContentType, name: str) -> Callable:
         pass
 
 
@@ -57,29 +38,10 @@ def get_root_contents_reference(root_contents):
         return decorator
 
     class RootContentsReference(AbsRootContents):
-        @property
-        @restricted()
-        def task(self) -> object:
-            return root_contents.task
-
-        @property
-        @restricted()
-        def data(self) -> object:
-            return root_contents.data
-
-        @property
-        @restricted()
-        def file(self) -> object:
-            return root_contents.file
-
         @restricted(root_contents.name)
         def dispatch(
             self, content_type: FeatureContentType, name: str = None
         ) -> Callable[[Callable], Callable]:
             return root_contents.dispatch(content_type, name)
-
-        @restricted(root_contents.name)
-        def get(self, content_type: FeatureContentType, name: str) -> Callable:
-            return root_contents.get(content_type, name)
 
     return RootContentsReference()
