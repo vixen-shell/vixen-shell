@@ -1,10 +1,10 @@
+from vx_config import VxConfig
 from ..Gtk_imports import WebKit2
-from ...globals import FRONT_PORT, FRONT_DEV_PORT
 from ...logger import Logger
 
 
 def get_front_port(dev_mode: bool):
-    return FRONT_PORT if not dev_mode else FRONT_DEV_PORT
+    return VxConfig.FRONT_PORT if not dev_mode else VxConfig.FRONT_DEV_PORT
 
 
 def get_uri(feature_name: str, route: str, dev_mode: bool):

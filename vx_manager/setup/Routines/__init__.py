@@ -1,3 +1,4 @@
+from vx_path import VxPath
 from .env_routines import (
     setup_environment,
     update_environment,
@@ -22,7 +23,7 @@ def setup(library_path: str):
 
     if result:
         write_json(
-            "/usr/share/vixen/vixen_setup.json",
+            VxPath.VX_SETUP_FILE,
             {"version": get_vx_package_version(library_path)},
         )
     else:

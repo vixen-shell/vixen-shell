@@ -1,4 +1,4 @@
-import os, sys
+import sys
 from importlib import import_module
 from vx_root.references.AbsFrames import get_frames_reference
 from vx_root.references.AbsParams import get_params_reference
@@ -12,9 +12,6 @@ from vx_features import (
     ParamData,
     ParamsValueError,
 )
-
-
-USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
 
 
 class FeatureLoader:

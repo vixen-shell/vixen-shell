@@ -1,4 +1,4 @@
-import os, asyncio
+import asyncio
 from vx_features import (
     ParamDataHandler,
     RootContents,
@@ -8,8 +8,6 @@ from fastapi import WebSocket
 from vx_root.root_utils.classes import ContextMenu
 from .FrameHandler import FrameHandler
 from ..logger import Logger
-
-USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
 
 
 class Feature:

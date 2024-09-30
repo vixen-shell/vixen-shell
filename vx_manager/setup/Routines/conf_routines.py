@@ -1,4 +1,5 @@
 import os
+from vx_path import VxPath
 from ..classes import Routine, RoutineTask, Commands
 
 
@@ -12,9 +13,9 @@ def setup_config(library_path: str):
             RoutineTask(
                 purpose="Create root modules folder",
                 command=Commands.folder_copy(
-                    f"{library_path}/extras/root/features", "/usr/share/vixen"
+                    f"{library_path}/extras/root/features", VxPath.ROOT_CONFIG
                 ),
-                undo_command=Commands.folder_remove(f"/usr/share/vixen/features"),
+                undo_command=Commands.folder_remove(VxPath.ROOT_FEATURE_MODULES),
             ),
             # ---------------------------------------------- - - -
             # User config
@@ -22,13 +23,9 @@ def setup_config(library_path: str):
             RoutineTask(
                 purpose="Create user config folder",
                 command=Commands.user(
-                    Commands.folder_create(
-                        f"/home/{os.getlogin()}/.config/vixen/features"
-                    )
+                    Commands.folder_create(VxPath.USER_FEATURE_PARAMS)
                 ),
-                undo_command=Commands.folder_remove(
-                    f"/home/{os.getlogin()}/.config/vixen"
-                ),
+                undo_command=Commands.folder_remove(VxPath.USER_CONFIG),
             ),
         ],
     ).run()

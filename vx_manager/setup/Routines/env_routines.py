@@ -1,10 +1,6 @@
 import os
+from vx_path import VxPath
 from ..classes import Routine, RoutineTask, Commands
-
-# ---------------------------------------------- - - -
-# Constants
-
-VX_ENV = "/opt/vixen-env"
 
 
 def setup_environment(library_path: str):
@@ -16,12 +12,12 @@ def setup_environment(library_path: str):
             #
             RoutineTask(
                 purpose="Create environment",
-                command=Commands.env_create(VX_ENV),
-                undo_command=Commands.folder_remove(VX_ENV),
+                command=Commands.env_create(VxPath.ENV),
+                undo_command=Commands.folder_remove(VxPath.ENV),
                 requirements=[
                     {
                         "purpose": "Check an existing environment folder",
-                        "callback": Commands.Checkers.folder(VX_ENV, False),
+                        "callback": Commands.Checkers.folder(VxPath.ENV, False),
                         "failure_message": f"Environment folder already exists",
                     }
                 ],
@@ -29,7 +25,7 @@ def setup_environment(library_path: str):
             RoutineTask(
                 purpose="Install Vixen Shell dependencies",
                 command=Commands.env_dependencies(
-                    VX_ENV, f"{library_path}/requirements.txt"
+                    VxPath.ENV, f"{library_path}/requirements.txt"
                 ),
             ),
             # ---------------------------------------------- - - -
@@ -37,7 +33,7 @@ def setup_environment(library_path: str):
             #
             RoutineTask(
                 purpose="Install Vixen Shell libraries",
-                command=Commands.env_install(VX_ENV, library_path),
+                command=Commands.env_install(VxPath.ENV, library_path),
             ),
             RoutineTask(
                 purpose="Remove build folders",
@@ -48,8 +44,8 @@ def setup_environment(library_path: str):
             #
             RoutineTask(
                 purpose="Create shared Vixen folder",
-                command=Commands.folder_create("/usr/share/vixen"),
-                undo_command=Commands.folder_remove(f"/usr/share/vixen"),
+                command=Commands.folder_create(VxPath.ROOT_CONFIG),
+                undo_command=Commands.folder_remove(VxPath.ROOT_CONFIG),
             ),
             # ---------------------------------------------- - - -
             # Install Vxm
@@ -61,7 +57,7 @@ def setup_environment(library_path: str):
             ),
             RoutineTask(
                 purpose="Patch Vixen Manager executable",
-                command=Commands.env_path_executable(VX_ENV, "/usr/bin/vxm"),
+                command=Commands.env_path_executable(VxPath.ENV, "/usr/bin/vxm"),
             ),
         ],
     ).run()
@@ -73,7 +69,7 @@ def update_environment():
     def validate_version(new_library_path: str):
         def check() -> bool:
             try:
-                current_setup = read_json("/usr/share/vixen/vixen_setup.json")
+                current_setup = read_json(VxPath.VX_SETUP_FILE)
                 return is_sup_version(
                     current_setup.get("version"),
                     get_vx_package_version(new_library_path),
@@ -109,11 +105,11 @@ def update_environment():
             #
             RoutineTask(
                 purpose="Backup current environment",
-                command=Commands.folder_copy(VX_ENV, "/tmp/vx_update"),
+                command=Commands.folder_copy(VxPath.ENV, "/tmp/vx_update"),
                 requirements=[
                     {
                         "purpose": "Check an existing environment folder",
-                        "callback": Commands.Checkers.folder(VX_ENV, True),
+                        "callback": Commands.Checkers.folder(VxPath.ENV, True),
                         "failure_message": f"Environment folder not found",
                     },
                     {
@@ -139,21 +135,23 @@ def update_environment():
             #
             RoutineTask(
                 purpose="Clean current environment",
-                command=Commands.folder_remove(VX_ENV),
-                undo_command=Commands.folder_copy("/tmp/vx_update/vixen-env", "/opt"),
+                command=Commands.folder_remove(VxPath.ENV),
+                undo_command=Commands.folder_copy(
+                    f"/tmp/vx_update/{VxPath.env_name}", VxPath.ENV_PARENT
+                ),
             ),
             # ---------------------------------------------- - - -
             # Update Environment
             #
             RoutineTask(
                 purpose="Update environment",
-                command=Commands.env_create(VX_ENV),
-                undo_command=Commands.folder_remove(VX_ENV),
+                command=Commands.env_create(VxPath.ENV),
+                undo_command=Commands.folder_remove(VxPath.ENV),
             ),
             RoutineTask(
                 purpose="Install environment dependencies",
                 command=Commands.env_dependencies(
-                    VX_ENV, f"{download_path}/requirements.txt"
+                    VxPath.ENV, f"{download_path}/requirements.txt"
                 ),
             ),
             # ---------------------------------------------- - - -
@@ -161,7 +159,7 @@ def update_environment():
             #
             RoutineTask(
                 purpose="Install Vixen Shell libraries",
-                command=Commands.env_install(VX_ENV, download_path),
+                command=Commands.env_install(VxPath.ENV, download_path),
             ),
             # ---------------------------------------------- - - -
             # Install Vxm
@@ -177,7 +175,7 @@ def update_environment():
             ),
             RoutineTask(
                 purpose="Patch Vixen Manager executable",
-                command=Commands.env_path_executable(VX_ENV, "/usr/bin/vxm"),
+                command=Commands.env_path_executable(VxPath.ENV, "/usr/bin/vxm"),
             ),
             # ---------------------------------------------- - - -
             # Clean tmp
@@ -196,19 +194,17 @@ def remove_all():
         tasks=[
             RoutineTask(
                 purpose="Remove root modules",
-                command=Commands.folder_remove("/usr/share/vixen"),
+                command=Commands.folder_remove(VxPath.ROOT_CONFIG),
                 skip_on={
-                    "callback": Commands.Checkers.folder("/usr/share/vixen", False),
+                    "callback": Commands.Checkers.folder(VxPath.ROOT_CONFIG, False),
                     "message": "Root modules folder not found",
                 },
             ),
             RoutineTask(
                 purpose="Remove user config",
-                command=Commands.folder_remove(f"/home/{os.getlogin()}/.config/vixen"),
+                command=Commands.folder_remove(VxPath.USER_CONFIG),
                 skip_on={
-                    "callback": Commands.Checkers.folder(
-                        f"/home/{os.getlogin()}/.config/vixen", False
-                    ),
+                    "callback": Commands.Checkers.folder(VxPath.USER_CONFIG, False),
                     "message": "User config folder not found",
                 },
             ),
@@ -222,19 +218,17 @@ def remove_all():
             ),
             RoutineTask(
                 purpose="Remove Vixen Shell front-end",
-                command=Commands.folder_remove("/var/opt/vx-front-main"),
+                command=Commands.folder_remove(VxPath.FRONT),
                 skip_on={
-                    "callback": Commands.Checkers.folder(
-                        "/var/opt/vx-front-main", False
-                    ),
+                    "callback": Commands.Checkers.folder(VxPath.FRONT, False),
                     "message": "Vixen Shell front-end not found",
                 },
             ),
             RoutineTask(
                 purpose="Remove Vixen Shell environment",
-                command=Commands.folder_remove(VX_ENV),
+                command=Commands.folder_remove(VxPath.ENV),
                 skip_on={
-                    "callback": Commands.Checkers.folder(VX_ENV, False),
+                    "callback": Commands.Checkers.folder(VxPath.ENV, False),
                     "message": "Vixen Shell environment not found",
                 },
             ),

@@ -1,3 +1,4 @@
+from vx_path import VxPath
 from ..classes import Commands, Routine, RoutineTask
 
 
@@ -7,25 +8,23 @@ def setup_front():
         tasks=[
             RoutineTask(
                 purpose="Download Vixen Shell front-end",
-                command=Commands.git_get_archive("/var/opt", "vx-front"),
-                undo_command=Commands.folder_remove("/var/opt/vx-front-main"),
+                command=Commands.git_get_archive(VxPath.FRONT_PARENT, "vx-front"),
+                undo_command=Commands.folder_remove(VxPath.FRONT),
                 requirements=[
                     {
                         "purpose": "Check an existing front-end folder",
-                        "callback": Commands.Checkers.folder(
-                            "/var/opt/vx-front-main", False
-                        ),
+                        "callback": Commands.Checkers.folder(VxPath.FRONT, False),
                         "failure_message": f"Front-end folder already exists",
                     }
                 ],
             ),
             RoutineTask(
                 purpose="Install Vixen Shell front-end dependencies",
-                command=Commands.yarn_install("/var/opt/vx-front-main"),
+                command=Commands.yarn_install(VxPath.FRONT),
             ),
             RoutineTask(
                 purpose="Build Vixen Shell front-end",
-                command=Commands.yarn_build("/var/opt/vx-front-main"),
+                command=Commands.yarn_build(VxPath.FRONT),
             ),
         ],
     ).run()
@@ -40,14 +39,12 @@ def update_front():
             #
             RoutineTask(
                 purpose="Backup current front-end",
-                command=Commands.folder_copy("/var/opt/vx-front-main", "/tmp"),
-                undo_command=Commands.folder_remove("/tmp/vx-front-main"),
+                command=Commands.folder_copy(VxPath.FRONT, "/tmp"),
+                undo_command=Commands.folder_remove(f"/tmp/{VxPath.front_name}"),
                 requirements=[
                     {
                         "purpose": "Check an existing front-end folder",
-                        "callback": Commands.Checkers.folder(
-                            "/var/opt/vx-front-main", True
-                        ),
+                        "callback": Commands.Checkers.folder(VxPath.FRONT, True),
                         "failure_message": f"Front-end folder not found",
                     }
                 ],
@@ -57,20 +54,22 @@ def update_front():
             #
             RoutineTask(
                 purpose="Clean current front-end",
-                command=Commands.folder_remove("/var/opt/vx-front-main"),
-                undo_command=Commands.folder_copy("/tmp/vx-front-main", "/var/opt"),
+                command=Commands.folder_remove(VxPath.FRONT),
+                undo_command=Commands.folder_copy(
+                    f"/tmp/{VxPath.front_name}", VxPath.FRONT_PARENT
+                ),
             ),
             # ---------------------------------------------- - - -
             # Updates
             #
             RoutineTask(
                 purpose="Download Vixen Shell front-end",
-                command=Commands.git_get_archive("/var/opt", "vx-front"),
-                undo_command=Commands.folder_remove("/var/opt/vx-front-main"),
+                command=Commands.git_get_archive(VxPath.FRONT_PARENT, "vx-front"),
+                undo_command=Commands.folder_remove(VxPath.FRONT),
             ),
             RoutineTask(
                 purpose="Install Vixen Shell front-end dependencies",
-                command=Commands.yarn_install("/var/opt/vx-front-main"),
+                command=Commands.yarn_install(VxPath.FRONT),
             ),
             # ---------------------------------------------- - - -
             # Restore feature front-ends
@@ -78,8 +77,8 @@ def update_front():
             RoutineTask(
                 purpose="Restore feature front-ends",
                 command=Commands.folder_copy(
-                    "/tmp/vx-front-main/src/features",
-                    "/var/opt/vx-front-main/src",
+                    f"/tmp/{VxPath.front_name}/src/features",
+                    VxPath.FRONT_SOURCES,
                     True,
                 ),
             ),
@@ -88,14 +87,14 @@ def update_front():
             #
             RoutineTask(
                 purpose="Build Vixen Shell front-end",
-                command=Commands.yarn_build("/var/opt/vx-front-main"),
+                command=Commands.yarn_build(VxPath.FRONT),
             ),
             # ---------------------------------------------- - - -
             # Clean tmp
             #
             RoutineTask(
                 purpose="Clean up temporary files",
-                command=Commands.folder_remove("/tmp/vx-front-main"),
+                command=Commands.folder_remove(f"/tmp/{VxPath.front_name}"),
             ),
         ],
     ).run()

@@ -2,10 +2,10 @@ import logging
 from threading import Thread
 from multiprocessing import Process, Queue
 from queue import Empty as QueueEmpty
+from vx_config import VxConfig
 from .FlaskApp import FlaskApp
 from ..front_app import app
 from ..utils import front_logging_config
-from ...globals import FRONT_PORT
 from ...logger import Logger
 
 
@@ -20,7 +20,7 @@ def server_process(queue: Queue):
     FlaskApp(
         app,
         {
-            "bind": f"localhost:{FRONT_PORT}",
+            "bind": f"localhost:{VxConfig.FRONT_PORT}",
             "logconfig_dict": front_logging_config,
         },
     ).run()

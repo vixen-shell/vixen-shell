@@ -124,3 +124,9 @@ class FrameView:
             context_menu.menu.popup_at_pointer(self.last_webview_press_event)
 
         GLib.idle_add(process)
+
+    def set_zoom_level(self, factor: float):
+        def process():
+            self.webview.set_zoom_level(factor)
+
+        GLib.idle_add(process)

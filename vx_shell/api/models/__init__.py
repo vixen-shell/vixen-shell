@@ -6,7 +6,6 @@ Description       : vixen shell api globals library.
 License           : GPL3
 """
 
-from .constants import *
 from .ModelResponses import ModelResponses
 
 

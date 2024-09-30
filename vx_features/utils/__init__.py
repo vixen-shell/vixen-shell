@@ -1,7 +1,6 @@
 import os
 from glob import glob
-
-USER_PARAMS_DIRECTORY = f"{os.path.expanduser('~')}/.config/vixen/features"
+from vx_path import VxPath
 
 
 class FeatureUtils:
@@ -46,16 +45,14 @@ class FeatureUtils:
         if FeatureUtils.is_dev_feature(entry):
             return f"{entry}/user/{FeatureUtils.feature_name_from(entry)}.json"
 
-        return f"{USER_PARAMS_DIRECTORY}/{entry}.json"
+        return f"{VxPath.USER_FEATURE_PARAMS}/{entry}.json"
 
     @staticmethod
     def get_root_feature_names():
-        root_features_directory = "/usr/share/vixen/features"
-
         feature_names: list[str] = []
 
-        for item in os.listdir(root_features_directory):
-            path = f"{root_features_directory}/{item}"
+        for item in os.listdir(VxPath.ROOT_FEATURE_MODULES):
+            path = f"{VxPath.ROOT_FEATURE_MODULES}/{item}"
 
             if os.path.isdir(path):
                 feature_names.append(item)

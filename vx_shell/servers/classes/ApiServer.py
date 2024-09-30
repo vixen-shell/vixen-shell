@@ -1,8 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
+from vx_config import VxConfig
 from .FrontServer import FrontServer
 from ..utils import api_logging_config
-from ...globals import API_PORT
 from ...logger import Logger
 
 
@@ -16,7 +16,10 @@ class ApiServer:
 
         ApiServer.server = uvicorn.Server(
             uvicorn.Config(
-                api, host="localhost", port=API_PORT, log_config=api_logging_config
+                api,
+                host="localhost",
+                port=VxConfig.API_PORT,
+                log_config=api_logging_config,
             )
         )
 

@@ -1,5 +1,6 @@
 import os
 from glob import glob
+from vx_path import VxPath
 from ..classes import Commands, Routine, RoutineTask
 from ...utils import write_json
 
@@ -17,13 +18,13 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
                 f"{tmp_project_dir}/.vscode/settings.json",
                 {
                     "python.analysis.extraPaths": glob(
-                        "/opt/vixen-env/lib/python*/site-packages"
+                        f"{VxPath.ENV}/lib/python*/site-packages"
                     )
-                    + ["/usr/share/vixen/features"],
+                    + [VxPath.ROOT_FEATURE_MODULES],
                     "python.autoComplete.extraPaths": glob(
-                        "/opt/vixen-env/lib/python*/site-packages"
+                        f"{VxPath.ENV}/lib/python*/site-packages"
                     )
-                    + ["/usr/share/vixen/features"],
+                    + [VxPath.ROOT_FEATURE_MODULES],
                 },
             )
             return True
@@ -148,10 +149,10 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                 purpose="Setup root config module",
                 command=Commands.folder_copy(
                     f"{dev_dir}/root/{feature_name}",
-                    "/usr/share/vixen/features",
+                    VxPath.ROOT_FEATURE_MODULES,
                 ),
                 undo_command=Commands.folder_remove(
-                    f"/usr/share/vixen/features/{feature_name}"
+                    f"{VxPath.ROOT_FEATURE_MODULES}/{feature_name}"
                 ),
                 requirements=[
                     {
@@ -167,10 +168,10 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                 purpose="Setup user config file",
                 command=Commands.file_copy(
                     f"{dev_dir}/user/{feature_name}.json",
-                    f"/home/{os.getlogin()}/.config/vixen/features",
+                    VxPath.USER_FEATURE_PARAMS,
                 ),
                 undo_command=Commands.file_remove(
-                    f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json"
+                    f"{VxPath.USER_FEATURE_PARAMS}/{feature_name}.json"
                 ),
                 skip_on={
                     "callback": Commands.Checkers.file(
@@ -198,7 +199,7 @@ def vx_add_feature(dev_dir: str, feature_name: str):
             RoutineTask(
                 purpose="Install feature dependencies",
                 command=Commands.env_dependencies(
-                    "/opt/vixen-env",
+                    VxPath.ENV,
                     f"{dev_dir}/requirements.txt",
                     f"/usr/share/vixen/{feature_name}.libs",
                 ),
@@ -216,16 +217,16 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                 purpose="Setup feature front-end sources",
                 command=Commands.folder_copy(
                     f"{dev_dir}/src/{feature_name}",
-                    "/var/opt/vx-front-main/src/features",
+                    VxPath.FRONT_FEATURES,
                 ),
                 undo_command=Commands.folder_remove(
-                    f"/var/opt/vx-front-main/src/features/{feature_name}"
+                    f"{VxPath.FRONT_FEATURES}/{feature_name}"
                 ),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
             RoutineTask(
                 purpose="Rebuild Vixen Shell front-end",
-                command=Commands.yarn_build("/var/opt/vx-front-main"),
+                command=Commands.yarn_build(VxPath.FRONT),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
         ],
@@ -267,7 +268,7 @@ def vx_add_extra_feature(feature_name: str):
 
 
 def vx_remove_feature(feature_name: str):
-    front_end = os.path.exists(f"/var/opt/vx-front-main/src/features/{feature_name}")
+    front_end = os.path.exists(f"{VxPath.FRONT_FEATURES}/{feature_name}")
 
     return Routine(
         purpose=f"Remove feature '{feature_name}'",
@@ -278,17 +279,17 @@ def vx_remove_feature(feature_name: str):
             RoutineTask(
                 purpose="Remove root config module",
                 command=Commands.folder_remove(
-                    f"/usr/share/vixen/features/{feature_name}"
+                    f"{VxPath.ROOT_FEATURE_MODULES}/{feature_name}"
                 ),
             ),
             RoutineTask(
                 purpose="Remove user config file",
                 command=Commands.file_remove(
-                    f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json"
+                    f"{VxPath.USER_FEATURE_PARAMS}/{feature_name}.json"
                 ),
                 skip_on={
                     "callback": Commands.Checkers.file(
-                        f"/home/{os.getlogin()}/.config/vixen/features/{feature_name}.json",
+                        f"{VxPath.USER_FEATURE_PARAMS}/{feature_name}.json",
                         False,
                     ),
                     "message": "User config file not found",
@@ -313,13 +314,13 @@ def vx_remove_feature(feature_name: str):
             RoutineTask(
                 purpose="Remove feature front-end sources",
                 command=Commands.folder_remove(
-                    f"/var/opt/vx-front-main/src/features/{feature_name}"
+                    f"{VxPath.FRONT_FEATURES}/{feature_name}"
                 ),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
             RoutineTask(
                 purpose="Rebuild Vixen Shell front-end",
-                command=Commands.yarn_build("/var/opt/vx-front-main"),
+                command=Commands.yarn_build(VxPath.FRONT),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
         ],

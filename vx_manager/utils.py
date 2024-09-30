@@ -1,4 +1,5 @@
 import os, sys, time, subprocess, multiprocessing, json, re, packaging
+from vx_path import VxPath
 from .logger import Logger
 
 
@@ -38,12 +39,10 @@ def is_sup_version(current_version, new_version):
 
 
 def get_root_feature_names():
-    root_params_directory = "/usr/share/vixen/features"
-
     feature_names: list[str] = []
 
-    for item in os.listdir(root_params_directory):
-        path = f"{root_params_directory}/{item}"
+    for item in os.listdir(VxPath.ROOT_FEATURE_MODULES):
+        path = f"{VxPath.ROOT_FEATURE_MODULES}/{item}"
 
         if os.path.isdir(path):
             feature_names.append(item)

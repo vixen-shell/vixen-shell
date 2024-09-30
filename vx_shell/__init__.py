@@ -9,11 +9,15 @@ License           : GPL3
 
 def run_shell():
     from sys import path
+    from vx_path import VxPath
+    from vx_config import VxConfig
+
     from .api import api
     from .servers import ApiServer
     from .ImportHook import ImportHook
 
     ImportHook.init()
+    VxConfig.load()
 
-    path.append("/usr/share/vixen/features")
+    path.append(VxPath.ROOT_FEATURE_MODULES)
     ApiServer.start(api)

@@ -1,6 +1,6 @@
 from fastapi import Response, Path
 from ..api import api
-from ...globals import ModelResponses, Models
+from ..models import ModelResponses, Models
 from ...features import Features
 
 # ---------------------------------------------- - - -

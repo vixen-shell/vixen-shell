@@ -1,4 +1,5 @@
 from fastapi.responses import JSONResponse
+from vx_config import VxConfig
 from ..api import api
 from ...servers import ApiServer
 
@@ -14,37 +15,13 @@ async def close():
     return
 
 
-import gi
-
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
-
-
 @api.get(
-    "/gtk_default_font",
-    description="Return the gtk default font name and size",
+    "/vx_theme",
+    description="Return the vixen theme preferences",
 )
-async def gtk_default_font():
-    settings = Gtk.Settings.get_default()
-    default_font = settings.get_property("gtk-font-name").rsplit(" ", 1)
+async def get_vx_theme():
+    vx_theme = VxConfig.gtk_fonts()
+    vx_theme["ui_scale"] = VxConfig.UI_SCALE
+    vx_theme["ui_color"] = VxConfig.UI_COLOR
 
-    font_family = default_font[0]
-    font_size = int(default_font[1])
-
-    return JSONResponse(
-        {
-            "font_family": font_family,
-            "font_size": font_size,
-        }
-    )
-
-
-@api.get(
-    "/gtk_dark_theme",
-    description="Return the gtk 'prefer-dark-theme' property",
-)
-async def gtk_dark_theme():
-    settings = Gtk.Settings.get_default()
-    dark_theme = settings.get_property("gtk-application-prefer-dark-theme")
-
-    return JSONResponse(dark_theme)
+    return JSONResponse(vx_theme)

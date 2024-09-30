@@ -4,8 +4,8 @@ from pydantic import BaseModel, ConfigDict
 from vx_features import ParamDataHandler
 from typing import Any
 from ..api import api
+from ..models import ModelResponses, Models
 from ...logger import Logger
-from ...globals import ModelResponses, Models
 from ...features import Features
 
 

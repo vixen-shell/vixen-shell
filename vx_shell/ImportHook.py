@@ -7,7 +7,15 @@ from pathlib import Path
 class ImportHook:
     env_path = Path(__file__).parents[1].as_posix()
     original_import = builtins.__import__
-    protected_packages = ["vx_cli", "vx_features", "vx_manager", "vx_shell", "vx_types"]
+    protected_packages = [
+        "vx_cli",
+        "vx_config",
+        "vx_features",
+        "vx_manager",
+        "vx_path",
+        "vx_shell",
+        "vx_types",
+    ]
 
     @staticmethod
     def custom_import(

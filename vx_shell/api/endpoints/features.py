@@ -1,7 +1,7 @@
 from fastapi import Response, Body
 from pydantic import BaseModel, ConfigDict
 from ..api import api
-from ...globals import ModelResponses, Models
+from ..models import ModelResponses, Models
 from ...features import Features
 
 # ---------------------------------------------- - - -
