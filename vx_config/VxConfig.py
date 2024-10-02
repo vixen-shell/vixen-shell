@@ -9,6 +9,7 @@ class VxConfig:
     FRONT_DEV_PORT: int = 5173
     UI_SCALE: float = 1.0
     UI_COLOR: str = "teal"
+    UI_ICONS: str = "regular"
 
     @staticmethod
     def gtk_fonts():
@@ -45,6 +46,7 @@ class VxConfig:
                 VxConfig.FRONT_DEV_PORT = vx_config.get("front_dev_port")
                 VxConfig.UI_SCALE = vx_config.get("ui_scale")
                 VxConfig.UI_COLOR = vx_config.get("ui_color")
+                VxConfig.UI_ICONS = vx_config.get("ui_icons")
         else:
             VxConfig.save()
 
@@ -58,6 +60,7 @@ class VxConfig:
             "front_dev_port": VxConfig.FRONT_DEV_PORT,
             "ui_scale": VxConfig.UI_SCALE,
             "ui_color": VxConfig.UI_COLOR,
+            "ui_icons": VxConfig.UI_ICONS,
         }
 
         if os.path.exists(file_path):

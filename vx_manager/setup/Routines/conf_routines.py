@@ -1,4 +1,3 @@
-import os
 from vx_path import VxPath
 from ..classes import Routine, RoutineTask, Commands
 
@@ -7,6 +6,16 @@ def setup_config(library_path: str):
     return Routine(
         purpose="Setup Vixen Shell features",
         tasks=[
+            # ---------------------------------------------- - - -
+            # Phosphor icons
+            #
+            RoutineTask(
+                purpose="Create Phosphor icons folder",
+                command=Commands.folder_copy(
+                    f"{library_path}/extras/phosphor", VxPath.ROOT_CONFIG
+                ),
+                undo_command=Commands.folder_remove(VxPath.ROOT_PHOSPHOR_ICONS),
+            ),
             # ---------------------------------------------- - - -
             # Root config
             #
