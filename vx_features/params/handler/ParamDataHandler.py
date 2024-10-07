@@ -131,18 +131,6 @@ class ParamDataHandler:
         )
 
     @staticmethod
-    def state_is_enable(feature_name: str) -> bool:
-        root_state = get_dict(
-            ParamDataHandler.select_data(feature_name, "ROOT"), ["state"]
-        )
-
-        return bool(root_state != "disable")
-
-    @staticmethod
-    def get_state(feature_name: str) -> dict:
-        return get_dict(ParamDataHandler.select_data(feature_name, "USER"), ["state"])
-
-    @staticmethod
     def save_params(feature_name: str):
         data = ParamDataHandler.__data_dict[feature_name]
         write_json(data.user_filepath, data.user)

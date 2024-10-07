@@ -2,6 +2,7 @@ import sys
 from importlib import import_module
 from vx_root.references.AbsFrames import get_frames_reference
 from vx_root.references.AbsParams import get_params_reference
+from vx_config import VxConfig
 from ..logger import Logger
 
 from vx_features import (
@@ -81,6 +82,10 @@ class FeatureLoader:
                     user_params_filepath=self.user_params_filepath,
                     dev_mode=self.is_dev_feature,
                 ),
+            )
+
+            VxConfig.update_state(
+                ParamDataHandler.get_value(f"{self.feature_name}.state")
             )
 
         except ParamsValueError as param_error:

@@ -45,7 +45,7 @@ class root_FeatureParams(BaseModel):
     autostart: bool | Disable | None = None
     frames: dict[str, root_FrameParams] | Disable = "disable"
     templates: dict[str, root_FrameParams] | None = None
-    state: Disable | None = None
+    state: dict | None = {}
 
     def model_post_init(self, __context: Any) -> None:
         if self.frames == "disable":
@@ -90,4 +90,4 @@ class root_FeatureParams_dict(TypedDict):
     autostart: bool | Disable
     frames: dict[str, root_FrameParams_dict] | Disable
     templates: dict[str, root_FrameParams_dict]
-    state: Disable
+    state: dict

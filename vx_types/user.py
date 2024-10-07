@@ -44,7 +44,6 @@ class user_FeatureParams(BaseModel):
 
     autostart: bool | None = None
     frames: dict[str, user_FrameParams] | None = None
-    state: dict | None = {}
 
 
 # ---------------------------------------------- - - -
@@ -111,12 +110,10 @@ class user_FrameParams_dict(TypedDict):
 class user_FeatureParams_dict(TypedDict):
     autostart: bool
     frames: dict[str, user_FrameParams_dict]
-    state: dict
 
     @staticmethod
     def get_structure():
         return {
             "autostart": "VALUE",
             "frames": defaultdict(lambda: user_FrameParams_dict.get_structure()),
-            "state": "VALUE",
         }

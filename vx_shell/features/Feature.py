@@ -42,7 +42,7 @@ class Feature:
         self.required_features = RootFeature(feature_name).required_features
         self.lifespan = RootFeature(feature_name).lifespan
         # -------------------------------------------- - - -
-        self.state_websockets: list[WebSocket] = []
+        # self.state_websockets: list[WebSocket] = []
         self.feature_websockets: list[WebSocket] = []
         self.frames = FrameHandler(feature_name=feature_name)
         self.is_started = False
@@ -126,9 +126,9 @@ class Feature:
         except Exception as exception:
             Logger.log_exception(exception)
 
-        state_websockets = self.state_websockets.copy()
-        for websocket in state_websockets:
-            await websocket.close()
+        # state_websockets = self.state_websockets.copy()
+        # for websocket in state_websockets:
+        #     await websocket.close()
 
         feature_websockets = self.feature_websockets.copy()
         for websocket in feature_websockets:

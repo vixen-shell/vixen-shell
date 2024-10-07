@@ -120,115 +120,115 @@ async def feature_sockets(
 #
 
 
-class InputStateEvent(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+# class InputStateEvent(BaseModel):
+#     model_config = ConfigDict(extra="forbid")
 
-    id: str
-    data: dict = None
+#     id: str
+#     data: dict = None
 
 
-@api.websocket("/feature/{feature_name}/state")
-async def feature_state_socket(websocket: WebSocket, feature_name: str):
-    await websocket.accept()
+# @api.websocket("/feature/{feature_name}/state")
+# async def feature_state_socket(websocket: WebSocket, feature_name: str):
+#     await websocket.accept()
 
-    async def revoke_websocket(message: str):
-        await websocket.send_json(OutputEvent(id="ERROR", data={"message": message}))
-        await websocket.close(reason=message)
+#     async def revoke_websocket(message: str):
+#         await websocket.send_json(OutputEvent(id="ERROR", data={"message": message}))
+#         await websocket.close(reason=message)
 
-    try:
-        feature = get_feature(feature_name)
-    except Exception as exception:
-        return await revoke_websocket(str(exception))
+#     try:
+#         feature = get_feature(feature_name)
+#     except Exception as exception:
+#         return await revoke_websocket(str(exception))
 
-    if not ParamDataHandler.state_is_enable(feature_name):
-        return await revoke_websocket(f"'{feature_name}' feature state is disable")
+#     if not ParamDataHandler.state_is_enable(feature_name):
+#         return await revoke_websocket(f"'{feature_name}' feature state is disable")
 
-    feature.state_websockets.append(websocket)
-    feature_state = ParamDataHandler.get_state(feature_name)
+#     feature.state_websockets.append(websocket)
+#     feature_state = ParamDataHandler.get_state(feature_name)
 
-    async def dispatch_event(event: OutputEvent):
-        for websocket in feature.state_websockets:
-            await websocket.send_json(event)
+#     async def dispatch_event(event: OutputEvent):
+#         for websocket in feature.state_websockets:
+#             await websocket.send_json(event)
 
-    try:
-        while True:
-            try:
-                input_event = InputStateEvent(**await websocket.receive_json())
+#     try:
+#         while True:
+#             try:
+#                 input_event = InputStateEvent(**await websocket.receive_json())
 
-                if input_event.id == "GET":
-                    if not input_event.data:
-                        raise ErrorEvent("GET", "Missing item data")
+#                 if input_event.id == "GET":
+#                     if not input_event.data:
+#                         raise ErrorEvent("GET", "Missing item data")
 
-                    key = input_event.data.get("key")
-                    if not key:
-                        raise ErrorEvent("GET", "Missing item key")
+#                     key = input_event.data.get("key")
+#                     if not key:
+#                         raise ErrorEvent("GET", "Missing item key")
 
-                    if not key in feature_state:
-                        raise ErrorEvent(
-                            event="GET",
-                            message="Key not found",
-                            data={"key": key},
-                        )
+#                     if not key in feature_state:
+#                         raise ErrorEvent(
+#                             event="GET",
+#                             message="Key not found",
+#                             data={"key": key},
+#                         )
 
-                    await dispatch_event(
-                        OutputEvent(
-                            id="UPDATE",
-                            data={
-                                "key": key,
-                                "value": feature_state[key],
-                            },
-                        )
-                    )
+#                     await dispatch_event(
+#                         OutputEvent(
+#                             id="UPDATE",
+#                             data={
+#                                 "key": key,
+#                                 "value": feature_state[key],
+#                             },
+#                         )
+#                     )
 
-                if input_event.id == "SET":
-                    if not input_event.data:
-                        raise ErrorEvent("SET", "Missing item data")
+#                 if input_event.id == "SET":
+#                     if not input_event.data:
+#                         raise ErrorEvent("SET", "Missing item data")
 
-                    key = input_event.data.get("key")
-                    if not key:
-                        raise ErrorEvent("SET", "Missing item key")
+#                     key = input_event.data.get("key")
+#                     if not key:
+#                         raise ErrorEvent("SET", "Missing item key")
 
-                    if not key in feature_state:
-                        raise ErrorEvent(
-                            event="SET",
-                            message="Key not found",
-                            data={"key": key},
-                        )
+#                     if not key in feature_state:
+#                         raise ErrorEvent(
+#                             event="SET",
+#                             message="Key not found",
+#                             data={"key": key},
+#                         )
 
-                    feature_state[key] = input_event.data.get("value")
+#                     feature_state[key] = input_event.data.get("value")
 
-                    await dispatch_event(
-                        OutputEvent(
-                            id="UPDATE",
-                            data={"key": key, "value": input_event.data.get("value")},
-                        )
-                    )
+#                     await dispatch_event(
+#                         OutputEvent(
+#                             id="UPDATE",
+#                             data={"key": key, "value": input_event.data.get("value")},
+#                         )
+#                     )
 
-                if input_event.id == "SAVE":
-                    ParamDataHandler.save_params(feature_name)
+#                 if input_event.id == "SAVE":
+#                     ParamDataHandler.save_params(feature_name)
 
-                    await dispatch_event(OutputEvent(id="SAVE", data=feature_state))
+#                     await dispatch_event(OutputEvent(id="SAVE", data=feature_state))
 
-            except ErrorEvent as error_event:
-                Logger.log(
-                    f"[{feature_name}]: (State socket) {error_event.data}",
-                    "WARNING",
-                )
-                await websocket.send_json(
-                    OutputEvent(id="ERROR", data=error_event.data)
-                )
+#             except ErrorEvent as error_event:
+#                 Logger.log(
+#                     f"[{feature_name}]: (State socket) {error_event.data}",
+#                     "WARNING",
+#                 )
+#                 await websocket.send_json(
+#                     OutputEvent(id="ERROR", data=error_event.data)
+#                 )
 
-            except ValidationError as exception:
-                Logger.log(
-                    f"[{feature_name}]: (State socket) {str(exception)}",
-                    "WARNING",
-                )
-                await websocket.send_json(
-                    OutputEvent(id="ERROR", data=json.loads(exception.json()))
-                )
+#             except ValidationError as exception:
+#                 Logger.log(
+#                     f"[{feature_name}]: (State socket) {str(exception)}",
+#                     "WARNING",
+#                 )
+#                 await websocket.send_json(
+#                     OutputEvent(id="ERROR", data=json.loads(exception.json()))
+#                 )
 
-    except:
-        feature.state_websockets.remove(websocket)
+#     except:
+#         feature.state_websockets.remove(websocket)
 
 
 # ---------------------------------------------- - - -

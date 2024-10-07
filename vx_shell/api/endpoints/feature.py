@@ -81,41 +81,41 @@ async def stop_feature(
 # FEATURE STATE
 #
 
-state_responses = ModelResponses(
-    {200: Models.Features.State, 404: Models.Commons.Error, 409: Models.Commons.Error}
-)
+# state_responses = ModelResponses(
+#     {200: Models.Features.State, 404: Models.Commons.Error, 409: Models.Commons.Error}
+# )
 
 
-@api.get(
-    "/feature/{feature_name}/state",
-    description="Get a feature global state",
-    responses=state_responses.responses,
-)
-async def feature_state(
-    response: Response, feature_name: str = Path(description="Feature name")
-):
-    if not Features.exists(feature_name):
-        return state_responses(response, 404)(
-            message=f"Feature '{feature_name}' not found"
-        )
+# @api.get(
+#     "/feature/{feature_name}/state",
+#     description="Get a feature global state",
+#     responses=state_responses.responses,
+# )
+# async def feature_state(
+#     response: Response, feature_name: str = Path(description="Feature name")
+# ):
+#     if not Features.exists(feature_name):
+#         return state_responses(response, 404)(
+#             message=f"Feature '{feature_name}' not found"
+#         )
 
-    feature = Features.get(feature_name)
+#     feature = Features.get(feature_name)
 
-    if not feature.is_started:
-        return state_responses(response, 409)(
-            message=f"Feature '{feature_name}' is not started"
-        )
+#     if not feature.is_started:
+#         return state_responses(response, 409)(
+#             message=f"Feature '{feature_name}' is not started"
+#         )
 
-    if not ParamDataHandler.state_is_enable(feature_name):
-        return start_responses(response, 200)(
-            name=feature_name, is_started=True, state=None
-        )
+#     if not ParamDataHandler.state_is_enable(feature_name):
+#         return state_responses(response, 200)(
+#             name=feature_name, is_started=True, state=None
+#         )
 
-    return state_responses(response, 200)(
-        name=feature_name,
-        is_started=True,
-        state=ParamDataHandler.get_value(f"{feature_name}.state"),
-    )
+#     return state_responses(response, 200)(
+#         name=feature_name,
+#         is_started=True,
+#         state=ParamDataHandler.get_value(f"{feature_name}.state"),
+#     )
 
 
 # ---------------------------------------------- - - -

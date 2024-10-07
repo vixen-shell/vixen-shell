@@ -19,15 +19,15 @@ class AbsParams(ABC):
     def node_is_define(self, node_path: str) -> bool:
         pass
 
-    @property
-    @abstractmethod
-    def state_is_enable(self) -> bool:
-        pass
+    # @property
+    # @abstractmethod
+    # def state_is_enable(self) -> bool:
+    #     pass
 
-    @property
-    @abstractmethod
-    def state(self) -> dict:
-        pass
+    # @property
+    # @abstractmethod
+    # def state(self) -> dict:
+    #     pass
 
     @abstractmethod
     def save_params(self) -> None:
@@ -60,13 +60,13 @@ def get_params_reference(feature_name: str, ParamDataHandler):
             path = f"{feature_name}.{node_path}"
             return ParamDataHandler.node_is_define(path)
 
-        @property
-        def state_is_enable(self) -> bool:
-            return ParamDataHandler.state_is_enable(feature_name)
+        # @property
+        # def state_is_enable(self) -> bool:
+        #     return ParamDataHandler.state_is_enable(feature_name)
 
-        @property
-        def state(self) -> dict:
-            return ParamDataHandler.get_state(feature_name)
+        # @property
+        # def state(self) -> dict:
+        #     return ParamDataHandler.get_state(feature_name)
 
         def save_params(self) -> None:
             ParamDataHandler.save_params(feature_name)

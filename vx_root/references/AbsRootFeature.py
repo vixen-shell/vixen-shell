@@ -1,6 +1,6 @@
 from inspect import stack, getmodule
 from abc import ABC, abstractmethod
-from typing import Literal, Callable
+from typing import Callable
 from vx_types import root_FeatureParams_dict
 from .AbsFrames import AbsFrames
 from .AbsParams import AbsParams

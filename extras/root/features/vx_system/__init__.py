@@ -7,6 +7,5 @@ root_feature().init(
     {
         "autostart": True,
         "frames": "disable",
-        "state": "disable",
     }
 )
