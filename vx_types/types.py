@@ -7,4 +7,4 @@ AlignmentKeys = Literal["start", "center", "end", "stretch"]
 
 ParamPermission = Literal["DISABLED", "ROOT", "RESTRICTED", "USER"]
 
-FeatureContentType = Literal["task", "data", "file", "socket"]
+FeatureContentType = Literal["task", "data", "socket"]

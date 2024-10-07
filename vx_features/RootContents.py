@@ -29,7 +29,6 @@ class RootContents:
             self.name = FeatureUtils.feature_name_from(entry)
             self.task = rootcontent()
             self.data = rootcontent()
-            self.file = rootcontent()
             self.socket = rootcontent()
 
     def dispatch(self, content_type: FeatureContentType, name: str = None):
