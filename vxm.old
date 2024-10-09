@@ -1,0 +1,174 @@
+#!./.venv/bin/python
+
+"""
+Author            : Nohavye
+Author's Email    : noha.poncelet@gmail.com
+Repository        : https://github.com/vixen-shell/vixen-shell.git
+Description       : Vixen manager executable.
+License           : GPL3
+"""
+
+import os, argparse
+
+os.environ["GDK_BACKEND"] = "wayland"
+os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "0"
+
+from vx_manager import Manager
+
+
+def handle_path(args):
+    return args.path or os.getcwd()
+
+
+def handle_args(args):
+    path = handle_path(args)
+
+    if args.setup:
+        if args.setup == "update":
+            Manager.Setup.update()
+
+        if args.setup == "remove":
+            Manager.Setup.remove()
+
+    elif args.shell:
+        if args.shell == "open":
+            if args.no_dmabuf:
+                print("DMABUF Renderer disabled\n")
+                os.environ["WEBKIT_DISABLE_DMABUF_RENDERER"] = "1"
+
+            Manager.Shell.open()
+
+        if args.shell == "close":
+            Manager.Shell.close()
+
+    elif args.dev:
+        if args.dev == "run":
+            Manager.Shell.dev(path)
+
+        if args.dev == "create":
+            Manager.Setup.create_feature(path)
+
+    elif args.features:
+        if args.features == "names":
+            Manager.Shell.feature_names()
+
+        if args.features == "add":
+            if args.extra:
+                Manager.Setup.add_extra_feature(args.extra)
+            else:
+                Manager.Setup.add_feature(path)
+
+        if args.features == "remove":
+            Manager.Setup.remove_feature()
+
+    elif args.frames:
+        if args.frames == "ids":
+            if not args.feature:
+                print("Missing [--feature FEATURE] option")
+                return
+
+            Manager.Shell.feature_frame_ids(args.feature)
+
+        if args.frames == "toggle":
+            if not args.feature:
+                print("Missing [--feature FEATURE] option")
+                return
+
+            if not args.frame:
+                print("Missing [--frame FRAME] option")
+                return
+
+            Manager.Shell.toggle_feature_frame(args.feature, args.frame)
+
+        if args.frames == "open":
+            if not args.feature:
+                print("Missing [--feature FEATURE] option")
+                return
+
+            if not args.frame:
+                print("Missing [--frame FRAME] option")
+                return
+
+            Manager.Shell.open_feature_frame(args.feature, args.frame)
+
+        if args.frames == "close":
+            if not args.feature:
+                print("Missing [--feature FEATURE] option")
+                return
+
+            if not args.frame:
+                print("Missing [--frame FRAME] option")
+                return
+
+            Manager.Shell.close_feature_frame(args.feature, args.frame)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description=f"""
+        Vixen Manager.
+    """
+    )
+
+    root_args = parser.add_mutually_exclusive_group(required=True)
+
+    # ---------------------------------------------- - - -
+    # Root Arguments
+    #
+
+    root_args.add_argument(
+        "--setup",
+        type=str,
+        choices=["update", "remove"],
+        help="Vixen Shell setup.",
+    )
+    root_args.add_argument(
+        "--shell",
+        type=str,
+        choices=["open", "close"],
+        help="Vixen Shell controls.",
+    )
+    root_args.add_argument(
+        "--dev", type=str, choices=["run", "create"], help="Devs controls."
+    )
+    root_args.add_argument(
+        "--features",
+        type=str,
+        choices=["names", "add", "remove"],
+        help="Features controls.",
+    )
+    root_args.add_argument(
+        "--frames",
+        type=str,
+        choices=["ids", "toggle", "open", "close"],
+        help="Feature frames controls.",
+    )
+
+    # ---------------------------------------------- - - -
+    # Additional arguments
+    #
+    parser.add_argument(
+        "--path",
+        type=str,
+        default="",
+        help="Optional path (--dev run/new, --features add)",
+    )
+    parser.add_argument(
+        "--feature",
+        type=str,
+        default="",
+        help="Feature name (--frames ids/toggle/open/close)",
+    )
+    parser.add_argument(
+        "--frame", type=str, default="", help="Frame id (--frames toggle/open/close)"
+    )
+    parser.add_argument(
+        "--extra", type=str, default="", help="Extra feature name (--features add)"
+    )
+    parser.add_argument(
+        "--no-dmabuf",
+        action="store_true",
+        help="Use if your video driver is 'nouveau' (--shell open)",
+    )
+
+    handle_args(parser.parse_args())

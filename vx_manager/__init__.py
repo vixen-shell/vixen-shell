@@ -4,5 +4,5 @@ Logger.init()
 
 
 class Manager:
-    from .ShellManager import ShellManager as Shell
+    from .args_parser import handle_args
     from .SetupManager import SetupManager as Setup
