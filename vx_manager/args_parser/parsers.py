@@ -102,7 +102,6 @@ task_parser.add_argument(
     "--args",
     type=parse_mixed_type,
     nargs="+",
-    metavar="[ARGS]",
     help="Task arguments (str, int, float, none)",
 )
 
