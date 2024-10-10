@@ -201,6 +201,30 @@ class TaskHandler:
             TaskHandler._handle_task()
 
 
+class StateHandler:
+    feature_name: str
+
+    start: bool
+    stop: bool
+
+    @staticmethod
+    def init(args: Namespace):
+        StateHandler.feature_name = args.feature_name
+
+        StateHandler.start = args.start
+        StateHandler.stop = args.stop
+
+    @staticmethod
+    def handle():
+        if StateHandler.start:
+            Shell.start_feature(StateHandler.feature_name)
+
+        if StateHandler.stop:
+            Shell.stop_feature(StateHandler.feature_name)
+
+        exit()
+
+
 class FeatureHandler:
     args: Namespace
     feature_name: str
@@ -233,34 +257,34 @@ class FeatureHandler:
         return os.getcwd() if not FeatureHandler.path else FeatureHandler.path
 
     @staticmethod
+    def _check_path():
+        if FeatureHandler.path:
+            exit(
+                {
+                    "message": "No need to use the --path option in this context",
+                    "parser": feature_parser,
+                }
+            )
+
+    @staticmethod
     def _handle_options():
-
-        def check_path():
-            if FeatureHandler.path:
-                exit(
-                    {
-                        "message": "No need to use the --path option in this context",
-                        "parser": feature_parser,
-                    }
-                )
-
         if FeatureHandler.list:
-            check_path()
+            FeatureHandler._check_path()
             Shell.feature_names()
 
         elif FeatureHandler.new:
-            check_path()
+            FeatureHandler._check_path()
             Setup.create_feature(FeatureHandler._handle_path())
 
         elif FeatureHandler.add:
             Setup.add_feature(FeatureHandler._handle_path())
 
         elif FeatureHandler.extra:
-            check_path()
+            FeatureHandler._check_path()
             Setup.add_extra_feature(FeatureHandler.extra)
 
         elif FeatureHandler.remove:
-            check_path()
+            FeatureHandler._check_path()
             Setup.remove_feature()
 
         elif FeatureHandler.dev:
@@ -270,6 +294,11 @@ class FeatureHandler:
             exit({"message": "Missing options", "parser": feature_parser})
 
         exit()
+
+    @staticmethod
+    def _handle_state():
+        StateHandler.init(FeatureHandler.args)
+        StateHandler.handle()
 
     @staticmethod
     def _handle_frame():
@@ -288,6 +317,9 @@ class FeatureHandler:
         if not feature_name:
             FeatureHandler._handle_options()
         else:
+            if FeatureHandler.feature_cmd == "state":
+                FeatureHandler._handle_state()
+
             if FeatureHandler.feature_cmd == "frame":
                 FeatureHandler._handle_frame()
 

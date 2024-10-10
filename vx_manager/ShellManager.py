@@ -107,6 +107,24 @@ class ShellManager:
 
     @staticmethod
     @use_sudo(False)
+    def start_feature(feature_name: str):
+        from .requests import ShellRequests
+
+        result = ShellRequests.start_feature(feature_name)
+        if result != None:
+            print(f"Start '{result}' feature")
+
+    @staticmethod
+    @use_sudo(False)
+    def stop_feature(feature_name: str):
+        from .requests import ShellRequests
+
+        result = ShellRequests.stop_feature(feature_name)
+        if result != None:
+            print(f"Stop '{result}' feature")
+
+    @staticmethod
+    @use_sudo(False)
     def feature_frame_ids(feature_name: str):
         from .requests import ShellRequests
 

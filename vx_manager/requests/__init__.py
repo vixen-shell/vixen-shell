@@ -20,7 +20,7 @@ def handle_error_response(response: Response):
         error: dict = response.json()
 
         if error["shell_error"]:
-            Logger.log(f"[Shell]: {error['message']}", "ERROR")
+            Logger.log(f"{error['message']}", "ERROR")
         else:
             Logger.log(error["details"], "ERROR")
     except:
@@ -110,6 +110,17 @@ class ShellRequests:
     @check_ping(True)
     def start_feature(feature_name: str) -> str | None:
         response = request_get(f"/feature/{feature_name}/start")
+
+        if not response.status_code == 200:
+            handle_error_response(response)
+            return
+
+        return response.json()["name"]
+
+    @staticmethod
+    @check_ping(True)
+    def stop_feature(feature_name: str) -> str | None:
+        response = request_get(f"/feature/{feature_name}/stop")
 
         if not response.status_code == 200:
             handle_error_response(response)

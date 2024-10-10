@@ -59,8 +59,18 @@ feature_exclusive.add_argument(
 # --------------------------------- - - -
 # --------------------------------- - - -
 feature_subparser = feature_parser.add_subparsers(
-    dest="feature_cmd", title="Frame commands"
+    dest="feature_cmd", title="Feature commands", required=False
 )
+
+# --------------------------------- - - -
+# FEATURE STATE PARSER
+# --------------------------------- - - -
+feature_state_parser = feature_subparser.add_parser("state", help="Feature controls")
+feature_state_exclusive = feature_state_parser.add_mutually_exclusive_group()
+feature_state_exclusive.add_argument(
+    "--start", action="store_true", help="Start feature"
+)
+feature_state_exclusive.add_argument("--stop", action="store_true", help="Stop feature")
 
 # --------------------------------- - - -
 # FRAME PARSER
