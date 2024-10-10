@@ -78,12 +78,32 @@ frame_exclusive.add_argument("--toggle", action="store_true", help="Toggle a fra
 frame_exclusive.add_argument("--open", action="store_true", help="Open a frame")
 frame_exclusive.add_argument("--close", action="store_true", help="Close a frame")
 
+
 # --------------------------------- - - -
 # TASK PARSER
 # --------------------------------- - - -
+def parse_mixed_type(value):
+    if value.lower() == "none":
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            return value
+
+
 task_parser = feature_subparser.add_parser("task", help="Feature task controls")
 task_parser.add_argument(
     "task_name", nargs="?", type=str, metavar="NAME", help="The name of the task to run"
+)
+task_parser.add_argument(
+    "--args",
+    type=parse_mixed_type,
+    nargs="+",
+    metavar="[ARGS]",
+    help="Task arguments (str, int, float, none)",
 )
 
 task_exclusive = task_parser.add_mutually_exclusive_group()

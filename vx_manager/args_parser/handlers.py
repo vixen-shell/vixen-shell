@@ -1,6 +1,6 @@
 import os, sys
 from argparse import Namespace, ArgumentParser
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, List
 from .parsers import shell_parser, feature_parser, frame_parser, task_parser
 from ..SetupManager import SetupManager as Setup
 from ..ShellManager import ShellManager as Shell
@@ -142,24 +142,34 @@ class FrameHandler:
 
 
 class TaskHandler:
-    args: Namespace
     feature_name: str
     task_name: str
 
+    args: List[str | int | float | None]
     list: bool
 
     @staticmethod
     def init(args: Namespace):
-        TaskHandler.args = args
         TaskHandler.feature_name = args.feature_name
         TaskHandler.task_name = args.task_name
 
+        TaskHandler.args = args.args
         TaskHandler.list = args.list
 
     @staticmethod
     def _handle_options():
+        def check_args():
+            if TaskHandler.args:
+                exit(
+                    {
+                        "message": "No need to use the --args option in this context",
+                        "parser": task_parser,
+                    }
+                )
+
         if TaskHandler.list:
-            print(f"List all task available from feature '{TaskHandler.feature_name}'")
+            check_args()
+            Shell.feature_task_names(TaskHandler.feature_name)
         else:
             exit({"message": "Missing options", "parser": task_parser})
 
@@ -175,8 +185,8 @@ class TaskHandler:
                 }
             )
 
-        print(
-            f"Run task '{TaskHandler.task_name}' from feature '{TaskHandler.feature_name}'"
+        Shell.run_feature_task(
+            TaskHandler.feature_name, TaskHandler.task_name, TaskHandler.args
         )
 
         exit()
@@ -224,6 +234,7 @@ class FeatureHandler:
 
     @staticmethod
     def _handle_options():
+
         def check_path():
             if FeatureHandler.path:
                 exit(

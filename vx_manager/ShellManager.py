@@ -140,3 +140,24 @@ class ShellManager:
         result = ShellRequests.close_feature_frame(feature_name, frame_id)
         if result != None:
             print(result)
+
+    @staticmethod
+    @use_sudo(False)
+    def feature_task_names(feature_name: str):
+        from .requests import ShellRequests
+
+        result = ShellRequests.feature_task_names(feature_name)
+        if result != None:
+            print(result)
+
+    @staticmethod
+    @use_sudo(False)
+    def run_feature_task(feature_name: str, task_name: str, args: list | None):
+        from .requests import ShellRequests
+
+        result = ShellRequests.run_feature_task(
+            feature_name, task_name, args if args else []
+        )
+        if result != None:
+            print(f"Run task '{task_name}' from feature '{feature_name}'")
+            print(f"Return: {result}")

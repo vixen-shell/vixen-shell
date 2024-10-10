@@ -160,3 +160,29 @@ class ShellRequests:
             return
 
         return response.json()["id"]
+
+    @staticmethod
+    @check_ping(True)
+    def feature_task_names(feature_name: str) -> list | None:
+        response = request_get(f"/feature/{feature_name}/actions")
+
+        if not response.status_code == 200:
+            handle_error_response(response)
+            return
+
+        return response.json()
+
+    @staticmethod
+    @check_ping(True)
+    def run_feature_task(
+        feature_name: str, task_name: str, args: list = []
+    ) -> str | None:
+        payload = {"name": task_name, "args": args}
+
+        response = request_post(f"/feature/{feature_name}/action", payload)
+
+        if not response.status_code == 200:
+            handle_error_response(response)
+            return
+
+        return response.json()[task_name]

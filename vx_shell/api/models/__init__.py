@@ -24,6 +24,9 @@ class Models:
         from .models import Frames_Ids as Ids
         from .models import Frames_Properties as Properties
 
+    class Task:
+        from .models import Task_Base as Base
+
     class Log:
         from .models import Log_Log as Log
         from .models import Log_Logs as Logs

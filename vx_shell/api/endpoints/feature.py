@@ -1,6 +1,6 @@
 from fastapi import Response, Path, Body
 from pydantic import BaseModel, ConfigDict
-from vx_features import ParamDataHandler
+from vx_features import ParamDataHandler, RootContents
 from typing import Any
 from ..api import api
 from ..models import ModelResponses, Models
@@ -240,6 +240,41 @@ async def get_data(
         return feature_data_responses(response, 409)(message=str(exception))
 
     return feature_data_responses(response, 200)(**custom_data)
+
+
+# ---------------------------------------------- - - -
+# FEATURE ACTION NAMES
+#
+
+action_name_responses = ModelResponses(
+    {200: list, 404: Models.Commons.Error, 409: Models.Commons.Error}
+)
+
+
+@api.get(
+    "/feature/{feature_name}/actions",
+    description="Get the action names of a feature",
+    responses=action_name_responses.responses,
+)
+async def task_names(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+):
+    if not Features.exists(feature_name):
+        return action_name_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    if not feature.is_started:
+        return action_name_responses(response, 409)(
+            message=f"Feature '{feature_name}' is not started"
+        )
+
+    return action_name_responses(response, 200)(
+        list(RootContents(feature_name).task.__dict__.keys())
+    )
 
 
 # ---------------------------------------------- - - -

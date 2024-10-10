@@ -51,6 +51,12 @@ class Frames_Properties(Frames_Base):
     feature: Features_Base
 
 
+# TASKS MODELS
+class Task_Base(BaseModel):
+    feature_name: str
+    task_name: str
+
+
 # OS MODELS
 class Os_ExecInfo(BaseModel):
     pid: int
