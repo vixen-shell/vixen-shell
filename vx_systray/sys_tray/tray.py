@@ -29,14 +29,14 @@ class Tray:
         event_id: typing.Literal["ADD_ITEM", "UPDATE_ITEM", "REMOVE_ITEM"],
         item: dict | None = None,
     ):
-        self.socket.sendall(
-            json.dumps(
-                {
-                    "id": event_id,
-                    "data": item,
-                }
-            ).encode()
+        json_event = json.dumps(
+            {
+                "id": event_id,
+                "data": item,
+            }
         )
+
+        self.socket.sendall(f"{json_event}\n".encode())
 
     def add_item(self, item: StatusNotifierItem):
         full_service_name = "{}{}".format(item.service_name, item.object_path)

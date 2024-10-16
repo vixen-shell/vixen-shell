@@ -92,15 +92,21 @@ class SysTrayObserver:
             SysTrayObserver._writer = sock
 
             Logger.log("[Systray]: Start listening")
+            buffer: str = ""
             while not SysTrayObserver._stop_event.is_set():
                 try:
-                    data = sock.recv(1024)
+                    data = sock.recv(1024).decode()
                     if not data:
                         break
 
-                    SysTrayState.handle_event(json.loads(data.decode()))
+                    buffer += data
+
+                    while "\n" in buffer:
+                        line, buffer = buffer.split("\n", 1)
+                        SysTrayState.handle_event(json.loads(line))
 
                 except Exception as e:
+                    print(data.decode())
                     Logger.log(f"[Systray]: Error in listener thread: {e}")
                     break
 
