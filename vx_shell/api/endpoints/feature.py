@@ -344,3 +344,49 @@ async def get_action(
     return feature_action_responses(response, 200)(
         **{action_handler.name: returned_data or True}
     )
+
+
+# ---------------------------------------------- - - -
+# FEATURE DBUS MENU
+#
+
+
+class DbusMenuInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    frame_id: str
+    service_name: str
+
+
+dbus_menu_responses = ModelResponses(
+    {
+        200: dict,
+        404: Models.Commons.Error,
+        409: Models.Commons.Error,
+    }
+)
+
+
+@api.post(
+    "/feature/{feature_name}/dbus_menu",
+    description="Popup Dbus menu",
+    responses=dbus_menu_responses.responses,
+)
+async def get_action(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+    menu_info: DbusMenuInfo = Body(description="Dbus menu information"),
+):
+    if not Features.exists(feature_name):
+        return dbus_menu_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    try:
+        feature.popup_dbus_menu(menu_info.frame_id, menu_info.service_name)
+    except Exception as exception:
+        return dbus_menu_responses(response, 409)(message=str(exception))
+
+    return dbus_menu_responses(response, 200)(menu_info.model_dump())

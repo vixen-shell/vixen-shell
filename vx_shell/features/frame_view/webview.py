@@ -7,18 +7,21 @@ def get_front_port(dev_mode: bool):
     return VxConfig.FRONT_PORT if not dev_mode else VxConfig.FRONT_DEV_PORT
 
 
-def get_uri(feature_name: str, route: str, dev_mode: bool):
+def get_uri(feature_name: str, route: str, frame_id: str, dev_mode: bool):
 
     def get_params():
         feature_param = f"feature={feature_name}"
         route_param = f"route={route}"
+        frame_param = f"frame={frame_id}"
 
-        return f"{feature_param}&{route_param}"
+        return f"{feature_param}&{route_param}&{frame_param}"
 
     return f"http://localhost:{get_front_port(dev_mode)}/?{get_params()}"
 
 
-def webview(feature_name: str, route: str, dev_mode: bool, background_color):
+def webview(
+    feature_name: str, route: str, frame_id: str, dev_mode: bool, background_color
+):
     def on_decide_policy(webview, decision, decision_type):
         if isinstance(decision, WebKit2.NavigationPolicyDecision):
             request = decision.get_request()
@@ -46,6 +49,6 @@ def webview(feature_name: str, route: str, dev_mode: bool, background_color):
     webview.connect("decide-policy", on_decide_policy)
     webview.set_background_color(background_color)
 
-    webview.load_uri(get_uri(feature_name, route, dev_mode))
+    webview.load_uri(get_uri(feature_name, route, frame_id, dev_mode))
 
     return webview

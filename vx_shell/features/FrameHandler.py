@@ -25,6 +25,9 @@ class FrameHandler:
     def popup_context_menu(self, frame_id: str, context_menu: ContextMenu):
         self.frames[frame_id].popup_context_menu(context_menu)
 
+    def popup_dbus_menu(self, frame_id: str, service_name: str):
+        self.frames[frame_id].popup_dbus_menu(service_name)
+
     def cleanup(self):
         for frame in self.frames.values():
             frame.hide()

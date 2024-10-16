@@ -151,3 +151,7 @@ class Feature:
     @check_is_started(True)
     def popup_context_menu(self, frame_id: str, context_menu: ContextMenu):
         self.frames.popup_context_menu(frame_id, context_menu)
+
+    @check_is_started(True)
+    def popup_dbus_menu(self, frame_id: str, service_name: str):
+        self.frames.popup_dbus_menu(frame_id, service_name)

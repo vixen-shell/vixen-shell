@@ -1,4 +1,4 @@
-from .SysTrayObserver import SysTrayObserver
+from .SysTrayObserver import SysTrayObserver, SysTrayState
 
 
 def run_systray_server():

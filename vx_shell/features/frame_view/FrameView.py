@@ -1,5 +1,6 @@
 from vx_features import ParamDataHandler
 from vx_root.root_utils.classes import ContextMenu
+from vx_systray import SysTrayState
 from .webview import webview
 from .layerise_frame import layerise_frame, set_layer_frame
 from ..Gtk_imports import GLib, Gtk, Gdk
@@ -50,6 +51,7 @@ class FrameView:
                 self.webview = webview(
                     self.feature_name,
                     self.route,
+                    frame_id,
                     self.dev_mode,
                     Gdk.RGBA(red=0, green=0, blue=0, alpha=0.0),
                 )
@@ -78,6 +80,7 @@ class FrameView:
                 self.webview = webview(
                     self.feature_name,
                     self.route,
+                    frame_id,
                     self.dev_mode,
                     get_background_color(self.frame),
                 )
@@ -122,6 +125,15 @@ class FrameView:
     def popup_context_menu(self, context_menu: ContextMenu):
         def process():
             context_menu.menu.popup_at_pointer(self.last_webview_press_event)
+
+        GLib.idle_add(process)
+
+    def popup_dbus_menu(self, service_name: str):
+        def process():
+            if service_name in SysTrayState.menus:
+                SysTrayState.menus[service_name].popup_at_pointer(
+                    self.last_webview_press_event
+                )
 
         GLib.idle_add(process)
 

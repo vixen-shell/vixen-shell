@@ -3,8 +3,8 @@ from typing import TypedDict, Optional
 from fastapi import WebSocket
 from pydantic import BaseModel, ConfigDict, ValidationError
 from vx_config import VxConfig
+from vx_systray import SysTrayState
 from ..api import api
-from ...features import Features
 from ...logger import Logger
 
 
@@ -36,7 +36,7 @@ class InputStateEvent(BaseModel):
 
 
 @api.websocket("/vx_state")
-async def feature_state_socket(websocket: WebSocket):
+async def vixen_state_socket(websocket: WebSocket):
     await websocket.accept()
 
     VxConfig.websockets.append(websocket)
@@ -123,3 +123,40 @@ async def feature_state_socket(websocket: WebSocket):
 
     except:
         VxConfig.websockets.remove(websocket)
+
+
+# ---------------------------------------------- - - -
+# VIXEN SYSTRAY SOCKET
+#
+
+
+class InputSysTrayEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+
+
+@api.websocket("/vx_systray")
+async def vixen_systray_socket(websocket: WebSocket):
+    await websocket.accept()
+    SysTrayState.websockets.append(websocket)
+
+    try:
+        while True:
+            try:
+                input_event = InputSysTrayEvent(**await websocket.receive_json())
+
+                if input_event.id == "UPDATE":
+                    await websocket.send_json(
+                        {"id": "UPDATE", "data": {"systray": SysTrayState.state}}
+                    )
+            except ValidationError as exception:
+                Logger.log(
+                    f"[SysTray socket]: {str(exception)}",
+                    "WARNING",
+                )
+                await websocket.send_json(
+                    OutputEvent(id="ERROR", data=json.loads(exception.json()))
+                )
+    except:
+        SysTrayState.websockets.remove(websocket)

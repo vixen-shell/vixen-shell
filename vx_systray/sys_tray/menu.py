@@ -27,8 +27,8 @@ class MenuObserver(object):
         full_service_name = "{}{}".format(self.item.service_name, self.item.object_path)
 
         available_menu_info = {
-            "service_name": self.service_name,
-            "object_path": self.object_path,
+            "dbus_name": self.service_name,
+            "dbus_object": self.object_path,
         }
 
         if self.tray.items[full_service_name].get("menu") != available_menu_info:

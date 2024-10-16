@@ -10,11 +10,11 @@ from dasbus.client.proxy import disconnect_proxy
 from dasbus.error import DBusError
 
 
-def load_resource(package, resource_name):
+def load_resource(resource_name):
     try:
         import importlib.resources as resources
 
-        with resources.open_binary(package, resource_name) as resource_file:
+        with resources.open_binary(__package__, resource_name) as resource_file:
             return resource_file.read()
     except:
         pass
@@ -22,7 +22,7 @@ def load_resource(package, resource_name):
     try:
         import importlib.util
 
-        spec = importlib.util.find_spec(package)
+        spec = importlib.util.find_spec(__package__)
         if (
             spec is not None
             and spec.loader is not None
@@ -35,10 +35,10 @@ def load_resource(package, resource_name):
     try:
         import pkgutil
 
-        data = pkgutil.get_data(package, resource_name)
+        data = pkgutil.get_data(__package__, resource_name)
         if data is None:
             raise FileNotFoundError(
-                f"Resource {resource_name} not found in package {package}."
+                f"Resource {resource_name} not found in package {__package__}."
             )
         return data
     except ImportError as e:
@@ -102,7 +102,7 @@ class StatusNotifierItem(object):
                 ):
                     DBusSpecificationParser._parse_xml(
                         spec,
-                        load_resource(__package__, "org.kde.StatusNotifierItem.xml"),
+                        load_resource("org.kde.StatusNotifierItem.xml"),
                     )
         except:
             pass
@@ -115,14 +115,10 @@ class StatusNotifierItem(object):
         if hasattr(self.item_proxy, "NewTitle"):
             self.item_proxy.NewTitle.connect(lambda: self.change_handler(["Title"]))
         if hasattr(self.item_proxy, "NewIcon"):
-            self.item_proxy.NewIcon.connect(
-                lambda: self.change_handler(["IconName", "IconPixmap"])
-            )
+            self.item_proxy.NewIcon.connect(lambda: self.change_handler(["IconName"]))
         if hasattr(self.item_proxy, "NewAttentionIcon"):
             self.item_proxy.NewAttentionIcon.connect(
-                lambda: self.change_handler(
-                    ["AttentionIconName", "AttentionIconPixmap"]
-                )
+                lambda: self.change_handler(["AttentionIconName"])
             )
         if hasattr(self.item_proxy, "NewIconThemePath"):
             self.item_proxy.NewIconThemePath.connect(
