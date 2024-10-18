@@ -1,10 +1,10 @@
 from fastapi import Response, Path, Body
 from pydantic import BaseModel, ConfigDict
-from vx_features import ParamDataHandler, RootContents
 from typing import Any
+from vx_features import ParamDataHandler, RootContents
+from vx_logger import Logger
 from ..api import api
 from ..models import ModelResponses, Models
-from ...logger import Logger
 from ...features import Features
 
 

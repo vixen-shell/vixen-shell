@@ -7,8 +7,8 @@ License           : GPL3
 """
 
 from typing import List, Literal
+from vx_gtk import Gdk, Gtk, GtkLayerShell
 from .entities import Levels, Edges, Margins
-from ..Gtk_imports import Gdk, Gtk, GtkLayerShell
 
 
 def init_for_window(window: Gtk.Window):

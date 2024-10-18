@@ -3,7 +3,7 @@ from importlib import import_module
 from vx_root.references.AbsFrames import get_frames_reference
 from vx_root.references.AbsParams import get_params_reference
 from vx_config import VxConfig
-from ..logger import Logger
+from vx_logger import Logger
 
 from vx_features import (
     FeatureUtils,

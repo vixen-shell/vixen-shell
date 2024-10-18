@@ -1,6 +1,6 @@
 from vx_config import VxConfig
-from ..Gtk_imports import WebKit2
-from ...logger import Logger
+from vx_gtk import WebKit2
+from vx_logger import Logger
 
 
 def get_front_port(dev_mode: bool):

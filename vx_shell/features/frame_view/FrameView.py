@@ -1,9 +1,9 @@
 from vx_features import ParamDataHandler
 from vx_root.root_utils.classes import ContextMenu
 from vx_systray import SysTrayState
+from vx_gtk import GLib, Gtk, Gdk
 from .webview import webview
 from .layerise_frame import layerise_frame, set_layer_frame
-from ..Gtk_imports import GLib, Gtk, Gdk
 
 
 def get_background_color(widget):

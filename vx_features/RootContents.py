@@ -30,6 +30,7 @@ class RootContents:
             self.task = rootcontent()
             self.data = rootcontent()
             self.socket = rootcontent()
+            self.menu = rootcontent()
 
     def dispatch(self, content_type: FeatureContentType, name: str = None):
         def decorator(callback: Callable):

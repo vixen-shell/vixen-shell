@@ -4,8 +4,8 @@ from fastapi import WebSocket
 from pydantic import BaseModel, ConfigDict, ValidationError
 from vx_config import VxConfig
 from vx_systray import SysTrayState
+from vx_logger import Logger
 from ..api import api
-from ...logger import Logger
 
 
 class OutputEvent(TypedDict):

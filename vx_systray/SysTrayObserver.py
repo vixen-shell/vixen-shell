@@ -1,9 +1,7 @@
-import gi, socket, json, threading, os, time, asyncio
-
-gi.require_version("DbusmenuGtk3", "0.4")
-from gi.repository import GLib, DbusmenuGtk3
+import socket, json, threading, os, time, asyncio
+from vx_gtk import GLib, DbusmenuGtk3
 from fastapi import WebSocket
-from vx_shell.logger import Logger
+from vx_logger import Logger
 from .socket_worker import start_worker
 
 

@@ -1,5 +1,5 @@
 from typing import Callable
-from vx_shell.logger import Logger
+from vx_logger import Logger
 from vx_root.references.AbsFrames import AbsFrames
 from vx_root.references.AbsParams import AbsParams
 from vx_types import root_FeatureParams_dict

@@ -1,8 +1,17 @@
-import gi
+from vx_gtk import Gtk
+from typing import Callable, TypedDict, Literal, Dict, Union
 
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
-from typing import Callable, Literal
+type Separator = Literal["separator"]
+
+type Menu = Dict[str, Union[MenuItem, Separator]]
+
+
+class MenuItem(TypedDict):
+    icon: str
+    entry: Callable[[], None] | Menu
+
+
+test: Menu = {"Open": {"entry": lambda: print("Open")}}
 
 
 def get_item_with_icon(label: str, icon_name: str):

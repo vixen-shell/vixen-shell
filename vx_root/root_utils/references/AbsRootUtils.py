@@ -18,8 +18,8 @@ class AbsRootUtils(ABC):
 
 
 def get_root_utils_reference():
-    from vx_shell.logger import Logger
-    from vx_shell.features.Gtk_dialog import show_dialog_box
+    from vx_logger import Logger
+    from vx_gtk import show_dialog_box
 
     Logger_reference = get_logger_reference(Logger)
 

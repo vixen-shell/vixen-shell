@@ -3,10 +3,10 @@ from typing import TypedDict, Optional, Callable
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict
+from vx_logger import Logger
 from vx_root.root_utils.classes import SocketHandler
 from ..api import api
 from ...features import Features
-from ...logger import Logger
 
 
 class OutputEvent(TypedDict):

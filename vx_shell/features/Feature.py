@@ -6,8 +6,8 @@ from vx_features import (
 )
 from fastapi import WebSocket
 from vx_root.root_utils.classes import ContextMenu
+from vx_logger import Logger
 from .FrameHandler import FrameHandler
-from ..logger import Logger
 
 
 class Feature:

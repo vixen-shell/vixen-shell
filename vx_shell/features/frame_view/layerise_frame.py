@@ -1,7 +1,7 @@
 from vx_features import ParamDataHandler
 from vx_types import LevelKeys, AnchorEdgeKeys, AlignmentKeys
+from vx_gtk import Gtk
 from ..layerise import Edges, Levels, Margins, layerise_window, set_layer
-from ..Gtk_imports import Gtk
 
 anchor_key_values = {
     "top_start": [Edges.top, Edges.left],

@@ -11,9 +11,12 @@ class ImportHook:
         "vx_cli",
         "vx_config",
         "vx_features",
+        "vx_gtk",
+        "vx_logger",
         "vx_manager",
         "vx_path",
         "vx_shell",
+        "vx_systray",
         "vx_types",
     ]
 

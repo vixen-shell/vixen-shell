@@ -1,9 +1,9 @@
 import uvicorn
 from fastapi import FastAPI
 from vx_config import VxConfig
+from vx_logger import Logger
 from .FrontServer import FrontServer
 from ..utils import api_logging_config
-from ...logger import Logger
 
 
 class ApiServer:

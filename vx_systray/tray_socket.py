@@ -1,7 +1,5 @@
-import gi, os, socket, sys, signal
-
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
+import os, socket, sys, signal
+from vx_gtk import Gtk
 from .sys_tray import Tray, init_tray
 
 

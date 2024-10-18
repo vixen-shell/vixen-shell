@@ -4,14 +4,10 @@ from fastapi.responses import JSONResponse, FileResponse
 from typing import Optional, Literal
 from vx_config import VxConfig
 from vx_path import VxPath
+from vx_gtk import Gtk
 from ..api import api
 from ..models import ModelResponses, Models
 from ...servers import ApiServer
-
-import gi
-
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
 
 
 @api.get("/ping", description="Test API availability")

@@ -1,8 +1,4 @@
-import gi
-
-gi.require_version("Gdk", "3.0")
-from gi.repository import Gdk
-
+from vx_gtk import Gdk
 from dasbus.connection import SessionMessageBus
 from dasbus.specification import DBusSpecificationParser
 from dasbus.client.observer import DBusObserver
