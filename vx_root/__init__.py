@@ -1,5 +1,6 @@
 from .references import AbsRootFeature, AbsRootContents
-from .root_utils import utils
+from .root_utils import utils, SocketHandler
+from vx_gtk import ContextMenu
 
 
 def root_feature(feature_name: str = None) -> AbsRootFeature:

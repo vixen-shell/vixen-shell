@@ -5,7 +5,7 @@ from vx_features import (
     RootFeature,
 )
 from fastapi import WebSocket
-from vx_root.root_utils.classes import ContextMenu
+from vx_gtk import Gtk
 from vx_logger import Logger
 from .FrameHandler import FrameHandler
 
@@ -126,10 +126,6 @@ class Feature:
         except Exception as exception:
             Logger.log_exception(exception)
 
-        # state_websockets = self.state_websockets.copy()
-        # for websocket in state_websockets:
-        #     await websocket.close()
-
         feature_websockets = self.feature_websockets.copy()
         for websocket in feature_websockets:
             await websocket.close()
@@ -149,9 +145,13 @@ class Feature:
         self.frames.close(id)
 
     @check_is_started(True)
-    def popup_context_menu(self, frame_id: str, context_menu: ContextMenu):
-        self.frames.popup_context_menu(frame_id, context_menu)
+    def popup_context_menu(self, frame_id: str, menu: Gtk.Menu):
+        self.frames.popup_context_menu(frame_id, menu)
 
     @check_is_started(True)
     def popup_dbus_menu(self, frame_id: str, service_name: str):
         self.frames.popup_dbus_menu(frame_id, service_name)
+
+    @check_is_started(True)
+    def show_tooltip(self, frame_id: str, text: str):
+        self.frames.show_tooltip(frame_id, text)

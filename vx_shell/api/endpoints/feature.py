@@ -3,6 +3,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import Any
 from vx_features import ParamDataHandler, RootContents
 from vx_logger import Logger
+from vx_gtk import ContextMenuHandler
 from ..api import api
 from ..models import ModelResponses, Models
 from ...features import Features
@@ -347,6 +348,110 @@ async def get_action(
 
 
 # ---------------------------------------------- - - -
+# FEATURE TOOLTIP
+#
+
+
+class TooltipInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    frame_id: str
+    text: str
+
+
+tooltip_responses = ModelResponses(
+    {
+        200: dict,
+        404: Models.Commons.Error,
+        409: Models.Commons.Error,
+    }
+)
+
+
+@api.post(
+    "/feature/{feature_name}/tooltip",
+    description="Show tooltip",
+    responses=tooltip_responses.responses,
+)
+async def show_tooltip(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+    tooltip_info: TooltipInfo = Body(description="Menu information"),
+):
+    if not Features.exists(feature_name):
+        return tooltip_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    try:
+        feature.show_tooltip(tooltip_info.frame_id, tooltip_info.text)
+    except Exception as exception:
+        return menu_responses(response, 409)(message=str(exception))
+
+    return menu_responses(response, 200)(tooltip_info.model_dump())
+
+
+# ---------------------------------------------- - - -
+# FEATURE MENU
+#
+
+
+class MenuInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    frame_id: str
+    menu_name: str
+
+
+menu_responses = ModelResponses(
+    {
+        200: dict,
+        404: Models.Commons.Error,
+        409: Models.Commons.Error,
+    }
+)
+
+
+@api.post(
+    "/feature/{feature_name}/menu",
+    description="Popup menu",
+    responses=menu_responses.responses,
+)
+async def popup_menu(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+    menu_info: MenuInfo = Body(description="Menu information"),
+):
+    if not Features.exists(feature_name):
+        return menu_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    try:
+        menu_handler = ContextMenuHandler(
+            feature.contents.get("menu", menu_info.menu_name)()
+        )
+    except KeyError as key_error:
+        return menu_responses(response, 404)(
+            message=f"{key_error} not found in '{feature_name}' feature menu handlers"
+        )
+    except Exception as exception:
+        print(exception)
+        return menu_responses(response, 409)(message=str(exception))
+
+    try:
+        feature.popup_context_menu(menu_info.frame_id, menu_handler.menu)
+    except Exception as exception:
+        return menu_responses(response, 409)(message=str(exception))
+
+    return menu_responses(response, 200)(menu_info.model_dump())
+
+
+# ---------------------------------------------- - - -
 # FEATURE DBUS MENU
 #
 
@@ -372,7 +477,7 @@ dbus_menu_responses = ModelResponses(
     description="Popup Dbus menu",
     responses=dbus_menu_responses.responses,
 )
-async def get_action(
+async def popup_dbus_menu(
     response: Response,
     feature_name: str = Path(description="Feature name"),
     menu_info: DbusMenuInfo = Body(description="Dbus menu information"),

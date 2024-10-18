@@ -1,17 +1,17 @@
-from vx_gtk import Gtk
+from .Gtk_imports import GLib, Gtk
 from typing import Callable, TypedDict, Literal, Dict, Union
 
-type Separator = Literal["separator"]
+type MenuSeparator = Literal["separator"]
 
-type Menu = Dict[str, Union[MenuItem, Separator]]
+type ContextMenu = Dict[str, Union[MenuItem, MenuSeparator]]
 
 
 class MenuItem(TypedDict):
     icon: str
-    entry: Callable[[], None] | Menu
+    entry: Callable[[], None] | ContextMenu
 
 
-test: Menu = {"Open": {"entry": lambda: print("Open")}}
+test: ContextMenu = {"Open": {"entry": lambda: print("Open")}}
 
 
 def get_item_with_icon(label: str, icon_name: str):
@@ -60,41 +60,27 @@ def new_separator_menu_item():
     return separator
 
 
-class ContextMenu:
-    def __init__(self):
-        self.menu = Gtk.Menu()
+def get_gtk_menu(object: ContextMenu):
+    menu = Gtk.Menu()
+
+    for key, value in object.items():
+        if value == "separator":
+            menu.append(new_separator_menu_item())
+        else:
+            label = key
+            icon_name = value.get("icon")
+            entry = value.get("entry")
+
+            if callable(entry):
+                menu.append(new_menu_item(label, entry, icon_name))
+
+            if isinstance(entry, dict):
+                menu.append(new_submenu_item(label, get_gtk_menu(entry), icon_name))
+
+    return menu
+
+
+class ContextMenuHandler:
+    def __init__(self, context_menu_object: ContextMenu):
+        self.menu = get_gtk_menu(context_menu_object)
         self.menu.show()
-
-    def add_item(
-        self,
-        label: str,
-        icon_name: str = None,
-        end_separator: bool = False,
-    ):
-        def decorator(callback: Callable[[], None]):
-            self.menu.append(new_menu_item(label, callback, icon_name))
-
-            if end_separator:
-                self.menu.append(new_separator_menu_item())
-
-            return callback
-
-        return decorator
-
-    def add_submenu(
-        self,
-        label: str,
-        icon_name: str = None,
-        end_separator: bool = False,
-    ):
-        def decorator(callback: Callable[[], ContextMenu]):
-            submenu = callback().menu
-
-            self.menu.append(new_submenu_item(label, submenu, icon_name))
-
-            if end_separator:
-                self.menu.append(new_separator_menu_item())
-
-            return callback
-
-        return decorator

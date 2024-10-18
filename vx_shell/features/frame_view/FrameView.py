@@ -1,5 +1,4 @@
 from vx_features import ParamDataHandler
-from vx_root.root_utils.classes import ContextMenu
 from vx_systray import SysTrayState
 from vx_gtk import GLib, Gtk, Gdk
 from .webview import webview
@@ -33,6 +32,18 @@ class FrameView:
             f"{feature_name}.frames.{frame_id}.route"
         )
         self.last_webview_press_event = None
+        self.tooltip_text: str = None
+
+        def on_query_tooltip(widget, x, y, keyboard_mode, tooltip: Gtk.Tooltip):
+            if self.tooltip_text:
+                tooltip.set_text(self.tooltip_text)
+
+                def process():
+                    self.tooltip_text = None
+
+                GLib.timeout_add(1000, process)
+
+                return True
 
         def on_webview_press_event(widget, event):
             self.last_webview_press_event = event.copy()
@@ -90,6 +101,8 @@ class FrameView:
                     ParamDataHandler.get_value(f"{feature_name}.frames.{frame_id}.name")
                 )
 
+            self.webview.set_has_tooltip(True)
+            self.webview.connect("query-tooltip", on_query_tooltip)
             self.webview.connect("button-press-event", on_webview_press_event)
             self.frame.realize()
 
@@ -122,9 +135,9 @@ class FrameView:
 
         GLib.idle_add(process)
 
-    def popup_context_menu(self, context_menu: ContextMenu):
+    def popup_context_menu(self, menu: Gtk.Menu):
         def process():
-            context_menu.menu.popup_at_pointer(self.last_webview_press_event)
+            menu.popup_at_pointer(self.last_webview_press_event)
 
         GLib.idle_add(process)
 
@@ -134,6 +147,13 @@ class FrameView:
                 SysTrayState.menus[service_name].popup_at_pointer(
                     self.last_webview_press_event
                 )
+
+        GLib.idle_add(process)
+
+    def show_tooltip(self, text: str):
+        def process():
+            self.tooltip_text = text
+            self.webview.trigger_tooltip_query()
 
         GLib.idle_add(process)
 

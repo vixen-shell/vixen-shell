@@ -1,5 +1,5 @@
 from vx_features import ParamDataHandler
-from vx_root.root_utils.classes import ContextMenu
+from vx_gtk import Gtk
 from typing import Dict, List
 from .frame_view import FrameView
 
@@ -22,11 +22,14 @@ class FrameHandler:
     def close(self, id: str):
         self.frames[id].hide()
 
-    def popup_context_menu(self, frame_id: str, context_menu: ContextMenu):
-        self.frames[frame_id].popup_context_menu(context_menu)
+    def popup_context_menu(self, frame_id: str, menu: Gtk.Menu):
+        self.frames[frame_id].popup_context_menu(menu)
 
     def popup_dbus_menu(self, frame_id: str, service_name: str):
         self.frames[frame_id].popup_dbus_menu(service_name)
+
+    def show_tooltip(self, frame_id: str, text: str):
+        self.frames[frame_id].show_tooltip(text)
 
     def cleanup(self):
         for frame in self.frames.values():
