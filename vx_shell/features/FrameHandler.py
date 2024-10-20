@@ -28,9 +28,6 @@ class FrameHandler:
     def popup_dbus_menu(self, frame_id: str, service_name: str):
         self.frames[frame_id].popup_dbus_menu(service_name)
 
-    def show_tooltip(self, frame_id: str, text: str):
-        self.frames[frame_id].show_tooltip(text)
-
     def cleanup(self):
         for frame in self.frames.values():
             frame.hide()

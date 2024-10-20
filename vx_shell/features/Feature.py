@@ -151,7 +151,3 @@ class Feature:
     @check_is_started(True)
     def popup_dbus_menu(self, frame_id: str, service_name: str):
         self.frames.popup_dbus_menu(frame_id, service_name)
-
-    @check_is_started(True)
-    def show_tooltip(self, frame_id: str, text: str):
-        self.frames.show_tooltip(frame_id, text)

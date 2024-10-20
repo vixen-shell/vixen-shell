@@ -348,52 +348,6 @@ async def get_action(
 
 
 # ---------------------------------------------- - - -
-# FEATURE TOOLTIP
-#
-
-
-class TooltipInfo(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    frame_id: str
-    text: str
-
-
-tooltip_responses = ModelResponses(
-    {
-        200: dict,
-        404: Models.Commons.Error,
-        409: Models.Commons.Error,
-    }
-)
-
-
-@api.post(
-    "/feature/{feature_name}/tooltip",
-    description="Show tooltip",
-    responses=tooltip_responses.responses,
-)
-async def show_tooltip(
-    response: Response,
-    feature_name: str = Path(description="Feature name"),
-    tooltip_info: TooltipInfo = Body(description="Menu information"),
-):
-    if not Features.exists(feature_name):
-        return tooltip_responses(response, 404)(
-            message=f"Feature '{feature_name}' not found"
-        )
-
-    feature = Features.get(feature_name)
-
-    try:
-        feature.show_tooltip(tooltip_info.frame_id, tooltip_info.text)
-    except Exception as exception:
-        return menu_responses(response, 409)(message=str(exception))
-
-    return menu_responses(response, 200)(tooltip_info.model_dump())
-
-
-# ---------------------------------------------- - - -
 # FEATURE MENU
 #
 

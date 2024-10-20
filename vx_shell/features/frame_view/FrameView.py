@@ -32,18 +32,6 @@ class FrameView:
             f"{feature_name}.frames.{frame_id}.route"
         )
         self.last_webview_press_event = None
-        self.tooltip_text: str = None
-
-        def on_query_tooltip(widget, x, y, keyboard_mode, tooltip: Gtk.Tooltip):
-            if self.tooltip_text:
-                tooltip.set_text(self.tooltip_text)
-
-                def process():
-                    self.tooltip_text = None
-
-                GLib.timeout_add(1000, process)
-
-                return True
 
         def on_webview_press_event(widget, event):
             self.last_webview_press_event = event.copy()
@@ -102,7 +90,6 @@ class FrameView:
                 )
 
             self.webview.set_has_tooltip(True)
-            self.webview.connect("query-tooltip", on_query_tooltip)
             self.webview.connect("button-press-event", on_webview_press_event)
             self.frame.realize()
 
@@ -147,13 +134,6 @@ class FrameView:
                 SysTrayState.menus[service_name].popup_at_pointer(
                     self.last_webview_press_event
                 )
-
-        GLib.idle_add(process)
-
-    def show_tooltip(self, text: str):
-        def process():
-            self.tooltip_text = text
-            self.webview.trigger_tooltip_query()
 
         GLib.idle_add(process)
 
