@@ -86,7 +86,7 @@ class Tray:
         elif "Title" in changed_properties:
             tooltip = item.properties["Title"]
 
-        if "Status" in item.properties:
+        if "Status" in changed_properties:
             status = item.properties["Status"].lower()
 
         self.items[full_service_name]["icon_name"] = icon_name
