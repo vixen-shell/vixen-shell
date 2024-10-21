@@ -40,6 +40,7 @@ async def vixen_state_socket(websocket: WebSocket):
     await websocket.accept()
 
     VxConfig.websockets.append(websocket)
+    Logger.log(f'({len(VxConfig.websockets)}) - "WebSocket /vx_state" [connected]')
 
     async def dispatch_event(event: OutputEvent):
         for websocket in VxConfig.websockets:
@@ -123,6 +124,9 @@ async def vixen_state_socket(websocket: WebSocket):
 
     except:
         VxConfig.websockets.remove(websocket)
+        Logger.log(
+            f'({len(VxConfig.websockets)}) - "WebSocket /vx_state" [disconnected]'
+        )
 
 
 # ---------------------------------------------- - - -
@@ -139,7 +143,11 @@ class InputSysTrayEvent(BaseModel):
 @api.websocket("/vx_systray")
 async def vixen_systray_socket(websocket: WebSocket):
     await websocket.accept()
+
     SysTrayState.websockets.append(websocket)
+    Logger.log(
+        f'({len(SysTrayState.websockets)}) - "WebSocket /vx_systray" [connected]'
+    )
 
     try:
         while True:
@@ -160,3 +168,6 @@ async def vixen_systray_socket(websocket: WebSocket):
                 )
     except:
         SysTrayState.websockets.remove(websocket)
+        Logger.log(
+            f'({len(SysTrayState.websockets)}) - "WebSocket /vx_systray" [disconnected]'
+        )

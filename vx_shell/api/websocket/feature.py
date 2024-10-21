@@ -1,5 +1,5 @@
 import asyncio
-from typing import TypedDict, Optional, Callable
+from typing import TypedDict, Optional, Callable, Literal, Union
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict
@@ -119,6 +119,12 @@ async def feature_sockets(
 #
 
 
+class IntervalModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    interval: float
+
+
 class DataHandlerModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -126,18 +132,11 @@ class DataHandlerModel(BaseModel):
     args: list = []
 
 
-class DataStreamerModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    data_handlers: list[DataHandlerModel]
-    interval: float = 1
-
-
 class InputDataStreamEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    id: str
-    data: DataStreamerModel
+    id: Literal["SET_INTERVAL", "ADD_HANDLER"]
+    data: Union[IntervalModel, DataHandlerModel]
 
 
 class DataHandler:
@@ -153,10 +152,8 @@ class DataHandler:
             raise exception
 
 
-@api.websocket("/feature/{feature_name}/data_streamer/{target_feature_name}")
-async def feature_data_streamer(
-    websocket: WebSocket, feature_name: str, target_feature_name: str
-):
+@api.websocket("/feature/{feature_name}/data_streamer")
+async def feature_data_streamer(websocket: WebSocket, feature_name: str):
     await websocket.accept()
 
     async def revoke_websocket(message: str):
@@ -168,48 +165,44 @@ async def feature_data_streamer(
     except Exception as exception:
         return await revoke_websocket(str(exception))
 
-    try:
-        target_feature = get_feature(target_feature_name)
-    except Exception as exception:
-        return await revoke_websocket(str(exception))
-
     feature.feature_websockets.append(websocket)
+
+    data_handlers: dict[str, DataHandler] = {}
+    interval: float = 1
+
+    async def stream_loop():
+        try:
+            while True:
+                data = {}
+                current_handlers = data_handlers.copy()
+
+                for name, handler in current_handlers.items():
+                    data[name] = handler.get_data()
+
+                await websocket.send_json(OutputEvent(id="UPDATE", data=data))
+                await asyncio.sleep(interval)
+        except asyncio.CancelledError:
+            pass
+        except:
+            raise
+
+    stream_task = asyncio.create_task(stream_loop())
 
     try:
         while True:
             try:
                 input_event = InputDataStreamEvent(**await websocket.receive_json())
 
-                if input_event.id == "INIT":
-                    init_data = input_event.data
+                if input_event.id == "SET_INTERVAL":
+                    interval = input_event.data.interval
 
-                    data_handlers: dict[str, DataHandler] = {}
-                    for data_handler in init_data.data_handlers:
-                        data_handlers[data_handler.name] = DataHandler(
-                            target_feature.contents.get("data", data_handler.name),
-                            data_handler.args,
-                        )
+                if input_event.id == "ADD_HANDLER":
+                    data_handler = input_event.data
 
-                    interval = init_data.interval
-
-                    while True:
-                        data = {}
-
-                        for name, handler in data_handlers.items():
-                            data[name] = handler.get_data()
-
-                        await websocket.send_json(OutputEvent(id="UPDATE", data=data))
-                        await asyncio.sleep(interval)
-
-            except KeyError as key_error:
-                await websocket.send_json(
-                    OutputEvent(
-                        id="ERROR",
-                        data={
-                            "message": f"{key_error} not found in '{target_feature_name}' feature data handlers"
-                        },
+                    data_handlers[data_handler.name] = DataHandler(
+                        feature.contents.get("data", data_handler.name),
+                        data_handler.args,
                     )
-                )
 
             except Exception as exception:
                 await websocket.send_json(
@@ -221,3 +214,4 @@ async def feature_data_streamer(
 
     except:
         feature.feature_websockets.remove(websocket)
+        stream_task.cancel()

@@ -167,6 +167,44 @@ async def set_feature_param(
 
 
 # ---------------------------------------------- - - -
+# FEATURE SAVE PARAMS
+#
+
+save_params_responses = ModelResponses(
+    {200: dict, 404: Models.Commons.Error, 409: Models.Commons.Error}
+)
+
+
+@api.get(
+    "/feature/{feature_name}/save_params",
+    description="Save feature params",
+    responses=save_params_responses.responses,
+)
+async def save_feature_params(
+    response: Response,
+    feature_name: str = Path(description="Feature name"),
+):
+    if not Features.exists(feature_name):
+        return save_params_responses(response, 404)(
+            message=f"Feature '{feature_name}' not found"
+        )
+
+    feature = Features.get(feature_name)
+
+    if not feature.is_started:
+        return save_params_responses(response, 409)(
+            message=f"Feature '{feature_name}' is not started"
+        )
+
+    try:
+        ParamDataHandler.save_params(feature_name)
+    except Exception as exception:
+        return save_params_responses(response, 409)(message=str(exception))
+
+    return save_params_responses(response, 200)({"feature_name": feature_name})
+
+
+# ---------------------------------------------- - - -
 # FEATURE DATA
 #
 
