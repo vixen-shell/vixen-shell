@@ -124,6 +124,10 @@ class StatusNotifierItem(object):
             self.item_proxy.NewStatus.connect(
                 lambda _status: self.change_handler(["Status"])
             )
+        if hasattr(self.item_proxy, "NewToolTip"):
+            self.item_proxy.NewToolTip.connect(lambda: self.change_handler(["ToolTip"]))
+        if hasattr(self.item_proxy, "NewTooltip"):
+            self.item_proxy.NewTooltip.connect(lambda: self.change_handler(["Tooltip"]))
         for name in PROPERTIES:
             try:
                 self.properties[name] = getattr(self.item_proxy, name)
