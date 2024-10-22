@@ -220,12 +220,14 @@ feature_data_responses = ModelResponses(
 class DataHandlerModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str
-    args: list = []
+    data_name: str
+    handler_name: str
+    handler_args: list = []
 
 
 class DataHandler:
-    def __init__(self, handler, handler_args: list = []):
+    def __init__(self, data_name: str, handler, handler_args: list = []):
+        self.data_name = data_name
         self.handler = handler
         self.handler_args = handler_args
 
@@ -245,9 +247,7 @@ class DataHandler:
 async def get_data(
     response: Response,
     feature_name: str = Path(description="Feature name"),
-    data_handlers: list[DataHandlerModel] = Body(
-        description="Data handlers information"
-    ),
+    data_handler: DataHandlerModel = Body(description="Data handler information"),
 ):
     if not Features.exists(feature_name):
         return feature_data_responses(response, 404)(
@@ -256,29 +256,27 @@ async def get_data(
 
     feature = Features.get(feature_name)
 
-    handlers: dict[str, DataHandler] = {}
-    for handler in data_handlers:
-        try:
-            handlers[handler.name] = DataHandler(
-                feature.contents.get("data", handler.name),
-                handler.args,
-            )
-        except KeyError as key_error:
-            return feature_data_responses(response, 404)(
-                message=f"{key_error} not found in '{feature_name}' feature data handlers"
-            )
-        except Exception as exception:
-            return feature_data_responses(response, 409)(message=str(exception))
-
-    custom_data = {}
-
     try:
-        for name, handler in handlers.items():
-            custom_data[name] = handler.get_data()
+        handler = DataHandler(
+            data_handler.data_name,
+            feature.contents.get("data", data_handler.handler_name),
+            data_handler.handler_args,
+        )
+    except KeyError as key_error:
+        return feature_data_responses(response, 404)(
+            message=f"{key_error} not found in '{feature_name}' feature data handlers"
+        )
     except Exception as exception:
         return feature_data_responses(response, 409)(message=str(exception))
 
-    return feature_data_responses(response, 200)(**custom_data)
+    data = {}
+
+    try:
+        data[handler.data_name] = handler.get_data()
+    except Exception as exception:
+        return feature_data_responses(response, 409)(message=str(exception))
+
+    return feature_data_responses(response, 200)(**data)
 
 
 # ---------------------------------------------- - - -

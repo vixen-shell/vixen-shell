@@ -128,8 +128,9 @@ class IntervalModel(BaseModel):
 class DataHandlerModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str
-    args: list = []
+    data_name: str
+    handler_name: str
+    handler_args: list = []
 
 
 class InputDataStreamEvent(BaseModel):
@@ -140,7 +141,8 @@ class InputDataStreamEvent(BaseModel):
 
 
 class DataHandler:
-    def __init__(self, handler, handler_args: list = []):
+    def __init__(self, data_name: str, handler, handler_args: list = []):
+        self.data_name = data_name
         self.handler = handler
         self.handler_args = handler_args
 
@@ -167,7 +169,7 @@ async def feature_data_streamer(websocket: WebSocket, feature_name: str):
 
     feature.feature_websockets.append(websocket)
 
-    data_handlers: dict[str, DataHandler] = {}
+    data_handlers: list[DataHandler] = []
     interval: float = 1
 
     async def stream_loop():
@@ -176,8 +178,8 @@ async def feature_data_streamer(websocket: WebSocket, feature_name: str):
                 data = {}
                 current_handlers = data_handlers.copy()
 
-                for name, handler in current_handlers.items():
-                    data[name] = handler.get_data()
+                for handler in current_handlers:
+                    data[handler.data_name] = handler.get_data()
 
                 await websocket.send_json(OutputEvent(id="UPDATE", data=data))
                 await asyncio.sleep(interval)
@@ -199,9 +201,12 @@ async def feature_data_streamer(websocket: WebSocket, feature_name: str):
                 if input_event.id == "ADD_HANDLER":
                     data_handler = input_event.data
 
-                    data_handlers[data_handler.name] = DataHandler(
-                        feature.contents.get("data", data_handler.name),
-                        data_handler.args,
+                    data_handlers.append(
+                        DataHandler(
+                            data_handler.data_name,
+                            feature.contents.get("data", data_handler.handler_name),
+                            data_handler.handler_args,
+                        )
                     )
 
             except Exception as exception:
