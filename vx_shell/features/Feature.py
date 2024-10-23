@@ -1,10 +1,13 @@
 import asyncio
+from typing import Literal
 from vx_features import (
     ParamDataHandler,
     RootContents,
     RootFeature,
 )
 from fastapi import WebSocket
+from vx_config import VxConfig
+from vx_systray import SysTrayState
 from vx_gtk import Gtk
 from vx_logger import Logger
 from .FrameHandler import FrameHandler
@@ -42,8 +45,10 @@ class Feature:
         self.required_features = RootFeature(feature_name).required_features
         self.lifespan = RootFeature(feature_name).lifespan
         # -------------------------------------------- - - -
-        # self.state_websockets: list[WebSocket] = []
         self.feature_websockets: list[WebSocket] = []
+        self.state_websockets: list[WebSocket] = []
+        self.systray_websockets: list[WebSocket] = []
+        # -------------------------------------------- - - -
         self.frames = FrameHandler(feature_name=feature_name)
         self.is_started = False
         # -------------------------------------------- - - -
@@ -53,15 +58,55 @@ class Feature:
         ):
             self.start()
 
-    @property
     @check_is_started(True)
-    def frame_ids(self):
-        return self.frames.frame_ids
+    def attach_websocket(
+        self, type: Literal["feature", "state", "systray"], websocket: WebSocket
+    ):
+        websockets: list[WebSocket] = getattr(self, f"{type}_websockets")
+        websockets.append(websocket)
 
-    @property
+        if type == "state":
+            VxConfig.websockets.append(websocket)
+
+        if type == "systray":
+            SysTrayState.websockets.append(websocket)
+
     @check_is_started(True)
-    def active_frame_ids(self):
-        return self.frames.active_frame_ids
+    async def detach_websocket(
+        self, type: Literal["feature", "state", "systray"], websocket: WebSocket
+    ):
+        try:
+            await websocket.close()
+        except:
+            pass
+
+        websockets: list[WebSocket] = getattr(self, f"{type}_websockets")
+        websockets.remove(websocket)
+
+        if type == "state":
+            VxConfig.websockets.remove(websocket)
+
+        if type == "systray":
+            SysTrayState.websockets.remove(websocket)
+
+    @check_is_started(True)
+    async def cleanup_websockets(self):
+        async def close_websockets(websockets: list[WebSocket]):
+            for websocket in websockets:
+                try:
+                    await websocket.close()
+                except:
+                    pass
+
+        await close_websockets(self.feature_websockets.copy())
+        await close_websockets(self.state_websockets.copy())
+        await close_websockets(self.systray_websockets.copy())
+
+        for websocket in self.state_websockets:
+            VxConfig.websockets.remove(websocket)
+
+        for websocket in self.systray_websockets:
+            SysTrayState.websockets.remove(websocket)
 
     @check_is_started(False)
     def start(self):
@@ -126,10 +171,7 @@ class Feature:
         except Exception as exception:
             Logger.log_exception(exception)
 
-        feature_websockets = self.feature_websockets.copy()
-        for websocket in feature_websockets:
-            await websocket.close()
-
+        await self.cleanup_websockets()
         self.frames.cleanup()
 
         self.is_started = False
@@ -151,3 +193,13 @@ class Feature:
     @check_is_started(True)
     def popup_dbus_menu(self, frame_id: str, service_name: str):
         self.frames.popup_dbus_menu(frame_id, service_name)
+
+    @property
+    @check_is_started(True)
+    def frame_ids(self):
+        return self.frames.frame_ids
+
+    @property
+    @check_is_started(True)
+    def active_frame_ids(self):
+        return self.frames.active_frame_ids

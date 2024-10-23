@@ -1,8 +1,10 @@
-import asyncio
+import asyncio, json
 from typing import TypedDict, Optional, Callable, Literal, Union
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketDisconnect
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
+from vx_config import VxConfig
+from vx_systray import SysTrayState
 from vx_logger import Logger
 from vx_root.root_utils.classes import SocketHandler
 from ..api import api
@@ -37,14 +39,184 @@ def get_feature(feature_name: str):
 
 
 # ---------------------------------------------- - - -
+# FEATURE STATE SOCKET
+#
+
+
+class InputStateEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    data: dict = None
+
+
+@api.websocket("/feature/{feature_name}/state")
+async def vixen_state_socket(websocket: WebSocket, feature_name: str):
+    await websocket.accept()
+
+    async def revoke_websocket(e: Exception):
+        Logger.log_exception(e)
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": str(e)}))
+        await websocket.close(reason=str(e))
+
+    try:
+        feature = get_feature(feature_name)
+    except Exception as exception:
+        return await revoke_websocket(exception)
+
+    feature.attach_websocket("state", websocket)
+    Logger.log(
+        f'(State WebSockets: {len(VxConfig.websockets)}) - "/feature/{feature_name}/state" [connected]'
+    )
+
+    async def dispatch_event(event: OutputEvent):
+        for websocket in VxConfig.websockets:
+            await websocket.send_json(event)
+
+    try:
+        while True:
+            try:
+                input_event = InputStateEvent(**await websocket.receive_json())
+
+                if input_event.id == "GET":
+                    if not input_event.data:
+                        raise ErrorEvent("GET", "Missing item data")
+
+                    key = input_event.data.get("key")
+                    if not key:
+                        raise ErrorEvent("GET", "Missing item key")
+
+                    if not key in VxConfig.STATE:
+                        raise ErrorEvent(
+                            event="GET",
+                            message="Key not found",
+                            data={"key": key},
+                        )
+
+                    await dispatch_event(
+                        OutputEvent(
+                            id="UPDATE",
+                            data={
+                                "key": key,
+                                "value": VxConfig.STATE[key],
+                            },
+                        )
+                    )
+
+                if input_event.id == "SET":
+                    if not input_event.data:
+                        raise ErrorEvent("SET", "Missing item data")
+
+                    key = input_event.data.get("key")
+                    if not key:
+                        raise ErrorEvent("SET", "Missing item key")
+
+                    if not key in VxConfig.STATE:
+                        raise ErrorEvent(
+                            event="SET",
+                            message="Key not found",
+                            data={"key": key},
+                        )
+
+                    VxConfig.STATE[key] = input_event.data.get("value")
+
+                    await dispatch_event(
+                        OutputEvent(
+                            id="UPDATE",
+                            data={"key": key, "value": input_event.data.get("value")},
+                        )
+                    )
+
+                if input_event.id == "SAVE":
+                    VxConfig.save()
+                    await dispatch_event(OutputEvent(id="SAVE", data=VxConfig.STATE))
+
+            except ErrorEvent as error_event:
+                Logger.log(
+                    f"[State socket]: {error_event.data}",
+                    "WARNING",
+                )
+                await websocket.send_json(
+                    OutputEvent(id="ERROR", data=error_event.data)
+                )
+
+            except ValidationError as exception:
+                Logger.log(
+                    f"[State socket]: {str(exception)}",
+                    "WARNING",
+                )
+                await websocket.send_json(
+                    OutputEvent(id="ERROR", data=json.loads(exception.json()))
+                )
+
+    except:
+        await feature.detach_websocket("state", websocket)
+        Logger.log(
+            f'(State WebSockets: {len(VxConfig.websockets)}) - "/feature/{feature_name}/state" [disconnected]'
+        )
+
+
+# ---------------------------------------------- - - -
+# FEATURE SYSTRAY SOCKET
+#
+
+
+class InputSysTrayEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+
+
+@api.websocket("/feature/{feature_name}/systray")
+async def vixen_systray_socket(websocket: WebSocket, feature_name: str):
+    await websocket.accept()
+
+    async def revoke_websocket(e: Exception):
+        Logger.log_exception(e)
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": str(e)}))
+        await websocket.close(reason=str(e))
+
+    try:
+        feature = get_feature(feature_name)
+    except Exception as exception:
+        return await revoke_websocket(exception)
+
+    feature.attach_websocket("systray", websocket)
+    Logger.log(
+        f'(SysTray WebSockets: {len(SysTrayState.websockets)}) - "/feature/{feature_name}/systray" [connected]'
+    )
+
+    try:
+        while True:
+            try:
+                input_event = InputSysTrayEvent(**await websocket.receive_json())
+
+                if input_event.id == "UPDATE":
+                    await websocket.send_json(
+                        {"id": "UPDATE", "data": {"systray": SysTrayState.state}}
+                    )
+            except ValidationError as exception:
+                Logger.log(
+                    f"[SysTray socket]: {str(exception)}",
+                    "WARNING",
+                )
+                await websocket.send_json(
+                    OutputEvent(id="ERROR", data=json.loads(exception.json()))
+                )
+    except:
+        await feature.detach_websocket("systray", websocket)
+        Logger.log(
+            f'(SysTray WebSockets: {len(SysTrayState.websockets)}) - "/feature/{feature_name}/systray" [disconnected]'
+        )
+
+
+# ---------------------------------------------- - - -
 # FEATURE SOCKETS
 #
 
 
-@api.websocket("/feature/{feature_name}/sockets/{target_feature_name}/{handler_name}")
-async def feature_sockets(
-    websocket: WebSocket, feature_name: str, target_feature_name: str, handler_name: str
-):
+@api.websocket("/feature/{feature_name}/sockets/{handler_name}")
+async def feature_sockets(websocket: WebSocket, feature_name: str, handler_name: str):
     await websocket.accept()
 
     async def revoke_websocket(e: Exception):
@@ -58,12 +230,7 @@ async def feature_sockets(
         return await revoke_websocket(exception)
 
     try:
-        target_feature = get_feature(target_feature_name)
-    except Exception as exception:
-        return await revoke_websocket(exception)
-
-    try:
-        handler_func: Callable = target_feature.contents.get("socket", handler_name)
+        handler_func: Callable = feature.contents.get("socket", handler_name)
         type_msg_error = "The handler must be a function that returns an instance of class 'SocketHandler'"
 
         if not callable(handler_func):
@@ -77,7 +244,7 @@ async def feature_sockets(
     except KeyError as key_error:
         return await revoke_websocket(
             Exception(
-                f"{key_error} not found in '{target_feature_name}' feature websocket handlers"
+                f"{key_error} not found in '{feature_name}' feature websocket handlers"
             )
         )
 
@@ -87,7 +254,10 @@ async def feature_sockets(
     except Exception as exception:
         return await revoke_websocket(exception)
 
-    feature.feature_websockets.append(websocket)
+    feature.attach_websocket("feature", websocket)
+    Logger.log(
+        f'(Feature WebSockets: {len(feature.feature_websockets)}) - "/feature/{feature_name}/sockets/{handler_name}" [connected]'
+    )
 
     try:
         try:
@@ -111,7 +281,10 @@ async def feature_sockets(
         except Exception as exception:
             Logger.log_exception(exception)
 
-        feature.feature_websockets.remove(websocket)
+        await feature.detach_websocket("feature", websocket)
+        Logger.log(
+            f'(Feature WebSockets: {len(feature.feature_websockets)}) - "/feature/{feature_name}/sockets/{handler_name}" [disconnected]'
+        )
 
 
 # ---------------------------------------------- - - -
@@ -167,7 +340,10 @@ async def feature_data_streamer(websocket: WebSocket, feature_name: str):
     except Exception as exception:
         return await revoke_websocket(str(exception))
 
-    feature.feature_websockets.append(websocket)
+    feature.attach_websocket("feature", websocket)
+    Logger.log(
+        f'(Feature WebSockets: {len(feature.feature_websockets)}) - "/feature/{feature_name}/data_streamer" [connected]'
+    )
 
     data_handlers: list[DataHandler] = []
     interval: float = 1
@@ -218,5 +394,8 @@ async def feature_data_streamer(websocket: WebSocket, feature_name: str):
                 )
 
     except:
-        feature.feature_websockets.remove(websocket)
+        await feature.detach_websocket("feature", websocket)
+        Logger.log(
+            f'(Feature WebSockets: {len(feature.feature_websockets)}) - "/feature/{feature_name}/data_streamer" [disconnected]'
+        )
         stream_task.cancel()

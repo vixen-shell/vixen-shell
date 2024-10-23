@@ -11,7 +11,14 @@ class VxConfig:
     FRONT_PORT: int = 6492
     FRONT_DEV_PORT: int = 5173
 
-    STATE: dict = {"vx_ui_scale": 1.0, "vx_ui_color": "teal", "vx_ui_icons": "regular"}
+    STATE: dict = {
+        "vx_ui_scale": 1.0,
+        "vx_ui_color_scheme": None,
+        "vx_ui_color": "teal",
+        "vx_ui_icons": "regular",
+        "vx_ui_font_family": None,
+        "vx_ui_font_family_monospace": None,
+    }
 
     @staticmethod
     def gtk_fonts():

@@ -104,7 +104,6 @@ class SysTrayObserver:
                         SysTrayState.handle_event(json.loads(line))
 
                 except Exception as e:
-                    print(data.decode())
                     Logger.log(f"[Systray]: Error in listener thread: {e}")
                     break
 
