@@ -39,7 +39,7 @@ class Features:
         if not feature:
             raise KeyError(f"'{name}' feature not found")
 
-        if feature.is_started:
+        if feature.is_started or feature.is_active:
             await feature.stop()
 
         del Features.dict[name]

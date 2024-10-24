@@ -37,6 +37,22 @@ class Feature:
 
         return decorator
 
+    def check_is_active(value: bool):
+        def decorator(method):
+            def wrapper(self, *args, **kwargs):
+                if bool(self.is_active or self.is_started) == value:
+                    return method(self, *args, **kwargs)
+                else:
+                    raise ValueError(
+                        f"[{self.feature_name}]: Feature is not started"
+                        if value
+                        else f"[{self.feature_name}]: Feature is already {'started' if self.is_started else 'waiting to start'}"
+                    )
+
+            return wrapper
+
+        return decorator
+
     def __init__(self, feature_name: str, dev_mode: bool):
         self.feature_name = feature_name
         self.dev_mode = dev_mode
@@ -50,6 +66,7 @@ class Feature:
         self.systray_websockets: list[WebSocket] = []
         # -------------------------------------------- - - -
         self.frames = FrameHandler(feature_name=feature_name)
+        self.is_active = False
         self.is_started = False
         # -------------------------------------------- - - -
         if (
@@ -108,60 +125,69 @@ class Feature:
         for websocket in self.systray_websockets:
             SysTrayState.websockets.remove(websocket)
 
-    @check_is_started(False)
+    async def startup_handler(self):
+        from .Features import Features
+
+        def feature_is_started(feature_name: str):
+            def is_started():
+                feature = Features.get(feature_name)
+                return bool(feature and feature.is_started)
+
+            return is_started
+
+        required_features_state = [
+            feature_is_started(feature_name) for feature_name in self.required_features
+        ]
+
+        while self.is_active:
+            required_features_are_started = all(f() for f in required_features_state)
+
+            if not required_features_are_started and self.is_started:
+                await self.__stop()
+
+            if required_features_are_started and not self.is_started:
+                self.__start()
+
+            await asyncio.sleep(0.25)
+
+        if self.is_started:
+            await self.__stop()
+
+    @check_is_active(False)
     def start(self):
-        async def process():
-            if self.required_features:
-                from .Features import Features
+        if self.required_features:
+            self.is_active = True
+            asyncio.create_task(self.startup_handler())
+        else:
+            self.__start()
 
-                def get_expected_deps():
-                    deps: list[str] = self.required_features.copy()
+    @check_is_active(True)
+    async def stop(self):
+        if self.is_active:
+            self.is_active = False
+        else:
+            await self.__stop()
 
-                    for dep_name in self.required_features:
-                        dep_feature = Features.get(dep_name)
+    @check_is_started(False)
+    def __start(self):
+        try:
+            startup = self.lifespan.startup_sequence()
+        except Exception as exception:
+            Logger.log_exception(exception)
 
-                        if bool(dep_feature and dep_feature.is_started):
-                            if dep_name in deps:
-                                deps.remove(dep_name)
-
-                    return deps
-
-                expected_deps = get_expected_deps()
-
-                if expected_deps:
-                    Logger.log(f"[{self.feature_name}]: await {expected_deps}")
-
-                while expected_deps:
-                    check_deps = get_expected_deps()
-
-                    if check_deps != expected_deps:
-                        expected_deps = check_deps
-
-                        if expected_deps:
-                            Logger.log(f"[{self.feature_name}]: await {expected_deps}")
-
-                    await asyncio.sleep(0.5)
-
-            try:
-                startup = self.lifespan.startup_sequence()
-            except Exception as exception:
-                Logger.log_exception(exception)
-
-            if startup == True:
-                self.frames.init(self.dev_mode)
-                self.is_started = True
-                Logger.log(f"[{self.feature_name}]: feature started")
-            else:
-                Logger.log(
-                    f"[{self.feature_name}]: startup sequence return 'False'. "
-                    "Unable to start feature!",
-                    "WARNING",
-                )
-
-        asyncio.create_task(process())
+        if startup == True:
+            self.frames.init(self.dev_mode)
+            self.is_started = True
+            Logger.log(f"[{self.feature_name}]: feature started")
+        else:
+            Logger.log(
+                f"[{self.feature_name}]: startup sequence return 'False'. "
+                "Unable to start feature!",
+                "WARNING",
+            )
 
     @check_is_started(True)
-    async def stop(self) -> bool:
+    async def __stop(self) -> bool:
         try:
             if self.lifespan.shutdown_sequence() == False:
                 Logger.log(

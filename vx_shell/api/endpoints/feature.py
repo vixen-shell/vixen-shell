@@ -26,19 +26,17 @@ start_responses = ModelResponses(
 async def start_feature(
     response: Response, feature_name: str = Path(description="Feature name")
 ):
-    if not Features.exists(feature_name):
+    feature = Features.get(feature_name)
+
+    if not feature:
         return start_responses(response, 404)(
             message=f"Feature '{feature_name}' not found"
         )
 
-    feature = Features.get(feature_name)
-
-    if feature.is_started:
-        return start_responses(response, 409)(
-            message=f"Feature '{feature_name}' is already started"
-        )
-
-    feature.start()
+    try:
+        feature.start()
+    except ValueError as value_error:
+        return start_responses(response, 409)(message=str(value_error))
 
     return start_responses(response, 200)(name=feature_name)
 
@@ -60,19 +58,17 @@ stop_responses = ModelResponses(
 async def stop_feature(
     response: Response, feature_name: str = Path(description="Feature name")
 ):
-    if not Features.exists(feature_name):
+    feature = Features.get(feature_name)
+
+    if not feature:
         return stop_responses(response, 404)(
             message=f"Feature '{feature_name}' not found"
         )
 
-    feature = Features.get(feature_name)
-
-    if not feature.is_started:
-        return stop_responses(response, 409)(
-            message=f"Feature '{feature_name}' is not started"
-        )
-
-    await feature.stop()
+    try:
+        await feature.stop()
+    except ValueError as value_error:
+        return stop_responses(response, 409)(message=str(value_error))
 
     return stop_responses(response, 200)(name=feature_name, is_started=False)
 
@@ -135,7 +131,7 @@ class SetParamData(BaseModel):
 
 @api.post(
     "/feature/{feature_name}/set_param/{param_path}",
-    description="Get a feature param",
+    description="Set a feature param",
     responses=set_param_responses.responses,
 )
 async def set_feature_param(
