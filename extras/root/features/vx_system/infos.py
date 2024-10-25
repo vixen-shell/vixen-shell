@@ -1,7 +1,7 @@
 import os, psutil
 
 
-class SysInfos:
+class SystemInfos:
     @staticmethod
     def user_name() -> str:
         return os.getlogin()
@@ -10,6 +10,8 @@ class SysInfos:
     def user_directory() -> str:
         return os.path.expanduser("~")
 
+
+class SystemMetrics:
     @staticmethod
     def cpu_usage(percpu: bool = False) -> float | list[float]:
         return psutil.cpu_percent(percpu=percpu)
