@@ -128,6 +128,10 @@ class Feature:
     async def startup_handler(self):
         from .Features import Features
 
+        Logger.log(
+            f"[{self.feature_name}]: waiting for required features {self.required_features}"
+        )
+
         def feature_is_started(feature_name: str):
             def is_started():
                 feature = Features.get(feature_name)
@@ -143,12 +147,14 @@ class Feature:
             required_features_are_started = all(f() for f in required_features_state)
 
             if not required_features_are_started and self.is_started:
+                Logger.log(f"[{self.feature_name}]: waiting for required features")
                 await self.__stop()
 
             if required_features_are_started and not self.is_started:
+                Logger.log(f"[{self.feature_name}]: required features satisfied")
                 self.__start()
 
-            await asyncio.sleep(0.25)
+            await asyncio.sleep(0.5)
 
         if self.is_started:
             await self.__stop()
