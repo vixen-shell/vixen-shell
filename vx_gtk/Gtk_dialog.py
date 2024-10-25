@@ -2,7 +2,7 @@ from typing import Literal
 from .Gtk_imports import Gtk, GLib
 
 
-def show_dialog_box(
+def show_message_dialog(
     message: str, level: Literal["INFO", "WARNING"] = "INFO", title: str = "Vixen Shell"
 ):
     message_type = {"INFO": 0, "WARNING": 1}.get(level)

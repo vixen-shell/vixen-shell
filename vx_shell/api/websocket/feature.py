@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from vx_config import VxConfig
 from vx_systray import SysTrayState
 from vx_logger import Logger
-from vx_root.root_utils.classes import SocketHandler
+from vx_root import SocketHandler
 from ..api import api
 from ...features import Features
 
