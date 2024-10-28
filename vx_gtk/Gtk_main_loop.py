@@ -1,6 +1,6 @@
 import threading
 from vx_logger import Logger
-from .Gtk_imports import Gtk
+from .Gtk_imports import Gtk, GLib
 
 
 class GtkMainLoop:
@@ -13,6 +13,9 @@ class GtkMainLoop:
 
     @staticmethod
     def quit():
-        Gtk.main_quit()
+        def process():
+            Gtk.main_quit()
+
+        GLib.idle_add(process)
         GtkMainLoop._thread.join()
         Logger.log("Gtk main loop is stopped")

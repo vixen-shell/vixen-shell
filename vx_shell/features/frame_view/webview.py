@@ -28,7 +28,7 @@ def webview(
             uri = request.get_uri()
             allowed_domain = f"localhost:{get_front_port(dev_mode)}"
 
-            if allowed_domain in uri:
+            if uri == "about:blank" or allowed_domain in uri:
                 return False
             else:
                 Logger.log(f"Uri not allowed: {uri}", "WARNING")

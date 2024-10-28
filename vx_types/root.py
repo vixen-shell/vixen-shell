@@ -28,6 +28,7 @@ class root_LayerFrameParams(BaseModel):
     margins: root_MarginParams | Disable | None = None
     width: int | list[int] | Disable | None = None
     height: int | list[int] | Disable | None = None
+    transparent: bool = True
 
 
 class root_FrameParams(BaseModel):
@@ -78,6 +79,7 @@ class root_LayerFrameParams_dict(TypedDict):
     margins: root_MarginParams_dict | Disable
     width: int | list[int] | Disable
     height: int | list[int] | Disable
+    transparent: bool
 
 
 class root_FrameParams_dict(TypedDict):
