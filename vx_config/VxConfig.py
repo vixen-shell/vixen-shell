@@ -1,11 +1,18 @@
 import subprocess, os, json
 
+from typing import Callable, TypedDict, Any, Literal
 from fastapi import WebSocket
 from vx_path import VxPath
 
 
+class StateItem(TypedDict):
+    key: str
+    value: Any
+
+
 class VxConfig:
     websockets: list[WebSocket] = []
+    listeners: list[Callable[[StateItem], None]] = []
 
     API_PORT: int = 6481
     FRONT_PORT: int = 6492
@@ -81,7 +88,38 @@ class VxConfig:
                 json.dump(data, file, indent=4, ensure_ascii=False)
 
     @staticmethod
-    def update_state(feature_state: dict):
-        if any(key not in VxConfig.STATE for key in feature_state):
-            VxConfig.STATE.update(feature_state)
-            VxConfig.save()
+    def add_state_listener(listener: Callable[[StateItem], None]):
+        if not listener in VxConfig.listeners:
+            VxConfig.listeners.append(listener)
+
+    @staticmethod
+    def remove_state_listener(listener: Callable[[StateItem], None]):
+        if listener in VxConfig.listeners:
+            VxConfig.listeners.remove(listener)
+
+    @staticmethod
+    def update_state(feature_state: dict, option: Literal["add", "remove"] = "add"):
+        if option == "add":
+            for key, value in feature_state.items():
+                if key not in VxConfig.STATE:
+                    VxConfig.STATE[key] = value
+
+        if option == "remove":
+            for key in feature_state.keys():
+                VxConfig.STATE.pop(key, None)
+
+        VxConfig.save()
+
+    @staticmethod
+    def get_state(key: str):
+        return VxConfig.STATE[key]
+
+    @staticmethod
+    def set_state(key: str, value: Any):
+        if not key in VxConfig.STATE:
+            raise KeyError("Key not found")
+
+        VxConfig.STATE[key] = value
+
+        for listener in VxConfig.listeners:
+            listener(StateItem(key=key, value=value))

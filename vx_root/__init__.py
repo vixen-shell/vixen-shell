@@ -1,7 +1,7 @@
 from .references import AbsRootFeature, AbsRootContents
-from .classes import SocketHandler
+from .classes import State, StateItem, SocketHandler
 from vx_logger import Logger
-from vx_gtk import ContextMenu, show_message_dialog
+from vx_gtk import ContextMenu, show_message_dialog, show_confirm_dialog
 
 
 def root_feature(feature_name: str = None) -> AbsRootFeature:

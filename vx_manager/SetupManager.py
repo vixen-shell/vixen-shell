@@ -240,9 +240,22 @@ class SetupManager:
         if feature_name:
 
             def remove_feature():
-                if vx_remove_feature(feature_name):
+                from vx_features import ParamDataHandler
+                from vx_config import VxConfig
+
+                try:
+                    VxConfig.update_state(
+                        ParamDataHandler.get_value(f"{feature_name}.state"), "remove"
+                    )
+
+                    ShellRequests.unload_feature(feature_name)
+
+                    if vx_remove_feature(feature_name):
+                        print()
+                        Logger.log(f"'{feature_name}' feature removed successfully")
+                except:
                     print()
-                    Logger.log(f"'{feature_name}' feature removed successfully")
+                    Logger.log(f"Error removing feature '{feature_name}'", "ERROR")
 
             if not skip_confirm:
                 Logger.log(
@@ -251,7 +264,6 @@ class SetupManager:
                 )
 
                 if Cli.Input.get_confirm():
-                    ShellRequests.unload_feature(feature_name)
                     remove_feature()
                 else:
                     Logger.log("Operation avorted", "WARNING")

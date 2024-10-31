@@ -86,22 +86,22 @@ async def vixen_state_socket(websocket: WebSocket, feature_name: str):
                     if not key:
                         raise ErrorEvent("GET", "Missing item key")
 
-                    if not key in VxConfig.STATE:
+                    try:
+                        await websocket.send_json(
+                            OutputEvent(
+                                id="UPDATE",
+                                data={
+                                    "key": key,
+                                    "value": VxConfig.get_state(key),
+                                },
+                            )
+                        )
+                    except KeyError:
                         raise ErrorEvent(
                             event="GET",
                             message="Key not found",
                             data={"key": key},
                         )
-
-                    await dispatch_event(
-                        OutputEvent(
-                            id="UPDATE",
-                            data={
-                                "key": key,
-                                "value": VxConfig.STATE[key],
-                            },
-                        )
-                    )
 
                 if input_event.id == "SET":
                     if not input_event.data:
@@ -111,14 +111,14 @@ async def vixen_state_socket(websocket: WebSocket, feature_name: str):
                     if not key:
                         raise ErrorEvent("SET", "Missing item key")
 
-                    if not key in VxConfig.STATE:
+                    try:
+                        VxConfig.set_state(key, input_event.data.get("value"))
+                    except KeyError:
                         raise ErrorEvent(
                             event="SET",
                             message="Key not found",
                             data={"key": key},
                         )
-
-                    VxConfig.STATE[key] = input_event.data.get("value")
 
                     await dispatch_event(
                         OutputEvent(

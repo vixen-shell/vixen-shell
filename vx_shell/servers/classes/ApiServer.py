@@ -1,4 +1,4 @@
-import uvicorn
+import uvicorn, signal
 from fastapi import FastAPI
 from vx_config import VxConfig
 from vx_logger import Logger
@@ -13,6 +13,9 @@ class ApiServer:
     def start(api: FastAPI):
         if ApiServer.server:
             raise ValueError(f"{ApiServer.__name__} already running")
+
+        signal.signal(signal.SIGTERM, ApiServer.handle_signals)
+        signal.signal(signal.SIGHUP, ApiServer.handle_signals)
 
         ApiServer.server = uvicorn.Server(
             uvicorn.Config(
@@ -29,4 +32,15 @@ class ApiServer:
         try:
             ApiServer.server.run()
         except KeyboardInterrupt:
-            ApiServer.server.should_exit = True
+            ApiServer.stop()
+
+    @staticmethod
+    def stop():
+        if not ApiServer.server:
+            raise ValueError(f"{ApiServer.__name__} is not running")
+
+        ApiServer.server.should_exit = True
+
+    @staticmethod
+    def handle_signals(signum, frame):
+        ApiServer.stop()
