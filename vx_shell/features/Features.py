@@ -4,14 +4,17 @@ from vx_gtk import GtkMainLoop
 from vx_logger import Logger
 from .Feature import Feature
 from .FeatureLoader import FeatureLoader
+from .frame_view import PopupFrame
 
 
 class Features:
     dict: Dict[str, Feature] = {}
+    popup_frame: PopupFrame = None
 
     @staticmethod
     def init():
         GtkMainLoop.run()
+        Features.popup_frame = PopupFrame()
 
         for name in FeatureUtils.get_root_feature_names():
             try:
@@ -50,6 +53,9 @@ class Features:
 
     @staticmethod
     async def stop():
+        Features.popup_frame.hide()
+        Features.popup_frame = None
+
         for feature in Features.dict.values():
             if feature.is_started:
                 await feature.stop()

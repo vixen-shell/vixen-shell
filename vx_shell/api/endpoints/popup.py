@@ -1,12 +1,9 @@
-import asyncio
 from fastapi import Response, Path, Body
 from pydantic import BaseModel, ConfigDict
 from ..api import api
 from ..models import ModelResponses, Models
 from ...features.frame_view import PopupFrame
 from ...features import Features
-
-popup_frame = PopupFrame()
 
 # ---------------------------------------------- - - -
 # SHOW POPUP FRAME
@@ -34,8 +31,6 @@ async def show_popup_frame(
     feature_name: str = Path(description="Feature name"),
     popup_infos: PopupInfos = Body(description="Popup informations"),
 ):
-    global popup_frame
-
     feature = Features.get(feature_name)
 
     if not feature:
@@ -48,7 +43,7 @@ async def show_popup_frame(
             message=f"Feature '{feature_name}' is not started"
         )
 
-    popup_frame.show(
+    Features.popup_frame.show(
         feature_name,
         popup_infos.route,
         popup_infos.monitor_id or 0,
@@ -56,7 +51,7 @@ async def show_popup_frame(
     )
 
     return popup_responses(response, 200)(
-        {"feature_name": popup_frame.feature_name, "popup_frame": True}
+        {"feature_name": Features.popup_frame.feature_name, "popup_frame": True}
     )
 
 
@@ -71,10 +66,8 @@ async def show_popup_frame(
     responses=popup_responses.responses,
 )
 async def hide_popup_frame(response: Response):
-    global popup_frame
-
-    popup_frame.hide()
+    Features.popup_frame.hide()
 
     return popup_responses(response, 200)(
-        {"feature_name": popup_frame.feature_name, "popup_frame": False}
+        {"feature_name": Features.popup_frame.feature_name, "popup_frame": False}
     )
