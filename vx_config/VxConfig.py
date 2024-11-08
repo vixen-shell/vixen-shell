@@ -25,6 +25,8 @@ class VxConfig:
         "vx_ui_icons": "regular",
         "vx_ui_font_family": None,
         "vx_ui_font_family_monospace": None,
+        "vx_popup_frame": None,
+        "vx_popup_frame_callback_data": None,
     }
 
     @staticmethod
@@ -86,6 +88,34 @@ class VxConfig:
         else:
             with open(file_path, "x", encoding="utf-8") as file:
                 json.dump(data, file, indent=4, ensure_ascii=False)
+
+    @staticmethod
+    def save_state():
+        file_path = VxPath.VX_CONFIG_FILE
+
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as file:
+                vx_config: dict = json.load(file)
+                vx_config["state"] = VxConfig.STATE
+
+            with open(file_path, "w", encoding="utf-8") as file:
+                json.dump(vx_config, file, indent=4, ensure_ascii=False)
+
+    @staticmethod
+    def save_state_item(key: str):
+        file_path = VxPath.VX_CONFIG_FILE
+
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as file:
+                vx_config: dict = json.load(file)
+
+                if not key in vx_config["state"]:
+                    raise KeyError()
+
+                vx_config["state"][key] = VxConfig.STATE[key]
+
+            with open(file_path, "w", encoding="utf-8") as file:
+                json.dump(vx_config, file, indent=4, ensure_ascii=False)
 
     @staticmethod
     def add_state_listener(listener: Callable[[StateItem], None]):

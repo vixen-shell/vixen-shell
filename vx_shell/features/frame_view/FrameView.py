@@ -15,13 +15,14 @@ class FrameView:
         self.frame: Gtk.Window = None
         self.webview: WebKit2.WebView = None
 
-        self.feature_name: str = feature_name
-        self.frame_id: str = frame_id
+        self.feature_name = feature_name
+        self.frame_id = frame_id
         self.route: str = ParamDataHandler.get_value(
             f"{feature_name}.frames.{frame_id}.route"
         )
         self.dev_mode = dev_mode
-        self.last_button_press_event = None
+
+        self.last_button_press_event: Gdk.EventButton = None
 
         if ParamDataHandler.get_value(
             f"{feature_name}.frames.{frame_id}.show_on_startup"
@@ -50,12 +51,6 @@ class FrameView:
                 SysTrayState.menus[service_name].popup_at_pointer(
                     self.last_button_press_event
                 )
-
-        GLib.idle_add(process)
-
-    def set_zoom_level(self, factor: float):
-        def process():
-            self.webview.set_zoom_level(factor)
 
         GLib.idle_add(process)
 
@@ -155,7 +150,7 @@ def show_frame(frame_view: FrameView):
                     )
                 )
 
-            GLib.timeout_add(600, frame_view.frame.show)
+            GLib.timeout_add(100, frame_view.frame.show)
 
     GLib.idle_add(show)
 

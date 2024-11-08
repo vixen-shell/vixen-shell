@@ -128,8 +128,28 @@ async def vixen_state_socket(websocket: WebSocket, feature_name: str):
                     )
 
                 if input_event.id == "SAVE":
-                    VxConfig.save()
+                    VxConfig.save_state()
                     await dispatch_event(OutputEvent(id="SAVE", data=VxConfig.STATE))
+
+                if input_event.id == "SAVE_ITEM":
+                    if not input_event.data:
+                        raise ErrorEvent("SAVE_ITEM", "Missing item data")
+
+                    key = input_event.data.get("key")
+                    if not key:
+                        raise ErrorEvent("SAVE_ITEM", "Missing item key")
+
+                    try:
+                        VxConfig.save_state_item(key)
+                        await dispatch_event(
+                            OutputEvent(id="SAVE_ITEM", data=input_event.data)
+                        )
+                    except KeyError:
+                        raise ErrorEvent(
+                            event="SAVE_ITEM",
+                            message="Key not found",
+                            data={"key": key},
+                        )
 
             except ErrorEvent as error_event:
                 Logger.log(

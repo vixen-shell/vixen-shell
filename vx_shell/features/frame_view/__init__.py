@@ -7,3 +7,4 @@ License           : GPL3
 """
 
 from .FrameView import FrameView
+from .PopupFrame import PopupFrame

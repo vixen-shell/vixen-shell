@@ -426,11 +426,15 @@ async def popup_menu(
             message=f"{key_error} not found in '{feature_name}' feature menu handlers"
         )
     except Exception as exception:
-        print(exception)
         return menu_responses(response, 409)(message=str(exception))
 
     try:
-        feature.popup_context_menu(menu_info.frame_id, menu_handler.menu)
+        if menu_info.frame_id == "popup_frame":
+            from .popup import popup_frame
+
+            popup_frame.popup_context_menu(menu_handler.menu)
+        else:
+            feature.popup_context_menu(menu_info.frame_id, menu_handler.menu)
     except Exception as exception:
         return menu_responses(response, 409)(message=str(exception))
 
@@ -476,7 +480,12 @@ async def popup_dbus_menu(
     feature = Features.get(feature_name)
 
     try:
-        feature.popup_dbus_menu(menu_info.frame_id, menu_info.service_name)
+        if menu_info.frame_id == "popup_frame":
+            from .popup import popup_frame
+
+            popup_frame.popup_dbus_menu(menu_info.service_name)
+        else:
+            feature.popup_dbus_menu(menu_info.frame_id, menu_info.service_name)
     except Exception as exception:
         return dbus_menu_responses(response, 409)(message=str(exception))
 
