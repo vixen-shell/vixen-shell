@@ -128,7 +128,9 @@ class VxConfig:
             VxConfig.listeners.remove(listener)
 
     @staticmethod
-    def update_state(feature_state: dict, option: Literal["add", "remove"] = "add"):
+    def update_state(
+        feature_state: dict, option: Literal["add", "remove"] = "add", save: bool = True
+    ):
         if option == "add":
             for key, value in feature_state.items():
                 if key not in VxConfig.STATE:
@@ -138,7 +140,8 @@ class VxConfig:
             for key in feature_state.keys():
                 VxConfig.STATE.pop(key, None)
 
-        VxConfig.save()
+        if save:
+            VxConfig.save()
 
     @staticmethod
     def get_state(key: str):
