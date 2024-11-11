@@ -1,6 +1,5 @@
 from inspect import stack, getmodule
 from abc import ABC, abstractmethod
-from typing import Callable
 from vx_types import root_FeatureParams_dict
 from .AbsFrames import AbsFrames
 from .AbsParams import AbsParams
@@ -24,18 +23,6 @@ class AbsRootFeature(ABC):
 
     @abstractmethod
     def init(self, value: root_FeatureParams_dict) -> None:
-        pass
-
-    @abstractmethod
-    def set_required_features(self, value: list[str]) -> None:
-        pass
-
-    @abstractmethod
-    def on_startup(self, callback: Callable[[], bool]) -> None:
-        pass
-
-    @abstractmethod
-    def on_shutdown(self, callback: Callable[[], bool]) -> None:
         pass
 
 
@@ -83,17 +70,5 @@ def get_root_feature_reference(root_feature):
         @restricted(root_feature.name)
         def init(self, value: root_FeatureParams_dict) -> None:
             return root_feature.init(value)
-
-        @restricted(root_feature.name)
-        def set_required_features(self, value: list[str]) -> None:
-            return root_feature.set_required_features(value)
-
-        @restricted(root_feature.name)
-        def on_startup(self, callback: Callable[[], bool]) -> None:
-            return root_feature.on_startup(callback)
-
-        @restricted(root_feature.name)
-        def on_shutdown(self, callback: Callable[[], bool]) -> None:
-            return root_feature.on_shutdown(callback)
 
     return RootFeatureReference()

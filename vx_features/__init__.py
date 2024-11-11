@@ -1,7 +1,4 @@
-from .RootFeature import (
-    RootFeature,
-    FeatureLifespan,
-)
+from .RootFeature import RootFeature
 from .RootContents import RootContents
 from .params import (
     ParamDataHandler,

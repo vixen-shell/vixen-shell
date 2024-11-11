@@ -1,15 +1,12 @@
 import asyncio
 from typing import Literal
-from vx_features import (
-    ParamDataHandler,
-    RootContents,
-    RootFeature,
-)
+from vx_features import ParamDataHandler, RootContents
 from fastapi import WebSocket
 from vx_config import VxConfig
 from vx_systray import SysTrayState
 from vx_gtk import Gtk
 from vx_logger import Logger
+from vx_types import LifeCycleHandler, LifeCycleCleanUpHandler
 from .FrameHandler import FrameHandler
 
 
@@ -58,8 +55,6 @@ class Feature:
         self.dev_mode = dev_mode
         # -------------------------------------------- - - -
         self.contents = RootContents(feature_name)
-        self.required_features = RootFeature(feature_name).required_features
-        self.lifespan = RootFeature(feature_name).lifespan
         # -------------------------------------------- - - -
         self.feature_websockets: list[WebSocket] = []
         self.state_websockets: list[WebSocket] = []
@@ -69,6 +64,14 @@ class Feature:
         self.is_active = False
         self.is_started = False
         # -------------------------------------------- - - -
+        self.waited_features: list[str] = list(
+            ParamDataHandler.get_value(f"{feature_name}.wait_startup") or tuple()
+        )
+        self.startup_handler: LifeCycleHandler = ParamDataHandler.get_value(
+            f"{feature_name}.life_cycle"
+        )
+        self.cleanup_handler: LifeCycleCleanUpHandler = None
+
         if (
             ParamDataHandler.get_value(f"{feature_name}.autostart")
             and not self.dev_mode
@@ -125,11 +128,11 @@ class Feature:
         for websocket in self.systray_websockets:
             SysTrayState.websockets.remove(websocket)
 
-    async def startup_handler(self):
+    async def startup_wait_handler(self):
         from .Features import Features
 
         Logger.log(
-            f"[{self.feature_name}]: waiting for required features {self.required_features}"
+            f"[{self.feature_name}]: waiting for required features {self.waited_features}"
         )
 
         def feature_is_started(feature_name: str):
@@ -140,7 +143,7 @@ class Feature:
             return is_started
 
         required_features_state = [
-            feature_is_started(feature_name) for feature_name in self.required_features
+            feature_is_started(feature_name) for feature_name in self.waited_features
         ]
 
         while self.is_active:
@@ -159,11 +162,41 @@ class Feature:
         if self.is_started:
             await self.__stop()
 
+    def handle_lifecycle(self, event: Literal["startup", "cleanup"]) -> bool:
+        if event == "startup" and self.startup_handler:
+            startup = True
+
+            try:
+                cleanup_handler = self.startup_handler()
+
+                if callable(cleanup_handler):
+                    self.cleanup_handler = cleanup_handler
+                elif cleanup_handler == False:
+                    Logger.log(
+                        f"[{self.feature_name}]: startup sequence return 'False'",
+                        "WARNING",
+                    )
+                    startup = False
+
+            except Exception as exception:
+                Logger.log_exception(exception)
+                startup = False
+
+            return startup
+
+        if event == "cleanup" and self.cleanup_handler:
+            try:
+                self.cleanup_handler()
+            except Exception as exception:
+                Logger.log_exception(exception)
+
+        return True
+
     @check_is_active(False)
     def start(self):
-        if self.required_features:
+        if self.waited_features:
             self.is_active = True
-            asyncio.create_task(self.startup_handler())
+            asyncio.create_task(self.startup_wait_handler())
         else:
             self.__start()
 
@@ -176,35 +209,21 @@ class Feature:
 
     @check_is_started(False)
     def __start(self):
-        try:
-            startup = self.lifespan.startup_sequence()
-        except Exception as exception:
-            Logger.log_exception(exception)
+        startup = self.handle_lifecycle("startup")
 
         if startup == True:
-            self.frames.init(self.dev_mode)
-            self.is_started = True
-            Logger.log(f"[{self.feature_name}]: feature started")
-        else:
-            Logger.log(
-                f"[{self.feature_name}]: startup sequence return 'False'. "
-                "Unable to start feature!",
-                "WARNING",
-            )
+            try:
+                self.frames.init(self.dev_mode)
+                self.is_started = True
+                Logger.log(f"[{self.feature_name}]: feature started")
+            except:
+                self.handle_lifecycle("cleanup")
 
     @check_is_started(True)
     async def __stop(self) -> bool:
-        try:
-            if self.lifespan.shutdown_sequence() == False:
-                Logger.log(
-                    f"[{self.feature_name}]: shutdown sequence return 'False'!",
-                    "WARNING",
-                )
-        except Exception as exception:
-            Logger.log_exception(exception)
-
         await self.cleanup_websockets()
         self.frames.cleanup()
+        self.handle_lifecycle("cleanup")
 
         self.is_started = False
         Logger.log(f"[{self.feature_name}]: feature stopped")

@@ -35,6 +35,9 @@ class ShellHandler:
         no_dmabuf = ShellHandler.no_dmabuf
 
         if not action or action == "open":
+            os.environ["GDK_BACKEND"] = "wayland"
+            os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "0"
+
             if no_dmabuf:
                 print("DMABUF Renderer disabled\n")
                 os.environ["WEBKIT_DISABLE_DMABUF_RENDERER"] = "1"

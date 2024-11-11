@@ -1,4 +1,7 @@
-from typing import Literal
+from typing import Literal, Callable, Union
+
+LifeCycleCleanUpHandler = Callable[[], None]
+LifeCycleHandler = Callable[[], Union[LifeCycleCleanUpHandler | Literal[False] | None]]
 
 Disable = Literal["disable"]
 LevelKeys = Literal["background", "bottom", "overlay", "top"]

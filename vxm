@@ -8,11 +8,6 @@ Description       : Vixen manager executable.
 License           : GPL3
 """
 
-import os
-
-os.environ["GDK_BACKEND"] = "wayland"
-os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "0"
-
 from vx_manager import Manager
 
 Manager.handle_args()

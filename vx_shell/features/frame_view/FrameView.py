@@ -1,6 +1,9 @@
 from vx_features import ParamDataHandler
 from vx_systray import SysTrayState
 from vx_gtk import GLib, Gtk, Gdk, WebKit2
+from vx_types import LifeCycleHandler, LifeCycleCleanUpHandler
+from vx_logger import Logger
+from typing import Literal
 from .webview import webview, get_uri
 from .layerise_frame import layerise_frame, set_layer_frame
 
@@ -22,6 +25,11 @@ class FrameView:
         )
         self.dev_mode = dev_mode
 
+        self.startup_handler: LifeCycleHandler = ParamDataHandler.get_value(
+            f"{feature_name}.frames.{frame_id}.life_cycle"
+        )
+        self.cleanup_handler: LifeCycleCleanUpHandler = None
+
         self.last_button_press_event: Gdk.EventButton = None
 
         if ParamDataHandler.get_value(
@@ -33,11 +41,48 @@ class FrameView:
     def is_visible(self) -> bool:
         return self.frame and self.frame.get_visible()
 
+    def handle_lifecycle(self, event: Literal["startup", "cleanup"]) -> bool:
+        if event == "startup" and self.startup_handler:
+            startup = True
+
+            try:
+                cleanup_handler = self.startup_handler()
+
+                if callable(cleanup_handler):
+                    self.cleanup_handler = cleanup_handler
+                elif cleanup_handler == False:
+                    Logger.log(
+                        f"[{self.feature_name}]: frame ({self.frame_id}) startup sequence return 'False'",
+                        "WARNING",
+                    )
+                    startup = False
+
+            except Exception as exception:
+                Logger.log_exception(exception)
+                startup = False
+
+            return startup
+
+        if event == "cleanup" and self.cleanup_handler:
+            try:
+                self.cleanup_handler()
+            except Exception as exception:
+                Logger.log_exception(exception)
+
+        return True
+
     def show(self):
-        show_frame(self)
+        startup = self.handle_lifecycle("startup")
+
+        if startup:
+            try:
+                show_frame(self)
+            except:
+                self.handle_lifecycle("cleanup")
 
     def hide(self):
         hide_frame(self)
+        self.handle_lifecycle("cleanup")
 
     def popup_context_menu(self, menu: Gtk.Menu):
         def process():
