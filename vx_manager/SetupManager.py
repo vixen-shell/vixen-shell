@@ -96,7 +96,8 @@ class SetupManager:
                     values=folder_list,
                     reason="A project with this name already exists in the current folder",
                 ),
-            ]
+            ],
+            suffix="_feature",
         )
 
         if project_name:
@@ -175,6 +176,8 @@ class SetupManager:
         from .setup import vx_add_extra_feature
         from .requests import ShellRequests
         from .utils import get_root_feature_names
+
+        feature_name += "_feature"
 
         if not ShellRequests.ping():
             Logger.log("Vixen Shell is not running", "WARNING")

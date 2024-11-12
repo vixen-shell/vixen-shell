@@ -29,14 +29,16 @@ class Input:
 
     @staticmethod
     def get_answer(
-        input_filters: list[InputFilter] = [], prompt: str = "(type or [ctrl + C]): "
+        input_filters: list[InputFilter] = [],
+        prompt: str = "(type or [ctrl + C]): ",
+        suffix: str = "",
     ) -> str | None:
         input = InputHandler(prompt, input_filters)
 
         try:
             while True:
                 try:
-                    return input()
+                    return input() + suffix
                 except InputFilterError as error:
                     print(error.message)
         except KeyboardInterrupt:
