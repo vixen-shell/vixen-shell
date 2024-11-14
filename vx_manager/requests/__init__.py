@@ -97,8 +97,11 @@ class ShellRequests:
 
     @staticmethod
     @check_ping(True)
-    def unload_feature(feature_name: str) -> str | None:
-        response = request_post(f"/features/unload", feature_name)
+    def unload_feature(feature_name: str, for_remove: bool = False) -> str | None:
+        response = request_post(
+            f"/features/unload",
+            {"feature_name": feature_name, "for_remove": for_remove},
+        )
 
         if not response.status_code == 200:
             handle_error_response(response)

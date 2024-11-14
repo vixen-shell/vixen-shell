@@ -2,7 +2,7 @@ import subprocess, threading
 from typing import TypedDict
 
 
-class System:
+class SystemTasks:
     class ProcessInfos(TypedDict):
         pid: int
         command: str
@@ -22,4 +22,4 @@ class System:
         if wait_process:
             threading.Thread(target=process.wait).start()
 
-        return System.ProcessInfos(pid=process.pid, command=command, args=args)
+        return SystemTasks.ProcessInfos(pid=process.pid, command=command, args=args)

@@ -1,6 +1,8 @@
 import os
 from vx_path import VxPath
 from ..classes import Routine, RoutineTask, Commands
+from ...logger import Logger
+from ...utils import read_json
 
 
 def setup_environment(library_path: str):
@@ -64,131 +66,154 @@ def setup_environment(library_path: str):
 
 
 def update_environment():
-    from ...utils import get_vx_package_version, is_sup_version, read_json
+    Logger.log("The update feature is not available at the moment")
 
-    def validate_version(new_library_path: str):
-        def check() -> bool:
-            try:
-                current_setup = read_json(VxPath.VX_SETUP_FILE)
-                return is_sup_version(
-                    current_setup.get("version"),
-                    get_vx_package_version(new_library_path),
-                )
-            except:
-                return False
+    # from ...utils import get_vx_package_version, is_sup_version, read_json
 
-        return check
+    # def validate_version(new_library_path: str):
+    #     def check() -> bool:
+    #         try:
+    #             current_setup = read_json(VxPath.VX_SETUP_FILE)
+    #             return is_sup_version(
+    #                 current_setup.get("version"),
+    #                 get_vx_package_version(new_library_path),
+    #             )
+    #         except:
+    #             return False
 
-    download_path = "/tmp/vx_update/vixen-shell-main"
+    #     return check
 
-    return Routine(
-        purpose="Update Vixen Shell environment",
-        tasks=[
-            # ---------------------------------------------- - - -
-            # Init Tmp folder
-            #
-            RoutineTask(
-                purpose="Init temporary files",
-                command=Commands.folder_create("/tmp/vx_update"),
-                undo_command=Commands.folder_remove("/tmp/vx_update"),
-            ),
-            # ---------------------------------------------- - - -
-            # Download updates
-            #
-            RoutineTask(
-                purpose="Download Vixen environment",
-                command=Commands.git_get_archive("/tmp/vx_update", "vixen-shell"),
-                undo_command=Commands.folder_remove(download_path),
-            ),
-            # ---------------------------------------------- - - -
-            # Backup current environment
-            #
-            RoutineTask(
-                purpose="Backup current environment",
-                command=Commands.folder_copy(VxPath.ENV, "/tmp/vx_update"),
-                requirements=[
-                    {
-                        "purpose": "Check an existing environment folder",
-                        "callback": Commands.Checkers.folder(VxPath.ENV, True),
-                        "failure_message": f"Environment folder not found",
-                    },
-                    {
-                        "purpose": "Check version",
-                        "callback": validate_version(download_path),
-                        "failure_message": "Your current version is the latest version of Vixen Shell",
-                    },
-                ],
-            ),
-            RoutineTask(
-                purpose="Backup Vixen Manager executable",
-                command=Commands.file_copy("/usr/bin/vxm", "/tmp/vx_update/vxm", True),
-                requirements=[
-                    {
-                        "purpose": "Check an existing Manager executable",
-                        "callback": Commands.Checkers.file("/usr/bin/vxm", True),
-                        "failure_message": f"Vixen Manager executable not found",
-                    }
-                ],
-            ),
-            # ---------------------------------------------- - - -
-            # Clean current environment
-            #
-            RoutineTask(
-                purpose="Clean current environment",
-                command=Commands.folder_remove(VxPath.ENV),
-                undo_command=Commands.folder_copy(
-                    f"/tmp/vx_update/{VxPath.env_name}", VxPath.ENV_PARENT
-                ),
-            ),
-            # ---------------------------------------------- - - -
-            # Update Environment
-            #
-            RoutineTask(
-                purpose="Update environment",
-                command=Commands.env_create(VxPath.ENV),
-                undo_command=Commands.folder_remove(VxPath.ENV),
-            ),
-            RoutineTask(
-                purpose="Install environment dependencies",
-                command=Commands.env_dependencies(
-                    VxPath.ENV, f"{download_path}/requirements.txt"
-                ),
-            ),
-            # ---------------------------------------------- - - -
-            # Install Vixen Shell Libraries
-            #
-            RoutineTask(
-                purpose="Install Vixen Shell libraries",
-                command=Commands.env_install(VxPath.ENV, download_path),
-            ),
-            # ---------------------------------------------- - - -
-            # Install Vxm
-            #
-            RoutineTask(
-                purpose="Install Vixen Manager executable",
-                command=Commands.file_copy(
-                    f"{download_path}/vxm", "/usr/bin/vxm", True
-                ),
-                undo_command=Commands.file_copy(
-                    "/tmp/vx_update/vxm", "/usr/bin/vxm", True
-                ),
-            ),
-            RoutineTask(
-                purpose="Patch Vixen Manager executable",
-                command=Commands.env_path_executable(VxPath.ENV, "/usr/bin/vxm"),
-            ),
-            # ---------------------------------------------- - - -
-            # Clean tmp
-            #
-            RoutineTask(
-                purpose="Clean up temporary files",
-                command=Commands.folder_remove("/tmp/vx_update"),
-            ),
-        ],
-    ).run()
+    # download_path = "/tmp/vx_update/vixen-shell-main"
+
+    # return Routine(
+    #     purpose="Update Vixen Shell environment",
+    #     tasks=[
+    #         # ---------------------------------------------- - - -
+    #         # Init Tmp folder
+    #         #
+    #         RoutineTask(
+    #             purpose="Init temporary files",
+    #             command=Commands.folder_create("/tmp/vx_update"),
+    #             undo_command=Commands.folder_remove("/tmp/vx_update"),
+    #         ),
+    #         # ---------------------------------------------- - - -
+    #         # Download updates
+    #         #
+    #         RoutineTask(
+    #             purpose="Download Vixen environment",
+    #             command=Commands.git_get_archive("/tmp/vx_update", "vixen-shell"),
+    #             undo_command=Commands.folder_remove(download_path),
+    #         ),
+    #         # ---------------------------------------------- - - -
+    #         # Backup current environment
+    #         #
+    #         RoutineTask(
+    #             purpose="Backup current environment",
+    #             command=Commands.folder_copy(VxPath.ENV, "/tmp/vx_update"),
+    #             requirements=[
+    #                 {
+    #                     "purpose": "Check an existing environment folder",
+    #                     "callback": Commands.Checkers.folder(VxPath.ENV, True),
+    #                     "failure_message": f"Environment folder not found",
+    #                 },
+    #                 {
+    #                     "purpose": "Check version",
+    #                     "callback": validate_version(download_path),
+    #                     "failure_message": "Your current version is the latest version of Vixen Shell",
+    #                 },
+    #             ],
+    #         ),
+    #         RoutineTask(
+    #             purpose="Backup Vixen Manager executable",
+    #             command=Commands.file_copy("/usr/bin/vxm", "/tmp/vx_update/vxm", True),
+    #             requirements=[
+    #                 {
+    #                     "purpose": "Check an existing Manager executable",
+    #                     "callback": Commands.Checkers.file("/usr/bin/vxm", True),
+    #                     "failure_message": f"Vixen Manager executable not found",
+    #                 }
+    #             ],
+    #         ),
+    #         # ---------------------------------------------- - - -
+    #         # Clean current environment
+    #         #
+    #         RoutineTask(
+    #             purpose="Clean current environment",
+    #             command=Commands.folder_remove(VxPath.ENV),
+    #             undo_command=Commands.folder_copy(
+    #                 f"/tmp/vx_update/{VxPath.env_name}", VxPath.ENV_PARENT
+    #             ),
+    #         ),
+    #         # ---------------------------------------------- - - -
+    #         # Update Environment
+    #         #
+    #         RoutineTask(
+    #             purpose="Update environment",
+    #             command=Commands.env_create(VxPath.ENV),
+    #             undo_command=Commands.folder_remove(VxPath.ENV),
+    #         ),
+    #         RoutineTask(
+    #             purpose="Install environment dependencies",
+    #             command=Commands.env_dependencies(
+    #                 VxPath.ENV, f"{download_path}/requirements.txt"
+    #             ),
+    #         ),
+    #         # ---------------------------------------------- - - -
+    #         # Install Vixen Shell Libraries
+    #         #
+    #         RoutineTask(
+    #             purpose="Install Vixen Shell libraries",
+    #             command=Commands.env_install(VxPath.ENV, download_path),
+    #         ),
+    #         # ---------------------------------------------- - - -
+    #         # Install Vxm
+    #         #
+    #         RoutineTask(
+    #             purpose="Install Vixen Manager executable",
+    #             command=Commands.file_copy(
+    #                 f"{download_path}/vxm", "/usr/bin/vxm", True
+    #             ),
+    #             undo_command=Commands.file_copy(
+    #                 "/tmp/vx_update/vxm", "/usr/bin/vxm", True
+    #             ),
+    #         ),
+    #         RoutineTask(
+    #             purpose="Patch Vixen Manager executable",
+    #             command=Commands.env_path_executable(VxPath.ENV, "/usr/bin/vxm"),
+    #         ),
+    #         # ---------------------------------------------- - - -
+    #         # Clean tmp
+    #         #
+    #         RoutineTask(
+    #             purpose="Clean up temporary files",
+    #             command=Commands.folder_remove("/tmp/vx_update"),
+    #         ),
+    #     ],
+    # ).run()
 
 
 def remove_all():
+    desktop_entry_tasks: list[RoutineTask] = []
+    desktop_entry_filenames: list[str] = []
+
+    root_feature_module_paths = [
+        f"{VxPath.ROOT_FEATURE_MODULES}/{folder_name}"
+        for folder_name in os.listdir(VxPath.ROOT_FEATURE_MODULES)
+        if os.path.isdir(os.path.join(VxPath.ROOT_FEATURE_MODULES, folder_name))
+    ]
+
+    for module_path in root_feature_module_paths:
+        if os.path.exists(f"{module_path}/apps.json"):
+            desktop_entry_filenames += read_json(f"{module_path}/apps.json")
+
+    desktop_entry_tasks = [
+        RoutineTask(
+            purpose=f"Remove '{filename}' desktop entry",
+            command=Commands.file_remove(f"{VxPath.DESKTOP_ENTRIES}/{filename}"),
+        )
+        for filename in desktop_entry_filenames
+    ]
+
     return Routine(
         purpose="Remove Vixen Shell",
         tasks=[
@@ -232,5 +257,6 @@ def remove_all():
                     "message": "Vixen Shell environment not found",
                 },
             ),
-        ],
+        ]
+        + desktop_entry_tasks,
     ).run()

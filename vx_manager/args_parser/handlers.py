@@ -315,11 +315,11 @@ class FeatureHandler:
 
     @staticmethod
     def handle():
-        feature_name = FeatureHandler.feature_name
-
-        if not feature_name:
+        if not FeatureHandler.feature_name:
             FeatureHandler._handle_options()
         else:
+            FeatureHandler.feature_name += "_feature"
+
             if FeatureHandler.feature_cmd == "state":
                 FeatureHandler._handle_state()
 

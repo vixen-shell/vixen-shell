@@ -2,7 +2,7 @@ import os
 from glob import glob
 from vx_path import VxPath
 from ..classes import Commands, Routine, RoutineTask
-from ...utils import write_json
+from ...utils import write_json, read_json
 
 # ---------------------------------------------- - - -
 # Create new feature
@@ -10,7 +10,7 @@ from ...utils import write_json
 
 def vx_new_feature(path: str, project_name: str, front_end: bool):
     front_purpose = f" ({'no ' if not front_end else ''}front-end)"
-    tmp_project_dir = f"/tmp/vx-feature-{project_name}"
+    tmp_project_dir = f"/tmp/vx-feature-{project_name[:-8]}"
 
     def create_vscode_settings() -> bool:
         try:
@@ -32,7 +32,9 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             return False
 
     return Routine(
-        purpose="Create feature project development: " + project_name + front_purpose,
+        purpose="Create feature project development: "
+        + project_name[:-8]
+        + front_purpose,
         tasks=[
             # ---------------------------------------------- - - -
             # Project Folder
@@ -94,7 +96,7 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             RoutineTask(
                 purpose="Update project name in 'package.json' file",
                 command=Commands.json_patch_feature_name_property(
-                    f"{tmp_project_dir}/package.json", f"vx-feature-{project_name}"
+                    f"{tmp_project_dir}/package.json", f"vx-feature-{project_name[:-8]}"
                 ),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
@@ -118,7 +120,7 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
                 purpose="Finalize feature project",
                 command=Commands.folder_copy(tmp_project_dir, path),
                 undo_command=Commands.folder_remove(
-                    f"{path}/vx-feature-{project_name}"
+                    f"{path}/vx-feature-{project_name[:-8]}"
                 ),
             ),
             # Clean temporary files
@@ -139,8 +141,48 @@ def vx_add_feature(dev_dir: str, feature_name: str):
         f"{dev_dir}/src/{feature_name}"
     )
 
+    desktop_entry_filenames: list[str] = []
+    desktop_entry_tasks: list[RoutineTask] = []
+
+    def create_desktop_entries_register():
+        try:
+            write_json(
+                f"{VxPath.ROOT_FEATURE_MODULES}/{feature_name}/apps.json",
+                desktop_entry_filenames,
+            )
+            return True
+        except:
+            return False
+
+    if os.path.exists(f"{dev_dir}/apps") and os.path.isdir(f"{dev_dir}/apps"):
+        desktop_entry_filenames = [
+            file for file in os.listdir(f"{dev_dir}/apps") if file.endswith(".desktop")
+        ]
+
+        desktop_entry_tasks = [
+            RoutineTask(
+                purpose=f"Create '{filename}' desktop entry",
+                command=Commands.file_copy(
+                    f"{dev_dir}/apps/{filename}",
+                    VxPath.DESKTOP_ENTRIES,
+                ),
+                undo_command=Commands.file_remove(
+                    f"{VxPath.DESKTOP_ENTRIES}/{filename}"
+                ),
+            )
+            for filename in desktop_entry_filenames
+        ]
+
+        if desktop_entry_tasks:
+            desktop_entry_tasks += [
+                RoutineTask(
+                    purpose="Create desktop entries register",
+                    command=create_desktop_entries_register,
+                )
+            ]
+
     return Routine(
-        purpose=f"Add feature '{feature_name}' to Vixen Shell",
+        purpose=f"Add feature '{feature_name[:-8]}' to Vixen Shell",
         tasks=[
             # ---------------------------------------------- - - -
             # Feature Config
@@ -229,19 +271,22 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                 command=Commands.yarn_build(VxPath.FRONT),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
-        ],
+        ]
+        + desktop_entry_tasks,
     ).run()
 
 
 def vx_add_extra_feature(feature_name: str):
-    tmp_feature_dir = f"/tmp/vx-feature-{feature_name}-main"
+    tmp_feature_dir = f"/tmp/vx-feature-{feature_name[:-8]}-main"
 
     if not Routine(
-        purpose=f"Download extra feature '{feature_name}'",
+        purpose=f"Download extra feature '{feature_name[:-8]}'",
         tasks=[
             RoutineTask(
                 purpose="Download feature",
-                command=Commands.git_get_archive("/tmp", f"vx-feature-{feature_name}"),
+                command=Commands.git_get_archive(
+                    "/tmp", f"vx-feature-{feature_name[:-8]}"
+                ),
             ),
         ],
     ).run():
@@ -270,8 +315,23 @@ def vx_add_extra_feature(feature_name: str):
 def vx_remove_feature(feature_name: str):
     front_end = os.path.exists(f"{VxPath.FRONT_FEATURES}/{feature_name}")
 
+    desktop_entry_tasks: list[RoutineTask] = []
+
+    if os.path.exists(f"{VxPath.ROOT_FEATURE_MODULES}/{feature_name}/apps.json"):
+        desktop_entry_filenames = read_json(
+            f"{VxPath.ROOT_FEATURE_MODULES}/{feature_name}/apps.json"
+        )
+
+        desktop_entry_tasks = [
+            RoutineTask(
+                purpose=f"Remove '{filename}' desktop entry",
+                command=Commands.file_remove(f"{VxPath.DESKTOP_ENTRIES}/{filename}"),
+            )
+            for filename in desktop_entry_filenames
+        ]
+
     return Routine(
-        purpose=f"Remove feature '{feature_name}'",
+        purpose=f"Remove feature '{feature_name[:-8]}'",
         tasks=[
             # ---------------------------------------------- - - -
             # Feature Config
@@ -323,5 +383,6 @@ def vx_remove_feature(feature_name: str):
                 command=Commands.yarn_build(VxPath.FRONT),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
-        ],
+        ]
+        + desktop_entry_tasks,
     ).run()

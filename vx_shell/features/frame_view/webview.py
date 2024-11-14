@@ -33,9 +33,10 @@ def webview(
         if isinstance(decision, WebKit2.NavigationPolicyDecision):
             request = decision.get_request()
             uri = request.get_uri()
-            allowed_domain = f"localhost:{get_front_port(dev_mode)}"
 
-            if uri == "about:blank" or allowed_domain in uri:
+            if any(
+                allowed_domain in uri for allowed_domain in VxConfig.ALLOWED_DOMAINS
+            ):
                 return False
             else:
                 Logger.log(f"Uri not allowed: {uri}", "WARNING")

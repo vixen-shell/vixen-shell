@@ -1,8 +1,46 @@
+import os
 from vx_path import VxPath
 from ..classes import Routine, RoutineTask, Commands
+from ...utils import write_json
 
 
 def setup_config(library_path: str):
+    desktop_entry_filenames: list[str] = []
+    desktop_entry_tasks: list[RoutineTask] = []
+
+    def create_desktop_entries_register():
+        try:
+            write_json(
+                f"{VxPath.ROOT_FEATURE_MODULES}/basics_feature/apps.json",
+                desktop_entry_filenames,
+            )
+            return True
+        except:
+            return False
+
+    desktop_entry_filenames = [
+        file
+        for file in os.listdir(f"{library_path}/extras/apps")
+        if file.endswith(".desktop")
+    ]
+
+    desktop_entry_tasks = [
+        RoutineTask(
+            purpose=f"Create '{filename}' desktop entry",
+            command=Commands.file_copy(
+                f"{library_path}/extras/apps/{filename}",
+                VxPath.DESKTOP_ENTRIES,
+            ),
+            undo_command=Commands.file_remove(f"{VxPath.DESKTOP_ENTRIES}/{filename}"),
+        )
+        for filename in desktop_entry_filenames
+    ] + [
+        RoutineTask(
+            purpose="Create desktop entries register",
+            command=create_desktop_entries_register,
+        )
+    ]
+
     return Routine(
         purpose="Setup Vixen Shell features",
         tasks=[
@@ -36,5 +74,6 @@ def setup_config(library_path: str):
                 ),
                 undo_command=Commands.folder_remove(VxPath.USER_CONFIG),
             ),
-        ],
+        ]
+        + desktop_entry_tasks,
     ).run()

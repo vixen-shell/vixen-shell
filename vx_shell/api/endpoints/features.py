@@ -42,7 +42,7 @@ load_feature_responses = ModelResponses(
     description="Load a feature",
     responses=load_feature_responses.responses,
 )
-async def load_dev_feature(
+async def load_feature(
     response: Response,
     entry: LoadFeatureEntry = Body(
         description="Feature name or feature development directory"
@@ -66,6 +66,14 @@ async def load_dev_feature(
 # UNLOAD FEATURE
 #
 
+
+class UnloadFeatureEntry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    feature_name: str
+    for_remove: bool = False
+
+
 unload_feature_responses = ModelResponses(
     {200: Models.Features.Base, 404: Models.Commons.Error}
 )
@@ -76,12 +84,15 @@ unload_feature_responses = ModelResponses(
     description="Unload a feature",
     responses=unload_feature_responses.responses,
 )
-async def load_dev_feature(
+async def unload_feature(
     response: Response,
-    feature_name: str = Body(description="Feature name"),
+    entry: UnloadFeatureEntry = Body(description="Feature name"),
 ):
+    feature_name = entry.feature_name
+    for_remove = entry.for_remove
+
     try:
-        await Features.unload(feature_name)
+        await Features.unload(feature_name, for_remove)
         return unload_feature_responses(response, 200)(
             name=feature_name, is_started=False
         )

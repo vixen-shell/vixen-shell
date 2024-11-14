@@ -107,7 +107,9 @@ class SetupManager:
             if not Cli.Input.get_confirm():
                 front_end = False
 
-            Logger.log(f"Are you sure you want to create '{project_name}' project?")
+            Logger.log(
+                f"Are you sure you want to create '{project_name[:-8]}' project?"
+            )
 
             if Cli.Input.get_confirm():
                 if vx_new_feature(parent_dir, project_name, front_end):
@@ -142,13 +144,13 @@ class SetupManager:
 
         if feature_name in feature_names:
             Logger.log(
-                f"A feature called '{feature_name}' already exists in Vixen Shell",
+                f"A feature called '{feature_name[:-8]}' already exists in Vixen Shell",
                 "ERROR",
             )
             return
 
         Logger.log(
-            f"You are about to add '{feature_name}' feature to Vixen Shell. Do you want it?",
+            f"You are about to add '{feature_name[:-8]}' feature to Vixen Shell. Do you want it?",
             "WARNING",
         )
 
@@ -157,12 +159,14 @@ class SetupManager:
                 print()
 
                 if ShellRequests.load_feature(feature_name):
-                    Logger.log(f"'{feature_name}' feature added successfully")
+                    Logger.log(f"'{feature_name[:-8]}' feature added successfully")
                 else:
-                    Logger.log(f"Unable to load '{feature_name}' feature", "WARNING")
+                    Logger.log(
+                        f"Unable to load '{feature_name[:-8]}' feature", "WARNING"
+                    )
                     SetupManager.remove_feature(feature_name, True)
                     Logger.log(
-                        f"Add feature '{feature_name}' to Vixen Shell",
+                        f"Add feature '{feature_name[:-8]}' to Vixen Shell",
                         "WARNING",
                         "FAILED",
                     )
@@ -187,13 +191,13 @@ class SetupManager:
 
         if feature_name in feature_names:
             Logger.log(
-                f"A feature called '{feature_name}' already exists in Vixen Shell",
+                f"A feature called '{feature_name[:-8]}' already exists in Vixen Shell",
                 "ERROR",
             )
             return
 
         Logger.log(
-            f"You are about to add '{feature_name}' extra feature to Vixen Shell. Do you want it?",
+            f"You are about to add '{feature_name[:-8]}' extra feature to Vixen Shell. Do you want it?",
             "WARNING",
         )
 
@@ -202,12 +206,16 @@ class SetupManager:
                 print()
 
                 if ShellRequests.load_feature(feature_name):
-                    Logger.log(f"'{feature_name}' feature added successfully")
+                    Logger.log(
+                        f"'{feature_name[:-8]}' extra feature added successfully"
+                    )
                 else:
-                    Logger.log(f"Unable to load '{feature_name}' feature", "WARNING")
+                    Logger.log(
+                        f"Unable to load '{feature_name[:-8]}' feature", "WARNING"
+                    )
                     SetupManager.remove_feature(feature_name, True)
                     Logger.log(
-                        f"Add feature '{feature_name}' to Vixen Shell",
+                        f"Add feature '{feature_name[:-8]}' to Vixen Shell",
                         "WARNING",
                         "FAILED",
                     )
@@ -237,32 +245,28 @@ class SetupManager:
                         values=feature_names,
                         reason="You must type the name of an existing feature in Vixen Shell",
                     )
-                ]
+                ],
+                suffix="_feature",
             )
 
         if feature_name:
 
             def remove_feature():
-                from vx_features import ParamDataHandler
-                from vx_config import VxConfig
-
                 try:
-                    VxConfig.update_state(
-                        ParamDataHandler.get_value(f"{feature_name}.state"), "remove"
-                    )
-
-                    ShellRequests.unload_feature(feature_name)
+                    ShellRequests.unload_feature(feature_name, True)
 
                     if vx_remove_feature(feature_name):
                         print()
-                        Logger.log(f"'{feature_name}' feature removed successfully")
+                        Logger.log(
+                            f"'{feature_name[:-8]}' feature removed successfully"
+                        )
                 except:
                     print()
-                    Logger.log(f"Error removing feature '{feature_name}'", "ERROR")
+                    Logger.log(f"Error removing feature '{feature_name[:-8]}'", "ERROR")
 
             if not skip_confirm:
                 Logger.log(
-                    f"Are you sure you want to remove '{feature_name}' feature?",
+                    f"Are you sure you want to remove '{feature_name[:-8]}' feature?",
                     "WARNING",
                 )
 

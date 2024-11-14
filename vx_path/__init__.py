@@ -24,3 +24,5 @@ class VxPath:
 
     VX_SETUP_FILE: str = f"{ROOT_CONFIG}/vixen_setup.json"
     VX_CONFIG_FILE: str = f"{USER_CONFIG}/vixen.json"
+
+    DESKTOP_ENTRIES: str = "/usr/share/applications"

@@ -33,7 +33,6 @@ class ShellManager:
                 return
 
         def exit_dev_mode():
-            # os.system("clear")
             exit_code = 0
 
             if feature.unload():

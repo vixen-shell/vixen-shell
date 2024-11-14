@@ -36,7 +36,7 @@ class Features:
         return name, feature.is_started
 
     @staticmethod
-    async def unload(name: str):
+    async def unload(name: str, for_remove: bool = False):
         feature = Features.get(name)
 
         if not feature:
@@ -46,7 +46,7 @@ class Features:
             await feature.stop()
 
         del Features.dict[name]
-        FeatureLoader(name).unload()
+        FeatureLoader(name).unload(for_remove)
         FeatureLoader.del_instance(name)
 
         Logger.log(f"[{name}]: feature unloaded")

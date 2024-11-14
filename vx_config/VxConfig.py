@@ -17,6 +17,12 @@ class VxConfig:
     API_PORT: int = 6481
     FRONT_PORT: int = 6492
     FRONT_DEV_PORT: int = 5173
+    ALLOWED_DOMAINS: list[str] = [
+        "about:blank",
+        f"localhost:{FRONT_PORT}",
+        f"localhost:{FRONT_DEV_PORT}",
+        "vixen-shell.github.io",
+    ]
 
     STATE: dict = {
         "vx_ui_scale": 1.0,

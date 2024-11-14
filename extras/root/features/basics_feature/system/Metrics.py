@@ -1,14 +1,4 @@
-import os, psutil
-
-
-class SystemInfos:
-    @staticmethod
-    def user_name() -> str:
-        return os.getlogin()
-
-    @staticmethod
-    def user_directory() -> str:
-        return os.path.expanduser("~")
+import psutil
 
 
 class SystemMetrics:

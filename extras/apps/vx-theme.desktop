@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Vixen Shell Theme Settings
+Comment=Setting up the Vixen Shell theme.
+GenericName=Theme Editor
+Exec=vxm feature basics_feature frame theme_settings --open
+Icon=gnome-settings-theme
+Type=Application
+Categories=Settings;DesktopSettings;
+Keywords=vixen;shell;theme;

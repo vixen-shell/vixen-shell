@@ -23,6 +23,8 @@ class Input:
                     return responses.get(input())
                 except InputFilterError as error:
                     print(error.message)
+                except ValueError:
+                    pass
         except KeyboardInterrupt:
             print()
             return False
@@ -31,16 +33,18 @@ class Input:
     def get_answer(
         input_filters: list[InputFilter] = [],
         prompt: str = "(type or [ctrl + C]): ",
-        suffix: str = "",
+        suffix: str = None,
     ) -> str | None:
         input = InputHandler(prompt, input_filters)
 
         try:
             while True:
                 try:
-                    return input() + suffix
+                    return input(suffix=suffix)
                 except InputFilterError as error:
                     print(error.message)
+                except ValueError:
+                    pass
         except KeyboardInterrupt:
             print()
             return
