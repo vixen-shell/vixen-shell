@@ -72,17 +72,10 @@ class FrameView:
         return True
 
     def show(self):
-        startup = self.handle_lifecycle("startup")
-
-        if startup:
-            try:
-                show_frame(self)
-            except:
-                self.handle_lifecycle("cleanup")
+        show_frame(self)
 
     def hide(self):
         hide_frame(self)
-        self.handle_lifecycle("cleanup")
 
     def popup_context_menu(self, menu: Gtk.Menu):
         def process():
@@ -183,19 +176,25 @@ def show_frame(frame_view: FrameView):
 
     def show():
         if not frame_view.is_visible:
-            if not frame_view.frame:
-                create_frame()
-            else:
-                frame_view.webview.load_uri(
-                    get_uri(
-                        frame_view.feature_name,
-                        frame_view.route,
-                        frame_view.frame_id,
-                        frame_view.dev_mode,
-                    )
-                )
+            startup = frame_view.handle_lifecycle("startup")
 
-            GLib.timeout_add(100, frame_view.frame.show)
+            if startup:
+                try:
+                    if not frame_view.frame:
+                        create_frame()
+                    else:
+                        frame_view.webview.load_uri(
+                            get_uri(
+                                frame_view.feature_name,
+                                frame_view.route,
+                                frame_view.frame_id,
+                                frame_view.dev_mode,
+                            )
+                        )
+
+                    GLib.timeout_add(100, frame_view.frame.show)
+                except:
+                    frame_view.handle_lifecycle("cleanup")
 
     GLib.idle_add(show)
 
@@ -205,5 +204,6 @@ def hide_frame(frame_view: FrameView):
         if frame_view.is_visible:
             frame_view.frame.hide()
             frame_view.webview.load_html("")
+            frame_view.handle_lifecycle("cleanup")
 
     GLib.idle_add(hide)

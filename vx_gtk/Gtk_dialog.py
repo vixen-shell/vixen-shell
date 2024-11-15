@@ -3,7 +3,10 @@ from .Gtk_imports import Gtk, GLib
 
 
 def show_message_dialog(
-    message: str, level: Literal["INFO", "WARNING"] = "INFO", details: str = None
+    text: str,
+    title: str = None,
+    details: str = None,
+    level: Literal["INFO", "WARNING"] = "INFO",
 ):
     message_type = {"INFO": 0, "WARNING": 1}.get(level)
 
@@ -13,8 +16,12 @@ def show_message_dialog(
             flags=0,
             message_type=message_type,
             buttons=Gtk.ButtonsType.OK,
-            text=message,
+            text=text,
+            title=title,
         )
+
+        if not title:
+            dialog.set_decorated(False)
 
         if details:
             dialog.format_secondary_text(details)
@@ -29,9 +36,10 @@ def show_message_dialog(
 
 
 def show_confirm_dialog(
-    question: str,
+    text: str,
     ok_callback: Callable[[], None],
     cancel_callback: Callable[[], None] = None,
+    title: str = None,
     details: str = None,
 ):
     def process():
@@ -40,8 +48,12 @@ def show_confirm_dialog(
             flags=0,
             message_type=Gtk.MessageType.QUESTION,
             buttons=Gtk.ButtonsType.OK_CANCEL,
-            text=question,
+            text=text,
+            title=title,
         )
+
+        if not title:
+            dialog.set_decorated(False)
 
         if details:
             dialog.format_secondary_text(details)

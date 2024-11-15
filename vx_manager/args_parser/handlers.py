@@ -243,6 +243,9 @@ class FeatureHandler:
 
     @staticmethod
     def init(args: Namespace):
+        if args.feature_name:
+            args.feature_name += "_feature"
+
         FeatureHandler.args = args
         FeatureHandler.feature_name = args.feature_name
         FeatureHandler.feature_cmd = args.feature_cmd
@@ -318,8 +321,6 @@ class FeatureHandler:
         if not FeatureHandler.feature_name:
             FeatureHandler._handle_options()
         else:
-            FeatureHandler.feature_name += "_feature"
-
             if FeatureHandler.feature_cmd == "state":
                 FeatureHandler._handle_state()
 

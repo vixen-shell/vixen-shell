@@ -6,7 +6,7 @@ from vx_config import VxConfig
 from vx_systray import SysTrayState
 from vx_gtk import Gtk
 from vx_logger import Logger
-from vx_types import LifeCycleHandler, LifeCycleCleanUpHandler
+from vx_types import LifeCycleHandler, LifeCycleCleanUpHandler, user_FrameParams_dict
 from .FrameHandler import FrameHandler
 
 
@@ -60,7 +60,7 @@ class Feature:
         self.state_websockets: list[WebSocket] = []
         self.systray_websockets: list[WebSocket] = []
         # -------------------------------------------- - - -
-        self.frames = FrameHandler(feature_name=feature_name)
+        self.frames = FrameHandler(feature_name, self.dev_mode)
         self.is_active = False
         self.is_started = False
         # -------------------------------------------- - - -
@@ -213,7 +213,7 @@ class Feature:
 
         if startup == True:
             try:
-                self.frames.init(self.dev_mode)
+                self.frames.init()
                 self.is_started = True
                 Logger.log(f"[{self.feature_name}]: feature started")
             except:
@@ -244,6 +244,16 @@ class Feature:
     @check_is_started(True)
     def popup_dbus_menu(self, frame_id: str, service_name: str):
         self.frames.popup_dbus_menu(frame_id, service_name)
+
+    @check_is_started(True)
+    def new_frame_from_template(
+        self, frame_id: str, frame_params_dict: user_FrameParams_dict
+    ) -> bool:
+        return self.frames.new_frame_from_template(frame_id, frame_params_dict)
+
+    @check_is_started(True)
+    def remove_frame_from_template(self, frame_id: str) -> bool:
+        return self.frames.remove_frame_from_template(frame_id)
 
     @property
     @check_is_started(True)

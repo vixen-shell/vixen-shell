@@ -1,14 +1,18 @@
 import copy
 from typing import Literal, Any, Callable
 from pydantic import ValidationError
-from ..classes import ParamData, ParamsValidationError, ParamPermissionError
-from ..utils import write_json
+from vx_logger import Logger
+
 from vx_types import (
     root_FeatureParams_dict,
     user_FeatureParams_dict,
+    user_FrameParams_dict,
     user_FeatureParams,
     ParamPermission,
 )
+
+from ..classes import ParamData, ParamsValidationError, ParamPermissionError
+from ..utils import write_json
 
 
 def get_dict(node: dict, path_keys: list[str]) -> dict | Any | None:
@@ -195,6 +199,30 @@ class ParamDataHandler:
                 title="Validation error",
                 validation_error=validation_error,
             )
+
+    @staticmethod
+    def new_frame_from_template(
+        feature_name: str, frame_id: str, frame_params_dict: user_FrameParams_dict
+    ) -> bool:
+        try:
+            ParamDataHandler.__data_dict[feature_name].create_frame_from_template(
+                frame_id, frame_params_dict
+            )
+            return True
+        except Exception as exception:
+            Logger.log(str(exception), "WARNING")
+            return False
+
+    @staticmethod
+    def remove_frame_from_template(feature_name: str, frame_id: str) -> bool:
+        try:
+            ParamDataHandler.__data_dict[feature_name].remove_frame_from_template(
+                frame_id
+            )
+            return True
+        except Exception as exception:
+            Logger.log(str(exception), "WARNING")
+            return False
 
     @staticmethod
     def __handle_listeners(path: str, value: Any):
