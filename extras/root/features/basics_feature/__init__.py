@@ -1,5 +1,5 @@
 from vx_root import root_feature
-from .system import System
+from .exports import *
 from .theme_settings import theme_settings_frame
 
 feature = root_feature()
