@@ -181,6 +181,23 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                 )
             ]
 
+    def user_config_file_tasks():
+        config_file_paths = glob(f"{dev_dir}/user/{feature_name}*.json")
+
+        return [
+            RoutineTask(
+                purpose=f"Setup '{os.path.basename(file_path)}' user config file",
+                command=Commands.file_copy(
+                    file_path,
+                    VxPath.USER_FEATURE_PARAMS,
+                ),
+                undo_command=Commands.file_remove(
+                    f"{VxPath.USER_FEATURE_PARAMS}/{os.path.basename(file_path)}"
+                ),
+            )
+            for file_path in config_file_paths
+        ]
+
     return Routine(
         purpose=f"Add feature '{feature_name[:-8]}' to Vixen Shell",
         tasks=[
@@ -206,22 +223,9 @@ def vx_add_feature(dev_dir: str, feature_name: str):
                     }
                 ],
             ),
-            RoutineTask(
-                purpose="Setup user config file",
-                command=Commands.file_copy(
-                    f"{dev_dir}/user/{feature_name}.json",
-                    VxPath.USER_FEATURE_PARAMS,
-                ),
-                undo_command=Commands.file_remove(
-                    f"{VxPath.USER_FEATURE_PARAMS}/{feature_name}.json"
-                ),
-                skip_on={
-                    "callback": Commands.Checkers.file(
-                        f"{dev_dir}/user/{feature_name}.json", False
-                    ),
-                    "message": "User config file not found",
-                },
-            ),
+        ]
+        + user_config_file_tasks()
+        + [
             # ---------------------------------------------- - - -
             # Feature Dependencies
             #
@@ -330,6 +334,17 @@ def vx_remove_feature(feature_name: str):
             for filename in desktop_entry_filenames
         ]
 
+    def user_config_file_tasks():
+        config_file_paths = glob(f"{VxPath.USER_FEATURE_PARAMS}/{feature_name}*.json")
+
+        return [
+            RoutineTask(
+                purpose=f"Remove '{os.path.basename(file_path)}' user config file",
+                command=Commands.file_remove(file_path),
+            )
+            for file_path in config_file_paths
+        ]
+
     return Routine(
         purpose=f"Remove feature '{feature_name[:-8]}'",
         tasks=[
@@ -341,20 +356,10 @@ def vx_remove_feature(feature_name: str):
                 command=Commands.folder_remove(
                     f"{VxPath.ROOT_FEATURE_MODULES}/{feature_name}"
                 ),
-            ),
-            RoutineTask(
-                purpose="Remove user config file",
-                command=Commands.file_remove(
-                    f"{VxPath.USER_FEATURE_PARAMS}/{feature_name}.json"
-                ),
-                skip_on={
-                    "callback": Commands.Checkers.file(
-                        f"{VxPath.USER_FEATURE_PARAMS}/{feature_name}.json",
-                        False,
-                    ),
-                    "message": "User config file not found",
-                },
-            ),
+            )
+        ]
+        + user_config_file_tasks()
+        + [
             # ---------------------------------------------- - - -
             # Feature Dependencies
             #

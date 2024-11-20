@@ -1,4 +1,5 @@
 import os
+from glob import glob
 from vx_path import VxPath
 from ..classes import Routine, RoutineTask, Commands
 from ...utils import write_json
@@ -41,6 +42,23 @@ def setup_config(library_path: str):
         )
     ]
 
+    def user_config_file_tasks():
+        config_file_paths = glob(f"{library_path}/extras/user/*.json")
+
+        return [
+            RoutineTask(
+                purpose=f"Setup '{os.path.basename(file_path)}' user config file",
+                command=Commands.file_copy(
+                    file_path,
+                    VxPath.USER_FEATURE_PARAMS,
+                ),
+                undo_command=Commands.file_remove(
+                    f"{VxPath.USER_FEATURE_PARAMS}/{os.path.basename(file_path)}"
+                ),
+            )
+            for file_path in config_file_paths
+        ]
+
     return Routine(
         purpose="Setup Vixen Shell features",
         tasks=[
@@ -75,5 +93,6 @@ def setup_config(library_path: str):
                 undo_command=Commands.folder_remove(VxPath.USER_CONFIG),
             ),
         ]
+        + user_config_file_tasks()
         + desktop_entry_tasks,
     ).run()
