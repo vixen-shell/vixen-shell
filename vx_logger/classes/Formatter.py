@@ -2,6 +2,11 @@ import logging
 from ..utils import Cli
 
 
+class FormatterFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
+        return record.name != "uvicorn.access"
+
+
 class Formatter(logging.Formatter):
     def format(self, record):
         message = record.getMessage()

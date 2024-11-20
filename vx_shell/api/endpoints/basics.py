@@ -1,7 +1,8 @@
 import os, mimetypes
-from fastapi import Response, Path, Query
+from fastapi import Response, Path, Query, Body
 from fastapi.responses import JSONResponse, FileResponse
 from typing import Optional, Literal
+from vx_logger import Logger
 from vx_config import VxConfig
 from vx_path import VxPath
 from vx_gtk import Gtk
@@ -21,6 +22,18 @@ async def close():
     return
 
 
+@api.post("/log_to_tty", description="Send Vixen Shell logger to a console")
+async def log_to_tty(tty_path: str = Body(description="TTY path")):
+    Logger.add_handler(tty_path)
+    return tty_path
+
+
+@api.post("/unlog_to_tty", description="Stop to send Vixen Shell logger to a console")
+async def unlog_to_tty(tty_path: str = Body(description="TTY path")):
+    Logger.remove_handler(tty_path)
+    return tty_path
+
+
 @api.get(
     "/gtk_fonts",
     description="Return the gtk fonts preferences",
@@ -29,12 +42,12 @@ async def get_gtk_fonts():
     return JSONResponse(VxConfig.gtk_fonts())
 
 
-get_file_responses = ModelResponses(
-    {
-        404: Models.Commons.Error,
-        409: Models.Commons.Error,
-    }
+@api.get(
+    "/locale",
+    description="Return the locale preferences",
 )
+async def get_locale():
+    return JSONResponse(VxConfig.locale())
 
 
 @api.get(
@@ -43,6 +56,14 @@ get_file_responses = ModelResponses(
 )
 async def get_vx_state():
     return JSONResponse(VxConfig.STATE)
+
+
+get_file_responses = ModelResponses(
+    {
+        404: Models.Commons.Error,
+        409: Models.Commons.Error,
+    }
+)
 
 
 @api.get(

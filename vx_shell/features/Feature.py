@@ -1,4 +1,4 @@
-import asyncio
+import asyncio, os, json
 from typing import Literal
 from vx_features import ParamDataHandler, RootContents
 from fastapi import WebSocket
@@ -55,6 +55,18 @@ class Feature:
         self.dev_mode = dev_mode
         # -------------------------------------------- - - -
         self.contents = RootContents(feature_name)
+
+        locales_file_path = (
+            f"{ParamDataHandler.get_user_dir(self.feature_name)}"
+            f"/{self.feature_name}_{VxConfig.locale()}.json"
+        )
+        locales: dict = {}
+
+        if os.path.exists(locales_file_path):
+            with open(locales_file_path, "r", encoding="utf-8") as file:
+                locales = json.load(file)
+
+        self.contents.dispatch("data", "__locales__")(lambda: locales)
         # -------------------------------------------- - - -
         self.feature_websockets: list[WebSocket] = []
         self.state_websockets: list[WebSocket] = []

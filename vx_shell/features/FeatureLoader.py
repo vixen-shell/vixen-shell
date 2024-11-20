@@ -44,7 +44,7 @@ class FeatureLoader:
 
     def __load_tty(self):
         if self.tty_path:
-            Logger.add_handler(self.tty_path, "WARNING", True)
+            Logger.add_handler(self.tty_path, True)
 
     def __unload_tty(self):
         if self.tty_path:

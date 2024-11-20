@@ -8,7 +8,11 @@ root_subparsers = root_parser.add_subparsers(dest="root_cmd", title="Root comman
 # --------------------------------- - - -
 shell_parser = root_subparsers.add_parser("shell", help="Shell controls")
 shell_parser.add_argument(
-    "action", nargs="?", type=str, choices=["open", "close"], help="Shell controls"
+    "action",
+    nargs="?",
+    type=str,
+    choices=["open", "close", "logs"],
+    help="Shell controls",
 )
 shell_parser.add_argument(
     "--no-dmabuf", action="store_true", help="Disable DMABUF renderer"

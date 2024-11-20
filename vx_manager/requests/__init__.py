@@ -75,6 +75,14 @@ class ShellRequests:
         request_get("/shutdown")
 
     @staticmethod
+    def log_to_tty(tty_path: str):
+        return request_post("/log_to_tty", tty_path)
+
+    @staticmethod
+    def unlog_to_tty(tty_path: str):
+        return request_post("/unlog_to_tty", tty_path)
+
+    @staticmethod
     @check_ping(True)
     def feature_names() -> list[str] | None:
         return request_get("/features/names").json()["names"]

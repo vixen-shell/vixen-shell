@@ -131,7 +131,6 @@ class SysTrayObserver:
         if SysTrayObserver._thread:
             Logger.log("[Systray]: Stop event listener")
             SysTrayObserver._stop_event.set()
-            SysTrayObserver._thread.join()
             SysTrayObserver._thread = None
 
             Logger.log("[Systray]: Stop worker")

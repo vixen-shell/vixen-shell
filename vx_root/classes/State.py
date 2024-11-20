@@ -30,3 +30,15 @@ class State:
         from vx_config import VxConfig
 
         return VxConfig.set_state(key, value)
+
+    @staticmethod
+    def save():
+        from vx_config import VxConfig
+
+        return VxConfig.save_state()
+
+    @staticmethod
+    def save_items(keys: list[str]):
+        from vx_config import VxConfig
+
+        return VxConfig.save_state_items(keys)

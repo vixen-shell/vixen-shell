@@ -17,7 +17,7 @@ api_logging_config = {
     "loggers": {
         "uvicorn": {"level": "INFO", "propagate": True},
         "uvicorn.error": {"level": "INFO", "propagate": True},
-        "uvicorn.access": {"handlers": ["access"], "level": "INFO", "propagate": False},
+        "uvicorn.access": {"handlers": ["access"], "level": "INFO", "propagate": True},
     },
 }
 

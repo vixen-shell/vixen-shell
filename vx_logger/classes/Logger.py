@@ -1,6 +1,6 @@
 import logging, traceback
 from typing import Literal
-from .Formatter import Formatter, DevFormatter
+from .Formatter import FormatterFilter, Formatter, DevFormatter
 from ..utils import Log, LogLevel, LogListener
 
 
@@ -39,11 +39,19 @@ class Logger:
                     listener(log)
 
         formatter_handler = logging.StreamHandler()
+        formatter_handler.addFilter(FormatterFilter())
         formatter_handler.setFormatter(Formatter())
 
+        logger.setLevel(logging.DEBUG)
         logger.addHandler(formatter_handler)
         logger.addHandler(LogHandler())
         Logger.logger = logger
+
+    @staticmethod
+    @check_init(True)
+    def debug(*values: object):
+        message = " ".join(map(repr, values))
+        Logger.log(message, "DEBUG")
 
     @staticmethod
     @check_init(True)
@@ -70,14 +78,26 @@ class Logger:
 
     @staticmethod
     @check_init(True)
-    def add_handler(tty_path: str, level: LogLevel = "INFO", dev_mode: bool = False):
+    def add_handler(tty_path: str, dev_mode: bool = False):
         file_handler = logging.FileHandler(tty_path)
-        file_handler.setFormatter(Formatter() if not dev_mode else DevFormatter())
+        file_handler.setLevel(logging.DEBUG)
 
-        try:
-            file_handler.setLevel(logging._nameToLevel[level])
-        except KeyError as error:
-            raise KeyError(f"{error} is not a valid log level")
+        if dev_mode:
+
+            class LevelFilter(logging.Filter):
+                def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
+                    return record.levelno in (
+                        logging.DEBUG,
+                        logging.WARNING,
+                        logging.ERROR,
+                        logging.CRITICAL,
+                    )
+
+            file_handler.addFilter(LevelFilter())
+            file_handler.setFormatter(DevFormatter())
+
+        else:
+            file_handler.setFormatter(Formatter())
 
         Logger.log_handlers[tty_path] = file_handler
         Logger.logger.addHandler(file_handler)

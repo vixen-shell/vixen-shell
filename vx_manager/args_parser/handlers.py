@@ -21,7 +21,7 @@ def exit(error: ExitError = None):
 
 
 class ShellHandler:
-    action: Literal["open", "close"]
+    action: Literal["open", "close", "logs"]
     no_dmabuf: bool
 
     @staticmethod
@@ -54,6 +54,17 @@ class ShellHandler:
                 )
 
             Shell.close()
+
+        if action == "logs":
+            if no_dmabuf:
+                exit(
+                    {
+                        "message": "No need to use the --no-dmabuf option in this context",
+                        "parser": shell_parser,
+                    }
+                )
+
+            Shell.log_to_tty()
 
         exit()
 

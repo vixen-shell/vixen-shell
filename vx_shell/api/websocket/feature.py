@@ -69,10 +69,6 @@ async def vixen_state_socket(websocket: WebSocket, feature_name: str):
         f'(State WebSockets: {len(VxConfig.websockets)}) - "/feature/{feature_name}/state" [connected]'
     )
 
-    async def dispatch_event(event: OutputEvent):
-        for websocket in VxConfig.websockets:
-            await websocket.send_json(event)
-
     try:
         while True:
             try:
@@ -96,10 +92,10 @@ async def vixen_state_socket(websocket: WebSocket, feature_name: str):
                                 },
                             )
                         )
-                    except KeyError:
+                    except Exception as exception:
                         raise ErrorEvent(
                             event="GET",
-                            message="Key not found",
+                            message=str(exception),
                             data={"key": key},
                         )
 
@@ -113,42 +109,34 @@ async def vixen_state_socket(websocket: WebSocket, feature_name: str):
 
                     try:
                         VxConfig.set_state(key, input_event.data.get("value"))
-                    except KeyError:
+                    except Exception as exception:
                         raise ErrorEvent(
                             event="SET",
-                            message="Key not found",
+                            message=str(exception),
                             data={"key": key},
                         )
-
-                    await dispatch_event(
-                        OutputEvent(
-                            id="UPDATE",
-                            data={"key": key, "value": input_event.data.get("value")},
-                        )
-                    )
 
                 if input_event.id == "SAVE":
-                    VxConfig.save_state()
-                    await dispatch_event(OutputEvent(id="SAVE", data=VxConfig.STATE))
+                    try:
+                        VxConfig.save_state()
+                    except Exception as exception:
+                        raise ErrorEvent("SET", str(exception))
 
-                if input_event.id == "SAVE_ITEM":
+                if input_event.id == "SAVE_ITEMS":
                     if not input_event.data:
-                        raise ErrorEvent("SAVE_ITEM", "Missing item data")
+                        raise ErrorEvent("SAVE_ITEMS", "Missing item data")
 
-                    key = input_event.data.get("key")
-                    if not key:
-                        raise ErrorEvent("SAVE_ITEM", "Missing item key")
+                    keys = input_event.data.get("keys")
+                    if not keys:
+                        raise ErrorEvent("SAVE_ITEMS", "Missing item keys")
 
                     try:
-                        VxConfig.save_state_item(key)
-                        await dispatch_event(
-                            OutputEvent(id="SAVE_ITEM", data=input_event.data)
-                        )
-                    except KeyError:
+                        VxConfig.save_state_items(keys)
+                    except Exception as exception:
                         raise ErrorEvent(
-                            event="SAVE_ITEM",
-                            message="Key not found",
-                            data={"key": key},
+                            event="SAVE_ITEMS",
+                            message=str(exception),
+                            data=input_event.data,
                         )
 
             except ErrorEvent as error_event:

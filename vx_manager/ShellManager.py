@@ -1,5 +1,5 @@
-import os, sys, signal
-from .utils import use_sudo, DevFeature
+import sys, signal
+from .utils import use_sudo, DevFeature, get_current_tty
 from .logger import Logger
 from vx_cli import Cli
 
@@ -18,6 +18,33 @@ class ShellManager:
         from .requests import ShellRequests
 
         ShellRequests.close()
+
+    @staticmethod
+    @use_sudo(False)
+    def log_to_tty():
+        from .requests import ShellRequests
+
+        if ShellRequests.ping():
+            from time import sleep
+            from signal import signal, SIGINT
+
+            print("Listening to logs from Vixen Shell ([ctrl + C] to exit) ...\n")
+
+            def on_keyboard_interrupt(signum, frame):
+                if ShellRequests.ping():
+                    ShellRequests.unlog_to_tty(get_current_tty())
+
+                print("\nStop listening to logs from Vixen Shell")
+                exit(0)
+
+            signal(SIGINT, on_keyboard_interrupt)
+
+            ShellRequests.log_to_tty(get_current_tty())
+
+            while True:
+                sleep(1)
+        else:
+            Logger.log("Vixen Shell is not running", "WARNING")
 
     @staticmethod
     @use_sudo(False)
@@ -64,7 +91,6 @@ class ShellManager:
             signal.signal(signal.SIGINT, signal_handler)
 
             if feature.load():
-                # os.system("clear")
                 Logger.log(f"Load feature '{feature.name}'", suffix="SUCCESS")
 
                 feature.start()
@@ -88,7 +114,6 @@ class ShellManager:
                             Logger.log("Reload feature", "ERROR", "FAILED")
                             break
 
-                        # os.system("clear")
                         Logger.log(f"Reload feature '{feature.name}'", suffix="SUCCESS")
                         feature.start()
 

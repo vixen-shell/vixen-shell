@@ -135,6 +135,11 @@ class ParamDataHandler:
         )
 
     @staticmethod
+    def get_user_dir(feature_name: str):
+        user_filepath = ParamDataHandler.__data_dict[feature_name].user_filepath
+        return user_filepath.rpartition("/")[0]
+
+    @staticmethod
     def save_params(feature_name: str):
         data = ParamDataHandler.__data_dict[feature_name]
         write_json(data.user_filepath, data.user)
