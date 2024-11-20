@@ -1,0 +1,16 @@
+{
+    "Scale": "Échelle de l'interface",
+    "Set the display scale of the Vixen Sell UI": "Définir l'échelle d'affichage de l'interface de Vixen Sell",
+    "Color scheme": "Thème de couleurs",
+    "Use a custom color scheme": "Définir le thème de couleurs (claire ou sombre)",
+    "Primary color": "Couleur primaire",
+    "Set primary color": "Définir la couleur primaire",
+    "Icon style": "Style des icones",
+    "Set Vixen Shell icon style": "Définir le style des icones de Vixen Shell",
+    "Font family": "Police de caractère",
+    "Set the Vixen Shell font family": "Définir la police de caractère",
+    "Monospace font family": "Police de caractère à chasse fixe",
+    "Set the Vixen Shell monospace font family": "Définir la police de caractère à chasse fixe",
+    "Restore": "Rétablir",
+    "Save": "Enregistrer"
+}
