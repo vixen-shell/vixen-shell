@@ -1,5 +1,11 @@
 from .references import AbsRootFeature, AbsRootContents
 from .classes import State, StateItem, SocketHandler
+from vx_types import (
+    root_FeatureParams_dict,
+    root_FrameParams_dict,
+    root_LayerFrameParams_dict,
+    root_MarginParams_dict,
+)
 from vx_logger import Logger
 from vx_gtk import ContextMenu, show_message_dialog, show_confirm_dialog
 

@@ -1,9 +1,9 @@
-from vx_root import root_content, State
+from vx_root import root_content, State, root_FrameParams_dict
 from ..system import System
 
 content = root_content()
 
-theme_settings_frame = {
+theme_settings_frame: root_FrameParams_dict = {
     "name": "Vixen Shell Theme Settings",
     "route": "vx_theme",
     "layer_frame": "disable",
