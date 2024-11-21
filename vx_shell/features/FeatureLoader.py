@@ -93,21 +93,26 @@ class FeatureLoader:
             raise Exception(f"[{self.feature_name}]: {str(param_error)}")
 
     def __unload_feature_params(self, for_remove: bool = False):
-        if self.is_dev_feature:
-            VxConfig.update_state(
-                feature_state=ParamDataHandler.get_value(f"{self.feature_name}.state"),
-                option="remove",
-                save=False,
-            )
-        else:
-            if for_remove:
+        try:
+            if self.is_dev_feature:
                 VxConfig.update_state(
                     feature_state=ParamDataHandler.get_value(
                         f"{self.feature_name}.state"
                     ),
                     option="remove",
-                    save=True,
+                    save=False,
                 )
+            else:
+                if for_remove:
+                    VxConfig.update_state(
+                        feature_state=ParamDataHandler.get_value(
+                            f"{self.feature_name}.state"
+                        ),
+                        option="remove",
+                        save=True,
+                    )
+        except:
+            pass
 
         ParamDataHandler.remove_param_data(self.feature_name)
 
