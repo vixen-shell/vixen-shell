@@ -1,3 +1,4 @@
+from vx_root.references.AbsLocales import AbsLocales, get_locales_reference
 from vx_root.references.AbsFrames import AbsFrames
 from vx_root.references.AbsParams import AbsParams
 from vx_types import root_FeatureParams_dict
@@ -27,6 +28,7 @@ class RootFeature:
             self.name: str = FeatureUtils.feature_name_from(entry)
             self.root_params: root_FeatureParams_dict | None = None
 
+            self.locales: AbsLocales = get_locales_reference(self.name)
             self.frames: AbsFrames = None
             self.params: AbsParams = None
 

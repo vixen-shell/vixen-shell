@@ -31,7 +31,7 @@ class AbsFrames(ABC):
 
 
 def get_frames_reference(feature):
-    class FeatureReference(AbsFrames):
+    class FramesReference(AbsFrames):
         @property
         def ids(self) -> list[str]:
             return feature.frame_ids
@@ -54,4 +54,4 @@ def get_frames_reference(feature):
         def remove_from_template(self, id: str) -> bool:
             return feature.remove_frame_from_template(id)
 
-    return FeatureReference()
+    return FramesReference()

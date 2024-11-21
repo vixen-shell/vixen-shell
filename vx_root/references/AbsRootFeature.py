@@ -2,6 +2,7 @@ from inspect import stack, getmodule
 from abc import ABC, abstractmethod
 from vx_types import root_FeatureParams_dict
 from .AbsFrames import AbsFrames
+from .AbsLocales import AbsLocales
 from .AbsParams import AbsParams
 
 
@@ -14,6 +15,10 @@ class AbsRootFeature(ABC):
     @property
     @abstractmethod
     def frames(self) -> AbsFrames:
+        pass
+
+    @property
+    def locales(self) -> AbsLocales:
         pass
 
     @property
@@ -61,6 +66,11 @@ def get_root_feature_reference(root_feature):
         @restricted()
         def frames(self) -> AbsFrames:
             return root_feature.frames
+
+        @property
+        @restricted(root_feature.name)
+        def locales(self) -> AbsLocales:
+            return root_feature.locales
 
         @property
         @restricted()
