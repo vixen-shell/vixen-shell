@@ -239,12 +239,19 @@ async def feature_sockets(websocket: WebSocket, feature_name: str, handler_name:
 
     try:
         handler_func: Callable = feature.contents.get("socket", handler_name)
-        type_msg_error = "The handler must be a function that returns an instance of class 'SocketHandler'"
+        type_msg_error = (
+            "The handler must be a function that returns a 'SocketHandler' class"
+        )
 
         if not callable(handler_func):
             raise TypeError(type_msg_error)
 
-        socket_handler: SocketHandler = handler_func(websocket)
+        handler_class = handler_func()
+
+        if not issubclass(handler_class, SocketHandler):
+            raise TypeError(type_msg_error)
+
+        socket_handler: SocketHandler = handler_class(websocket)
 
         if not isinstance(socket_handler, SocketHandler):
             raise TypeError(type_msg_error)
