@@ -13,6 +13,7 @@ from .entities import Levels, Edges, Margins
 
 def init_for_window(window: Gtk.Window):
     GtkLayerShell.init_for_window(window)
+    GtkLayerShell.set_keyboard_mode(window, GtkLayerShell.KeyboardMode.ON_DEMAND)
 
 
 def set_namespace(window: Gtk.Window, namespace: str):

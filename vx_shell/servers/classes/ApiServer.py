@@ -16,6 +16,7 @@ class ApiServer:
 
         signal.signal(signal.SIGTERM, ApiServer.handle_signals)
         signal.signal(signal.SIGHUP, ApiServer.handle_signals)
+        signal.signal(signal.SIGINT, ApiServer.handle_signals)
 
         ApiServer.server = uvicorn.Server(
             uvicorn.Config(
