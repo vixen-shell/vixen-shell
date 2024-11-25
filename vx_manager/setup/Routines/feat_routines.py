@@ -106,13 +106,13 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
             # ---------------------------------------------- - - -
             # Front-end Sources
             #
-            RoutineTask(
-                purpose="Update project name in 'package.json' file",
-                command=Commands.json_patch_feature_name_property(
-                    f"{tmp_project_dir}/package.json", f"vx-feature-{project_name[:-8]}"
-                ),
-                skip_on={"callback": lambda: not front_end, "message": "No front-end"},
-            ),
+            # RoutineTask(
+            #     purpose="Update project name in 'package.json' file",
+            #     command=Commands.json_patch_feature_name_property(
+            #         f"{tmp_project_dir}/package.json", f"vx-feature-{project_name[:-8]}"
+            #     ),
+            #     skip_on={"callback": lambda: not front_end, "message": "No front-end"},
+            # ),
             RoutineTask(
                 purpose="Setup feature sources",
                 command=Commands.rename(
@@ -121,11 +121,11 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
                 ),
                 skip_on={"callback": lambda: not front_end, "message": "No front-end"},
             ),
-            RoutineTask(
-                purpose="Install project dependencies",
-                command=Commands.yarn_install(tmp_project_dir),
-                skip_on={"callback": lambda: not front_end, "message": "No front-end"},
-            ),
+            # RoutineTask(
+            #     purpose="Install project dependencies",
+            #     command=Commands.yarn_install(tmp_project_dir),
+            #     skip_on={"callback": lambda: not front_end, "message": "No front-end"},
+            # ),
             # ---------------------------------------------- - - -
             # Finalize Project
             #
