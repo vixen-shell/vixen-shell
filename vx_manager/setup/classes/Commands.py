@@ -61,6 +61,16 @@ class Commands:
     # ---------------------------------------------- - - -
     # Folders
     @staticmethod
+    def create_vixen_system_group() -> str:
+        return "groupadd vx_devs"
+
+    @staticmethod
+    def front_modules_permissions(modules_dir: str) -> str:
+        return f"chown -R root:vx_devs {modules_dir} && chmod -R 775 {modules_dir}"
+
+    # ---------------------------------------------- - - -
+    # Folders
+    @staticmethod
     def folder_create(dir: str) -> str:
         return f"mkdir -p {dir}"
 
