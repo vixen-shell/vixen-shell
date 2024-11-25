@@ -25,6 +25,18 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
                         f"{VxPath.ENV}/lib/python*/site-packages"
                     )
                     + [VxPath.ROOT_FEATURE_MODULES],
+                    "files.exclude": {
+                        ".vscode": True,
+                        "node_modules": True,
+                        "public": True,
+                        "eslint.config.js": True,
+                        "index.html": True,
+                        "jsconfig.json": True,
+                        "package.json": True,
+                        "postcss.config.cjs": True,
+                        "vite.config.js": True,
+                        "yarn.lock": True,
+                    },
                 },
             )
             return True
