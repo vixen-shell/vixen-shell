@@ -7,7 +7,13 @@ from vx_types import (
     root_MarginParams_dict,
 )
 from vx_logger import Logger
-from vx_gtk import ContextMenu, show_message_dialog, show_confirm_dialog
+from vx_gtk import (
+    AppHandler,
+    AppSummary,
+    ContextMenu,
+    show_message_dialog,
+    show_confirm_dialog,
+)
 
 
 def root_feature(feature_name: str = None) -> AbsRootFeature:
