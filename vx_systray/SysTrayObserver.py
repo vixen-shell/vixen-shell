@@ -1,4 +1,5 @@
 import socket, json, threading, os, time, asyncio
+from subprocess import Popen
 from vx_gtk import GLib, DbusmenuGtk3
 from fastapi import WebSocket
 from vx_logger import Logger
@@ -72,7 +73,7 @@ class SysTrayObserver:
     _stop_event = threading.Event()
 
     _socket_path = "/tmp/vx_systray_socket"
-    _worker_process = None
+    _worker_process: Popen[bytes] = None
     _worker_path = None
 
     @staticmethod
@@ -129,10 +130,17 @@ class SysTrayObserver:
     @staticmethod
     def stop():
         if SysTrayObserver._thread:
-            Logger.log("[Systray]: Stop event listener")
+            Logger.log("[Systray]: Waiting for event listener to stop")
             SysTrayObserver._stop_event.set()
-            SysTrayObserver._thread = None
 
-            Logger.log("[Systray]: Stop worker")
-            SysTrayObserver._worker_process.kill()
+            Logger.log("[Systray]: Waiting for worker to stop")
+            SysTrayObserver._worker_process.terminate()
+
+            SysTrayObserver._worker_process.wait()
+            Logger.log("[Systray]: Stopping worker")
+
+            SysTrayObserver._thread.join()
+            Logger.log("[Systray]: Stopping event listener")
+
             os.remove(SysTrayObserver._worker_path)
+            SysTrayObserver._thread = None

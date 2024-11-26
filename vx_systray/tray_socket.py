@@ -40,6 +40,8 @@ class TraySocket:
             TraySocket.__close_server()
             sys.exit(0)
 
+        signal.signal(signal.SIGTERM, handle_sigint)
+        signal.signal(signal.SIGHUP, handle_sigint)
         signal.signal(signal.SIGINT, handle_sigint)
 
         TraySocket.__init_server()
