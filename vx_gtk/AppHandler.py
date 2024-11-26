@@ -40,11 +40,11 @@ class AppSummary:
 
 class AppHandler:
     @staticmethod
-    def get_ids():
+    def get_ids() -> list[str]:
         return [app_info.get_id() for app_info in Gio.AppInfo.get_all()]
 
     @staticmethod
-    def get(app_id: str):
+    def get(app_id: str) -> Gio.DesktopAppInfo:
         return Gio.DesktopAppInfo.new(app_id)
 
     @staticmethod
@@ -88,11 +88,11 @@ class AppHandler:
         return app_id
 
     @staticmethod
-    def launch(app_id: str):
+    def launch(app_id: str) -> bool:
         app: Gio.DesktopAppInfo = Gio.DesktopAppInfo.new(app_id)
         return app.launch()
 
     @staticmethod
-    def launch_action(app_id: str, action_name: str):
+    def launch_action(app_id: str, action_name: str) -> bool:
         app: Gio.DesktopAppInfo = Gio.DesktopAppInfo.new(app_id)
         return app.launch_action(action_name)
