@@ -1,5 +1,5 @@
 from .references import AbsRootFeature, AbsRootContents
-from .classes import State, StateItem, SocketHandler
+from .classes import State, StateItem, SocketEvent, SocketHandler
 from vx_types import (
     root_FeatureParams_dict,
     root_FrameParams_dict,

@@ -1,4 +1,11 @@
+import asyncio
 from fastapi import WebSocket
+from typing import TypedDict, Union, Dict, Any
+
+
+class SocketEvent(TypedDict):
+    id: str
+    data: Union[Dict[str, Any] | None]
 
 
 class SocketHandler:
@@ -13,3 +20,6 @@ class SocketHandler:
 
     async def on_closing(self):
         pass
+
+    def send_event(self, event: SocketEvent):
+        asyncio.create_task(self.websocket.send_json(event))
