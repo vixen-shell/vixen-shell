@@ -130,6 +130,18 @@ class Applications:
     __app_dict = AppDict()
 
     @staticmethod
+    def items():
+        return Applications.__app_dict.items()
+
+    @staticmethod
+    def keys():
+        return Applications.__app_dict.keys()
+
+    @staticmethod
+    def values():
+        return Applications.__app_dict.values()
+
+    @staticmethod
     def get(id: str):
         return Applications.__app_dict.get(id)
 
