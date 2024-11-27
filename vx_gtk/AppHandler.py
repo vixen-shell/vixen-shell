@@ -126,4 +126,13 @@ class AppDict(dict[str, Application]):
         return closest_app
 
 
-Applications = AppDict()
+class Applications:
+    __app_dict = AppDict()
+
+    @staticmethod
+    def get(id: str):
+        return Applications.__app_dict.get(id)
+
+    @staticmethod
+    def find(matching_elements: list[str] = [], pid: int = None) -> Application:
+        return Applications.__app_dict.find(matching_elements, pid)
