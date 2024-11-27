@@ -37,15 +37,6 @@ class Application:
         self.should_show = app_info.should_show() or False
         self.actions = app_info.list_actions() or None
 
-        self.__launch = lambda: app_info.launch()
-        self.__launch_action = lambda action_name: app_info.launch_action(action_name)
-
-    def launch(self) -> bool:
-        return self.__launch()
-
-    def launch_action(self, action_name: str) -> bool:
-        return self.__launch_action(action_name)
-
 
 class AppDict(dict[str, Application]):
     def __init__(self):
@@ -87,12 +78,14 @@ class AppDict(dict[str, Application]):
         }:
             self._update_applications()
 
-    def find(self, matching_elements: list[str] = [], pid: int = None) -> Application:
+    def find(self, matching_to: list[str] = [], pid: int = None) -> Application:
         def compute_similarity(string1: str, string2: str) -> float:
             if not string1 or not string2:
                 return 0.0
 
             return SequenceMatcher(None, string1, string2).ratio()
+
+        matching_elements = matching_to.copy()
 
         if pid:
             matching_elements.extend(get_process_infos_by_pid(pid))
@@ -146,5 +139,20 @@ class Applications:
         return Applications.__app_dict.get(id)
 
     @staticmethod
-    def find(matching_elements: list[str] = [], pid: int = None) -> Application:
-        return Applications.__app_dict.find(matching_elements, pid)
+    def find(matching_to: list[str] = [], pid: int = None) -> Application:
+        return Applications.__app_dict.find(matching_to, pid)
+
+    @staticmethod
+    def launch(id: str) -> bool:
+        try:
+            app: Gio.DesktopAppInfo = Gio.DesktopAppInfo.new(id)
+            return app.launch()
+        except:
+            return False
+
+    def launch_action(id: str, action_name: str) -> bool:
+        try:
+            app: Gio.DesktopAppInfo = Gio.DesktopAppInfo.new(id)
+            return app.launch_action(action_name)
+        except:
+            return False

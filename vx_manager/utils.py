@@ -126,7 +126,7 @@ def get_current_tty():
     try:
         return os.ttyname(sys.stdout.fileno())
     except Exception as e:
-        raise RuntimeError("Impossible de récupérer le terminal actuel") from e
+        raise RuntimeError("Unable to retrieve current terminal") from e
 
 
 class DevFeature:

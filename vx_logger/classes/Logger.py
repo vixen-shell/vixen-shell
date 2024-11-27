@@ -1,13 +1,21 @@
-import logging, traceback
+import logging, traceback, os, sys
 from typing import Literal
 from .Formatter import FormatterFilter, Formatter, DevFormatter
 from ..utils import Log, LogLevel, LogListener
+
+
+def get_current_tty():
+    try:
+        return os.ttyname(sys.stdout.fileno())
+    except Exception as e:
+        raise RuntimeError("Unable to retrieve current terminal") from e
 
 
 class Logger:
     logger: logging.Logger = None
     log_listeners: list[LogListener] = []
     log_handlers: dict[str, logging.FileHandler] = {}
+    tty_print = get_current_tty()
 
     @staticmethod
     def check_init(value: bool):
@@ -49,6 +57,12 @@ class Logger:
 
     @staticmethod
     @check_init(True)
+    def print(*values: object):
+        with open(Logger.tty_print, "w") as tty:
+            print(*values, file=tty)
+
+    @staticmethod
+    @check_init(True)
     def debug(*values: object):
         message = " ".join(map(repr, values))
         Logger.log(message, "DEBUG")
@@ -83,6 +97,7 @@ class Logger:
         file_handler.setLevel(logging.DEBUG)
 
         if dev_mode:
+            Logger.tty_print = tty_path
 
             class LevelFilter(logging.Filter):
                 def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
@@ -108,6 +123,9 @@ class Logger:
         file_handler = Logger.log_handlers.get(tty_path)
 
         if file_handler:
+            if Logger.tty_print == tty_path:
+                Logger.tty_print = get_current_tty()
+
             Logger.logger.removeHandler(file_handler)
             Logger.log_handlers.pop(tty_path)
 
