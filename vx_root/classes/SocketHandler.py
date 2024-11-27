@@ -1,6 +1,6 @@
 import asyncio
 from fastapi import WebSocket
-from typing import TypedDict, Union, Dict, Any
+from typing import TypedDict, Union, Dict, Any, Coroutine
 
 
 class SocketEvent(TypedDict):
@@ -18,8 +18,5 @@ class SocketHandler:
     async def on_loop_iteration(self):
         await self.websocket.receive_text()
 
-    async def on_closing(self):
+    async def on_closing(self) -> Coroutine:
         pass
-
-    def send_event(self, event: SocketEvent):
-        asyncio.create_task(self.websocket.send_json(event))

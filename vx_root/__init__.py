@@ -8,8 +8,7 @@ from vx_types import (
 )
 from vx_logger import Logger
 from vx_gtk import (
-    AppHandler,
-    AppSummary,
+    Applications,
     ContextMenu,
     show_message_dialog,
     show_confirm_dialog,

@@ -1,6 +1,6 @@
 import psutil
 from difflib import SequenceMatcher
-from .Gtk_imports import Gio
+from .Gtk_imports import Gio, GLib
 
 
 def get_process_infos_by_pid(pid: int) -> list[str]:
@@ -13,14 +13,14 @@ def get_process_infos_by_pid(pid: int) -> list[str]:
     return [process.exe(), process.name(), command_line]
 
 
-class AppSummary:
+class Application:
     def __init__(self, app_info: Gio.DesktopAppInfo) -> None:
         self.id = app_info.get_id()
 
-        self.name = app_info.get_name()
+        self.name = app_info.get_name() or None
         self.display_name = app_info.get_display_name() or None
         self.generic_name = app_info.get_generic_name() or None
-        self.initial_class = app_info.get_startup_wm_class() or None
+        self.startup_wm_class = app_info.get_startup_wm_class() or None
 
         self.commandline = app_info.get_commandline() or None
         self.executable = app_info.get_executable() or None
@@ -37,18 +37,57 @@ class AppSummary:
         self.should_show = app_info.should_show() or False
         self.actions = app_info.list_actions() or None
 
+        self.__launch = lambda: app_info.launch()
+        self.__launch_action = lambda action_name: app_info.launch_action(action_name)
 
-class AppHandler:
-    @staticmethod
-    def get_ids() -> list[str]:
-        return [app_info.get_id() for app_info in Gio.AppInfo.get_all()]
+    def launch(self) -> bool:
+        return self.__launch()
 
-    @staticmethod
-    def get(app_id: str) -> Gio.DesktopAppInfo:
-        return Gio.DesktopAppInfo.new(app_id)
+    def launch_action(self, action_name: str) -> bool:
+        return self.__launch_action(action_name)
 
-    @staticmethod
-    def find_id(matching_elements: list[str] = [], pid: int = None) -> str:
+
+class AppDict(dict[str, Application]):
+    def __init__(self):
+        super().__init__(self._load_applications())
+
+        self._monitors = [
+            self._create_monitor(Gio.File.new_for_path("/usr/share/applications/")),
+            self._create_monitor(
+                Gio.File.new_for_path(GLib.get_user_data_dir() + "/applications/")
+            ),
+        ]
+
+    def _create_monitor(self, path: Gio.File) -> Gio.FileMonitor:
+        monitor = path.monitor_directory(Gio.FileMonitorFlags.NONE, None)
+        monitor.connect("changed", self._on_entry_changed)
+        return monitor
+
+    def _load_applications(self) -> dict[str, Application]:
+        return {
+            app_info.get_id(): Application(app_info)
+            for app_info in Gio.AppInfo.get_all()
+        }
+
+    def _update_applications(self):
+        self.clear()
+        self.update(self._load_applications())
+
+    def _on_entry_changed(
+        self,
+        monitor: Gio.FileMonitor,
+        file: Gio.File,
+        other_file: Gio.File,
+        event_type: Gio.FileMonitorEvent,
+    ):
+        if event_type in {
+            Gio.FileMonitorEvent.CREATED,
+            Gio.FileMonitorEvent.DELETED,
+            Gio.FileMonitorEvent.CHANGED,
+        }:
+            self._update_applications()
+
+    def find(self, matching_elements: list[str] = [], pid: int = None) -> Application:
         def compute_similarity(string1: str, string2: str) -> float:
             if not string1 or not string2:
                 return 0.0
@@ -58,11 +97,10 @@ class AppHandler:
         if pid:
             matching_elements.extend(get_process_infos_by_pid(pid))
 
-        app_id: str = None
+        closest_app: Application = None
         closest_ratio = 0.0
 
-        for app_info in Gio.AppInfo.get_all():
-            app = AppSummary(app_info)
+        for app in self.values():
             similarities = []
 
             for elem in matching_elements:
@@ -70,7 +108,7 @@ class AppHandler:
                 similarities.append(compute_similarity(elem, app.name))
                 similarities.append(compute_similarity(elem, app.display_name))
                 similarities.append(compute_similarity(elem, app.generic_name))
-                similarities.append(compute_similarity(elem, app.initial_class))
+                similarities.append(compute_similarity(elem, app.startup_wm_class))
                 similarities.append(compute_similarity(elem, app.commandline))
                 similarities.append(compute_similarity(elem, app.executable))
                 similarities.append(compute_similarity(elem, app.description))
@@ -82,17 +120,10 @@ class AppHandler:
                 overall_similarity = 0.0
 
             if overall_similarity > closest_ratio:
-                app_id = app_info.get_id()
+                closest_app = app
                 closest_ratio = overall_similarity
 
-        return app_id
+        return closest_app
 
-    @staticmethod
-    def launch(app_id: str) -> bool:
-        app: Gio.DesktopAppInfo = Gio.DesktopAppInfo.new(app_id)
-        return app.launch()
 
-    @staticmethod
-    def launch_action(app_id: str, action_name: str) -> bool:
-        app: Gio.DesktopAppInfo = Gio.DesktopAppInfo.new(app_id)
-        return app.launch_action(action_name)
+Applications = AppDict()
