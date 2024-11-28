@@ -4,18 +4,11 @@ from .Formatter import FormatterFilter, Formatter, DevFormatter
 from ..utils import Log, LogLevel, LogListener
 
 
-def get_current_tty():
-    try:
-        return os.ttyname(sys.stdout.fileno())
-    except Exception as e:
-        raise RuntimeError("Unable to retrieve current terminal") from e
-
-
 class Logger:
     logger: logging.Logger = None
     log_listeners: list[LogListener] = []
     log_handlers: dict[str, logging.FileHandler] = {}
-    tty_print = get_current_tty()
+    tty_print = None
 
     @staticmethod
     def check_init(value: bool):
@@ -58,8 +51,11 @@ class Logger:
     @staticmethod
     @check_init(True)
     def print(*values: object):
-        with open(Logger.tty_print, "w") as tty:
-            print(*values, file=tty)
+        if Logger.tty_print:
+            with open(Logger.tty_print, "w") as tty:
+                return print(*values, file=tty)
+
+        print(*values)
 
     @staticmethod
     @check_init(True)
@@ -124,7 +120,7 @@ class Logger:
 
         if file_handler:
             if Logger.tty_print == tty_path:
-                Logger.tty_print = get_current_tty()
+                Logger.tty_print = None
 
             Logger.logger.removeHandler(file_handler)
             Logger.log_handlers.pop(tty_path)
