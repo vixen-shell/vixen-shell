@@ -196,23 +196,26 @@ def remove_all():
     desktop_entry_tasks: list[RoutineTask] = []
     desktop_entry_filenames: list[str] = []
 
-    root_feature_module_paths = [
-        f"{VxPath.ROOT_FEATURE_MODULES}/{folder_name}"
-        for folder_name in os.listdir(VxPath.ROOT_FEATURE_MODULES)
-        if os.path.isdir(os.path.join(VxPath.ROOT_FEATURE_MODULES, folder_name))
-    ]
+    try:
+        root_feature_module_paths = [
+            f"{VxPath.ROOT_FEATURE_MODULES}/{folder_name}"
+            for folder_name in os.listdir(VxPath.ROOT_FEATURE_MODULES)
+            if os.path.isdir(os.path.join(VxPath.ROOT_FEATURE_MODULES, folder_name))
+        ]
 
-    for module_path in root_feature_module_paths:
-        if os.path.exists(f"{module_path}/apps.json"):
-            desktop_entry_filenames += read_json(f"{module_path}/apps.json")
+        for module_path in root_feature_module_paths:
+            if os.path.exists(f"{module_path}/apps.json"):
+                desktop_entry_filenames += read_json(f"{module_path}/apps.json")
 
-    desktop_entry_tasks = [
-        RoutineTask(
-            purpose=f"Remove '{filename}' desktop entry",
-            command=Commands.file_remove(f"{VxPath.DESKTOP_ENTRIES}/{filename}"),
-        )
-        for filename in desktop_entry_filenames
-    ]
+        desktop_entry_tasks = [
+            RoutineTask(
+                purpose=f"Remove '{filename}' desktop entry",
+                command=Commands.file_remove(f"{VxPath.DESKTOP_ENTRIES}/{filename}"),
+            )
+            for filename in desktop_entry_filenames
+        ]
+    except:
+        pass
 
     return Routine(
         purpose="Remove Vixen Shell",
