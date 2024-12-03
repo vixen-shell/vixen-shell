@@ -29,6 +29,7 @@ class user_LayerFrameParams(BaseModel):
     margins: user_MarginParams | None = None
     width: int | None = None
     height: int | None = None
+    radius: int | None = None
 
 
 class user_FrameParams(BaseModel):
@@ -77,6 +78,7 @@ class user_LayerFrameParams_dict(TypedDict):
     margins: user_MarginParams_dict
     width: int
     height: int
+    radius: int
 
     @staticmethod
     def get_structure():
@@ -90,6 +92,7 @@ class user_LayerFrameParams_dict(TypedDict):
             "margins": user_MarginParams_dict.get_structure(),
             "width": "VALUE",
             "height": "VALUE",
+            "radius": "VALUE",
         }
 
 

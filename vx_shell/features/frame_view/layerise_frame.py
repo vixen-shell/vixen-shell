@@ -1,6 +1,6 @@
 from vx_features import ParamDataHandler
 from vx_types import LevelKeys, AnchorEdgeKeys, AlignmentKeys
-from vx_gtk import Gtk
+from vx_gtk import Gtk, Gdk
 from ..layerise import Edges, Levels, Margins, layerise_window, set_layer
 
 anchor_key_values = {

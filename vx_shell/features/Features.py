@@ -1,6 +1,5 @@
 from vx_features import FeatureUtils
 from typing import List, Dict
-from vx_gtk import GtkMainLoop
 from vx_logger import Logger
 from .Feature import Feature
 from .FeatureLoader import FeatureLoader
@@ -13,7 +12,6 @@ class Features:
 
     @staticmethod
     def init():
-        GtkMainLoop.run()
         Features.popup_frame = PopupFrame()
 
         for name in FeatureUtils.get_root_feature_names():
@@ -59,8 +57,6 @@ class Features:
         for feature in Features.dict.values():
             if feature.is_started:
                 await feature.stop()
-
-        GtkMainLoop.quit()
 
     @staticmethod
     def names() -> List[str]:

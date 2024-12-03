@@ -97,12 +97,13 @@ class StatusNotifierWatcherInterface(object):
             full_service_name = "{}{}".format(service, "/StatusNotifierItem")
 
         else:
-            full_service_name = "{}{}".format(call_info["sender"], "/StatusNotifierItem")
+            full_service_name = "{}{}".format(
+                call_info["sender"], "/StatusNotifierItem"
+            )
 
         if full_service_name not in self._statusNotifierItems:
             item_service_observer = DBusObserver(
-                message_bus=self.session_bus,
-                service_name=call_info["sender"]
+                message_bus=self.session_bus, service_name=call_info["sender"]
             )
             item_service_observer.service_available.connect(
                 lambda _observer: self.item_available_handler(full_service_name)
@@ -124,12 +125,9 @@ class StatusNotifierWatcherInterface(object):
         # print("StatusNotifierWatcher -> RegisterStatusNotifierHost: {}".format(service))
         if call_info["sender"] not in self._statusNotifierHosts:
             host_service_observer = DBusObserver(
-                message_bus=self.session_bus,
-                service_name=call_info["sender"]
+                message_bus=self.session_bus, service_name=call_info["sender"]
             )
-            host_service_observer.service_available.connect(
-                self.host_available_handler
-            )
+            host_service_observer.service_available.connect(self.host_available_handler)
             host_service_observer.service_unavailable.connect(
                 self.host_unavailable_handler
             )
@@ -169,12 +167,15 @@ class StatusNotifierWatcherInterface(object):
         )"""
         self._statusNotifierItems.append(full_service_name)
         self.StatusNotifierItemRegistered.emit(full_service_name)
-        self.PropertiesChanged.emit(WATCHER_SERVICE_NAME, {
-            "RegisteredStatusNotifierItems": dasbus.typing.get_variant(
-                dasbus.typing.List[dasbus.typing.Str],
-                self._statusNotifierItems
-            )
-        }, [])
+        self.PropertiesChanged.emit(
+            WATCHER_SERVICE_NAME,
+            {
+                "RegisteredStatusNotifierItems": dasbus.typing.get_variant(
+                    dasbus.typing.List[dasbus.typing.Str], self._statusNotifierItems
+                )
+            },
+            [],
+        )
 
     def item_unavailable_handler(self, full_service_name):
         """print(
@@ -185,27 +186,42 @@ class StatusNotifierWatcherInterface(object):
         if full_service_name in set(self._statusNotifierItems):
             self._statusNotifierItems.remove(full_service_name)
             self.StatusNotifierItemUnregistered.emit(full_service_name)
-            self.PropertiesChanged.emit(WATCHER_SERVICE_NAME, {
-                "RegisteredStatusNotifierItems": dasbus.typing.get_variant(
-                    dasbus.typing.List[dasbus.typing.Str],
-                    self._statusNotifierItems
-                )
-            }, [])
+            self.PropertiesChanged.emit(
+                WATCHER_SERVICE_NAME,
+                {
+                    "RegisteredStatusNotifierItems": dasbus.typing.get_variant(
+                        dasbus.typing.List[dasbus.typing.Str], self._statusNotifierItems
+                    )
+                },
+                [],
+            )
 
     def host_available_handler(self, observer):
         self._statusNotifierHosts.append(observer.service_name)
         self.StatusNotifierHostRegistered.emit()
-        self.PropertiesChanged.emit(WATCHER_SERVICE_NAME, {
-            "IsStatusNotifierHostRegistered": dasbus.typing.get_variant(dasbus.typing.Bool, True)
-        }, [])
+        self.PropertiesChanged.emit(
+            WATCHER_SERVICE_NAME,
+            {
+                "IsStatusNotifierHostRegistered": dasbus.typing.get_variant(
+                    dasbus.typing.Bool, True
+                )
+            },
+            [],
+        )
 
     def host_unavailable_handler(self, observer):
         self._statusNotifierHosts.remove(observer.service_name)
         self.StatusNotifierHostUnregistered.emit()
         if len(self._statusNotifierHosts) == 0:
-            self.PropertiesChanged.emit(WATCHER_SERVICE_NAME, {
-                "IsStatusNotifierHostRegistered": dasbus.typing.get_variant(dasbus.typing.Bool, False)
-            }, [])
+            self.PropertiesChanged.emit(
+                WATCHER_SERVICE_NAME,
+                {
+                    "IsStatusNotifierHostRegistered": dasbus.typing.get_variant(
+                        dasbus.typing.Bool, False
+                    )
+                },
+                [],
+            )
         # deinit on host (parent process) unavailable to avoid becoming zombie process
         deinit()
 
@@ -218,9 +234,12 @@ def init():
 
     global dasbus_event_loop
     if dasbus_event_loop is None:
-        # print("watcher.init(): running dasbus.EventLoop")
-        dasbus_event_loop = EventLoop()
-        dasbus_event_loop.run()
+        try:
+            # print("watcher.init(): running dasbus.EventLoop")
+            dasbus_event_loop = EventLoop()
+            dasbus_event_loop.run()
+        except:
+            pass
 
 
 def deinit():

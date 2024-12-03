@@ -1,21 +1,39 @@
-import logging
-from threading import Thread
-from multiprocessing import Process, Queue
-from queue import Empty as QueueEmpty
+import os, sys, logging
+from multiprocessing import Process
 from vx_config import VxConfig
-from vx_logger import Logger
+from vx_cli import Cli
 from .FlaskApp import FlaskApp
 from ..front_app import app
 from ..utils import front_logging_config
 
 
-def server_process(queue: Queue):
-    class LogHandler(logging.Handler):
-        def emit(self, record: logging.LogRecord) -> None:
-            queue.put({"level": record.levelname, "message": record.getMessage()})
+def get_current_tty():
+    try:
+        return os.ttyname(sys.stdout.fileno())
+    except:
+        return None
 
-    logger = logging.getLogger("gunicorn")
-    logger.addHandler(LogHandler())
+
+class Formatter(logging.Formatter):
+    def format(self, record):
+        message = record.getMessage()
+
+        levelname = Cli.String.level(record.levelname, record.levelname)
+        levelname += ":" + Cli.String.spaces(9 - len(record.levelname))
+        message = f"[Front server]: {message}"
+
+        return levelname + message
+
+
+def server_process():
+    tty_path = get_current_tty()
+
+    if tty_path:
+        file_handler = logging.FileHandler(tty_path)
+        file_handler.setFormatter(Formatter())
+
+        logger = logging.getLogger("gunicorn")
+        logger.addHandler(file_handler)
 
     FlaskApp(
         app,
@@ -28,42 +46,14 @@ def server_process(queue: Queue):
 
 class FrontServer:
     process: Process = None
-    log_handler: Thread = None
-
-    @staticmethod
-    def init_log_handler():
-        queue = Queue()
-
-        def handle_log():
-            Logger.log(f"[Front server]: Start listening logs", "INFO")
-
-            while FrontServer.process.is_alive():
-                try:
-                    log = queue.get(timeout=1)
-                    Logger.log(f"[Front server]: {log['message']}", log["level"])
-
-                    if log["message"] == "Shutting down: Master":
-                        break
-
-                except QueueEmpty:
-                    continue
-
-            Logger.log(f"[Front server]: Stop listening logs", "INFO")
-
-        thread = Thread(target=handle_log)
-
-        return thread, queue
 
     @staticmethod
     def start():
         if FrontServer.process:
             raise ValueError(f"{FrontServer.__name__} already running")
 
-        FrontServer.log_handler, queue = FrontServer.init_log_handler()
-        FrontServer.process = Process(target=server_process, args=(queue,))
-
+        FrontServer.process = Process(target=server_process)
         FrontServer.process.start()
-        FrontServer.log_handler.start()
 
     @staticmethod
     def stop():
@@ -71,4 +61,3 @@ class FrontServer:
             raise ValueError(f"{FrontServer.__name__} is not running")
 
         FrontServer.process.terminate()
-        FrontServer.log_handler.join()
