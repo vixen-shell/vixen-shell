@@ -29,6 +29,7 @@ def vx_new_feature(path: str, project_name: str, front_end: bool):
                         ".vscode": True,
                         "node_modules": True,
                         "public": True,
+                        "src/main.jsx": True,
                         ".prettierrc": True,
                         "eslint.config.js": True,
                         "index.html": True,
