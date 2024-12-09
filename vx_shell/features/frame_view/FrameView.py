@@ -98,64 +98,40 @@ def get_background_color(widget):
     return context.get_background_color(Gtk.StateFlags.NORMAL)
 
 
-def set_webview(frame_view: FrameView, radius: int = None):
+def set_webview(frame_view: FrameView, layer: bool = False):
+    background_color = (
+        Gdk.RGBA(0, 0, 0, 0) if layer else get_background_color(frame_view.frame)
+    )
 
-    def draw_rounded_rectangle(cr, x, y, width, height, radius):
-        cr.new_sub_path()
-        cr.arc(x + width - radius, y + radius, radius, -1.57, 0)
-        cr.arc(x + width - radius, y + height - radius, radius, 0, 1.57)
-        cr.arc(x + radius, y + height - radius, radius, 1.57, 3.14)
-        cr.arc(x + radius, y + radius, radius, 3.14, 4.71)
-        cr.close_path()
+    if layer:
+        screen = frame_view.frame.get_screen()
+        rgba_visual = screen.get_rgba_visual()
+        if rgba_visual is not None:
+            frame_view.frame.set_visual(rgba_visual)
 
-    def on_draw(widget, cr):
-        allocation = widget.get_allocation()
-        width, height = allocation.width, allocation.height
-
-        draw_rounded_rectangle(cr, 0, 0, width, height, radius)
-
-        cr.clip()
+        frame_view.frame.set_app_paintable(True)
 
     frame_view.webview = webview(
         frame_view.feature_name,
         frame_view.route,
         frame_view.frame_id,
         frame_view.dev_mode,
-        get_background_color(frame_view.frame),
+        background_color,
     )
 
-    if radius:
-        event_box: Gtk.EventBox = Gtk.EventBox()
-        event_box.add(frame_view.webview)
-        event_box.connect("draw", on_draw)
-        event_box.show_all()
-        frame_view.frame.add(event_box)
-    else:
-        frame_view.frame.add(frame_view.webview)
+    frame_view.frame.add(frame_view.webview)
 
 
 def show_frame(frame_view: FrameView):
     def create_frame():
-
         frame_view.frame = Gtk.Window()
-        frame_view.frame.set_app_paintable(True)
 
         if ParamDataHandler.node_is_define(
             f"{frame_view.feature_name}.frames.{frame_view.frame_id}.layer_frame"
         ):
-            set_webview(
-                frame_view,
-                ParamDataHandler.get_value(
-                    f"{frame_view.feature_name}.frames.{frame_view.frame_id}.layer_frame.radius"
-                ),
-            )
+            set_webview(frame_view, True)
 
-            layerise_frame(
-                frame_view.frame,
-                ParamDataHandler.get_value(
-                    f"{frame_view.feature_name}.frames.{frame_view.frame_id}.name"
-                ),
-            )
+            layerise_frame(frame_view.frame, "vx_layer")
             set_layer_frame(
                 frame_view.frame, frame_view.feature_name, frame_view.frame_id
             )

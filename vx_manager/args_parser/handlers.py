@@ -22,21 +22,27 @@ def exit(error: ExitError = None):
 
 class ShellHandler:
     action: Literal["open", "close", "logs"]
+    software_rendering: bool
     no_dmabuf: bool
 
     @staticmethod
     def init(args: Namespace):
         ShellHandler.action = args.action
+        ShellHandler.software_rendering = args.software_rendering
         ShellHandler.no_dmabuf = args.no_dmabuf
 
     @staticmethod
     def handle():
         action = ShellHandler.action
+        software_rendering = ShellHandler.software_rendering
         no_dmabuf = ShellHandler.no_dmabuf
 
         if not action or action == "open":
             os.environ["GDK_BACKEND"] = "wayland"
-            os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "0"
+
+            if software_rendering:
+                print("Use software rendering\n")
+                os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 
             if no_dmabuf:
                 print("DMABUF Renderer disabled\n")
@@ -45,10 +51,10 @@ class ShellHandler:
             Shell.open()
 
         if action == "close":
-            if no_dmabuf:
+            if software_rendering or no_dmabuf:
                 exit(
                     {
-                        "message": "No need to use the --no-dmabuf option in this context",
+                        "message": "No need to use the options in this context",
                         "parser": shell_parser,
                     }
                 )
@@ -56,10 +62,10 @@ class ShellHandler:
             Shell.close()
 
         if action == "logs":
-            if no_dmabuf:
+            if software_rendering or no_dmabuf:
                 exit(
                     {
-                        "message": "No need to use the --no-dmabuf option in this context",
+                        "message": "No need to use options in this context",
                         "parser": shell_parser,
                     }
                 )

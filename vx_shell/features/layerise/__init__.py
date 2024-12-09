@@ -49,7 +49,7 @@ def unset_anchor_edges(window: Gtk.Window):
 
 def set_anchor_edges(window: Gtk.Window, anchor_edges: List[Edges] | None):
     if not anchor_edges:
-        anchor_edges = [Edges.top, Edges.right, Edges.bottom, Edges.left]
+        anchor_edges = []
     unset_anchor_edges(window)
 
     for edge in anchor_edges:

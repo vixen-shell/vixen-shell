@@ -28,7 +28,6 @@ class root_LayerFrameParams(BaseModel):
     margins: root_MarginParams | Disable | None = None
     width: int | list[int] | Disable | None = None
     height: int | list[int] | Disable | None = None
-    radius: int | list[int] | Disable = None
 
 
 class root_FrameParams(BaseModel):
@@ -82,7 +81,6 @@ class root_LayerFrameParams_dict(TypedDict):
     margins: Union[root_MarginParams_dict | Disable]
     width: Union[int | list[int] | Disable]
     height: Union[int | list[int] | Disable]
-    radius: Union[int | list[int] | Disable]
 
 
 class root_FrameParams_dict(TypedDict):

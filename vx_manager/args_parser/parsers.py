@@ -15,6 +15,9 @@ shell_parser.add_argument(
     help="Shell controls",
 )
 shell_parser.add_argument(
+    "--software-rendering", action="store_true", help="Use software rendering"
+)
+shell_parser.add_argument(
     "--no-dmabuf", action="store_true", help="Disable DMABUF renderer"
 )
 
