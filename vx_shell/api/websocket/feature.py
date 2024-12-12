@@ -219,6 +219,134 @@ async def vixen_systray_socket(websocket: WebSocket, feature_name: str):
 
 
 # ---------------------------------------------- - - -
+# FEATURE FRAME SOCKET
+#
+
+
+class InputFrameEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    data: dict = None
+
+
+@api.websocket("/feature/{feature_name}/frames")
+async def vixen_frame_socket(websocket: WebSocket, feature_name: str):
+    await websocket.accept()
+
+    async def revoke_websocket(e: Exception):
+        Logger.log_exception(e)
+        await websocket.send_json(OutputEvent(id="ERROR", data={"message": str(e)}))
+        await websocket.close(reason=str(e))
+
+    try:
+        feature = get_feature(feature_name)
+    except Exception as exception:
+        return await revoke_websocket(exception)
+
+    feature.attach_websocket("frames", websocket)
+    Logger.log(
+        f'(Frames WebSockets: {len(feature.frames_websockets)}) - "/feature/{feature_name}/frames" [connected]'
+    )
+
+    try:
+        await websocket.send_json(
+            OutputEvent(
+                id="FRAME_IDS",
+                data={
+                    "frame_ids": feature.frame_ids,
+                    "active_frame_ids": feature.active_frame_ids,
+                },
+            )
+        )
+
+        while True:
+            try:
+                input_event = InputFrameEvent(**await websocket.receive_json())
+
+                if input_event.id == "TOGGLE":
+                    if not input_event.data:
+                        raise ErrorEvent("TOGGLE", "Missing item data")
+
+                    frame_id = input_event.data.get("frame_id")
+                    if not frame_id:
+                        raise ErrorEvent("TOGGLE", "Missing item frame id")
+
+                    try:
+                        if frame_id in feature.active_frame_ids:
+                            feature.close_frame(frame_id)
+                        else:
+                            feature.open_frame(frame_id)
+
+                    except Exception as exception:
+                        raise ErrorEvent(
+                            event="TOGGLE",
+                            message=str(exception),
+                            data={"frame_id": frame_id},
+                        )
+
+                if input_event.id == "OPEN":
+                    if not input_event.data:
+                        raise ErrorEvent("OPEN", "Missing item data")
+
+                    frame_id = input_event.data.get("frame_id")
+                    if not frame_id:
+                        raise ErrorEvent("OPEN", "Missing item frame id")
+
+                    try:
+                        feature.open_frame(frame_id)
+
+                    except Exception as exception:
+                        raise ErrorEvent(
+                            event="OPEN",
+                            message=str(exception),
+                            data={"frame_id": frame_id},
+                        )
+
+                if input_event.id == "CLOSE":
+                    if not input_event.data:
+                        raise ErrorEvent("CLOSE", "Missing item data")
+
+                    frame_id = input_event.data.get("frame_id")
+                    if not frame_id:
+                        raise ErrorEvent("CLOSE", "Missing item frame id")
+
+                    try:
+                        feature.close_frame(frame_id)
+
+                    except Exception as exception:
+                        raise ErrorEvent(
+                            event="CLOSE",
+                            message=str(exception),
+                            data={"frame_id": frame_id},
+                        )
+
+            except ErrorEvent as error_event:
+                Logger.log(
+                    f"[Frames socket]: {error_event.data}",
+                    "WARNING",
+                )
+                await websocket.send_json(
+                    OutputEvent(id="ERROR", data=error_event.data)
+                )
+
+            except ValidationError as exception:
+                Logger.log(
+                    f"[Frames socket]: {str(exception)}",
+                    "WARNING",
+                )
+                await websocket.send_json(
+                    OutputEvent(id="ERROR", data=json.loads(exception.json()))
+                )
+
+    except:
+        await feature.detach_websocket("frames", websocket)
+        Logger.log(
+            f'(Frames WebSockets: {len(feature.frames_websockets)}) - "/feature/{feature_name}/frames" [disconnected]'
+        )
+
+
+# ---------------------------------------------- - - -
 # FEATURE SOCKETS
 #
 

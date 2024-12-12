@@ -1,3 +1,4 @@
+import threading
 from vx_features import ParamDataHandler
 from vx_systray import SysTrayState
 from vx_gtk import GLib, Gtk, Gdk, WebKit2
@@ -15,6 +16,7 @@ class FrameView:
         frame_id: str,
         dev_mode: bool = False,
     ):
+        self.is_open: bool = False
         self.frame: Gtk.Window = None
         self.webview: WebKit2.WebView = None
 
@@ -36,10 +38,6 @@ class FrameView:
             f"{feature_name}.frames.{frame_id}.show_on_startup"
         ):
             self.show()
-
-    @property
-    def is_visible(self) -> bool:
-        return self.frame and self.frame.get_visible()
 
     def handle_lifecycle(self, event: Literal["startup", "cleanup"]) -> bool:
         if event == "startup" and self.startup_handler:
@@ -173,36 +171,48 @@ def show_frame(frame_view: FrameView):
         frame_view.webview.show()
         frame_view.frame.hide()
 
-    def show():
-        if not frame_view.is_visible:
-            startup = frame_view.handle_lifecycle("startup")
+    init_completed = threading.Event()
+    init_is_done = False
 
-            if startup:
-                try:
-                    if not frame_view.frame:
-                        create_frame()
-                    else:
-                        frame_view.webview.load_uri(
-                            get_uri(
-                                frame_view.feature_name,
-                                frame_view.route,
-                                frame_view.frame_id,
-                                frame_view.dev_mode,
-                            )
+    def init_show():
+        nonlocal init_is_done
+        startup = frame_view.handle_lifecycle("startup")
+
+        if startup:
+            try:
+                if not frame_view.frame:
+                    create_frame()
+                else:
+                    frame_view.webview.load_uri(
+                        get_uri(
+                            frame_view.feature_name,
+                            frame_view.route,
+                            frame_view.frame_id,
+                            frame_view.dev_mode,
                         )
+                    )
 
-                    GLib.timeout_add(200, frame_view.frame.show)
-                except:
-                    frame_view.handle_lifecycle("cleanup")
+                init_is_done = True
+            except:
+                frame_view.handle_lifecycle("cleanup")
 
-    GLib.idle_add(show)
+        init_completed.set()
+
+    if not frame_view.is_open:
+        GLib.idle_add(init_show)
+        init_completed.wait()
+
+        if init_is_done:
+            GLib.timeout_add(300, frame_view.frame.show)
+            frame_view.is_open = True
 
 
 def hide_frame(frame_view: FrameView):
     def hide():
-        if frame_view.is_visible:
-            frame_view.frame.hide()
-            frame_view.webview.load_html("")
-            frame_view.handle_lifecycle("cleanup")
+        frame_view.frame.hide()
+        frame_view.webview.load_html("")
+        frame_view.handle_lifecycle("cleanup")
 
-    GLib.idle_add(hide)
+    if frame_view.is_open:
+        GLib.idle_add(hide)
+        frame_view.is_open = False

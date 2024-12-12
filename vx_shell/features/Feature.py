@@ -1,5 +1,5 @@
 import asyncio, os, json
-from typing import Literal
+from typing import TypedDict, Optional, Literal
 from vx_features import ParamDataHandler, RootContents
 from fastapi import WebSocket
 from vx_config import VxConfig
@@ -8,6 +8,11 @@ from vx_gtk import Gtk
 from vx_logger import Logger
 from vx_types import LifeCycleHandler, LifeCycleCleanUpHandler, user_FrameParams_dict
 from .FrameHandler import FrameHandler
+
+
+class OutputEvent(TypedDict):
+    id: str
+    data: Optional[dict]
 
 
 class Feature:
@@ -70,6 +75,7 @@ class Feature:
         # -------------------------------------------- - - -
         self.feature_websockets: list[WebSocket] = []
         self.state_websockets: list[WebSocket] = []
+        self.frames_websockets: list[WebSocket] = []
         self.systray_websockets: list[WebSocket] = []
         # -------------------------------------------- - - -
         self.frames = FrameHandler(feature_name, self.dev_mode)
@@ -92,7 +98,9 @@ class Feature:
 
     @check_is_started(True)
     def attach_websocket(
-        self, type: Literal["feature", "state", "systray"], websocket: WebSocket
+        self,
+        type: Literal["feature", "state", "frames", "systray"],
+        websocket: WebSocket,
     ):
         websockets: list[WebSocket] = getattr(self, f"{type}_websockets")
         websockets.append(websocket)
@@ -105,7 +113,9 @@ class Feature:
 
     @check_is_started(True)
     async def detach_websocket(
-        self, type: Literal["feature", "state", "systray"], websocket: WebSocket
+        self,
+        type: Literal["feature", "state", "frames", "systray"],
+        websocket: WebSocket,
     ):
         try:
             await websocket.close()
@@ -132,6 +142,7 @@ class Feature:
 
         await close_websockets(self.feature_websockets.copy())
         await close_websockets(self.state_websockets.copy())
+        await close_websockets(self.frames_websockets.copy())
         await close_websockets(self.systray_websockets.copy())
 
         for websocket in self.state_websockets:
@@ -139,6 +150,11 @@ class Feature:
 
         for websocket in self.systray_websockets:
             SysTrayState.websockets.remove(websocket)
+
+        self.feature_websockets = []
+        self.state_websockets = []
+        self.frames_websockets = []
+        self.systray_websockets = []
 
     async def startup_wait_handler(self):
         from .Features import Features
@@ -240,32 +256,105 @@ class Feature:
         self.is_started = False
         Logger.log(f"[{self.feature_name}]: feature stopped")
 
+    # ---------------------------------------------- - - -
+    # FRAMES
+    #
+
+    async def dispatch_frame_event(self, event: OutputEvent):
+        for websocket in self.frames_websockets:
+            await websocket.send_json(event)
+
     @check_is_started(True)
     def open_frame(self, frame_id: str):
-        new_frame_id = self.frames.open(frame_id)
-        return new_frame_id if new_frame_id else frame_id
+        if not frame_id in self.frame_ids:
+            raise ValueError(f"Frame ID '{frame_id}' does not exist")
+
+        if frame_id in self.active_frame_ids:
+            raise ValueError(f"Frame '{frame_id}' is already open")
+
+        self.frames.open(frame_id)
+
+        print("OPEN: ", self.active_frame_ids)
+
+        asyncio.create_task(
+            self.dispatch_frame_event(
+                OutputEvent(
+                    id="OPEN",
+                    data={
+                        "frame_id": frame_id,
+                        "active_frame_ids": self.active_frame_ids,
+                    },
+                )
+            )
+        )
+
+        return frame_id
 
     @check_is_started(True)
-    def close_frame(self, id: str):
-        self.frames.close(id)
+    def close_frame(self, frame_id: str):
+        if not frame_id in self.frame_ids:
+            raise ValueError(f"Frame ID '{frame_id}' does not exist")
 
-    @check_is_started(True)
-    def popup_context_menu(self, frame_id: str, menu: Gtk.Menu):
-        self.frames.popup_context_menu(frame_id, menu)
+        if not frame_id in self.active_frame_ids:
+            raise ValueError(f"Frame '{frame_id}' is not open")
 
-    @check_is_started(True)
-    def popup_dbus_menu(self, frame_id: str, service_name: str):
-        self.frames.popup_dbus_menu(frame_id, service_name)
+        self.frames.close(frame_id)
 
-    @check_is_started(True)
+        print("CLOSE: ", self.active_frame_ids)
+
+        asyncio.create_task(
+            self.dispatch_frame_event(
+                OutputEvent(
+                    id="CLOSE",
+                    data={
+                        "frame_id": frame_id,
+                        "active_frame_ids": self.active_frame_ids,
+                    },
+                )
+            )
+        )
+
+    # @check_is_started(True)
     def new_frame_from_template(
         self, frame_id: str, frame_params_dict: user_FrameParams_dict
     ) -> bool:
-        return self.frames.new_frame_from_template(frame_id, frame_params_dict)
+        result = self.frames.new_frame_from_template(frame_id, frame_params_dict)
+
+        if result and self.is_started:
+            self.frames.init()
+
+            asyncio.create_task(
+                self.dispatch_frame_event(
+                    OutputEvent(
+                        id="NEW_FROM_TEMPLATE",
+                        data={
+                            "frame_id": frame_id,
+                            "frame_ids": self.frame_ids,
+                        },
+                    )
+                )
+            )
+
+        return result
 
     @check_is_started(True)
     def remove_frame_from_template(self, frame_id: str) -> bool:
-        return self.frames.remove_frame_from_template(frame_id)
+        result = self.frames.remove_frame_from_template(frame_id)
+
+        if result:
+            asyncio.create_task(
+                self.dispatch_frame_event(
+                    OutputEvent(
+                        id="REMOVE_FROM_TEMPLATE",
+                        data={
+                            "frame_id": frame_id,
+                            "frame_ids": self.frame_ids,
+                        },
+                    )
+                )
+            )
+
+        return result
 
     @property
     @check_is_started(True)
@@ -276,3 +365,15 @@ class Feature:
     @check_is_started(True)
     def active_frame_ids(self):
         return self.frames.active_frame_ids
+
+    # ---------------------------------------------- - - -
+    # POPUP MENU
+    #
+
+    @check_is_started(True)
+    def popup_context_menu(self, frame_id: str, menu: Gtk.Menu):
+        self.frames.popup_context_menu(frame_id, menu)
+
+    @check_is_started(True)
+    def popup_dbus_menu(self, frame_id: str, service_name: str):
+        self.frames.popup_dbus_menu(frame_id, service_name)

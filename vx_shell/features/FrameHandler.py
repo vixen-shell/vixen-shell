@@ -38,7 +38,7 @@ class FrameHandler:
         if ParamDataHandler.new_frame_from_template(
             self.feature_name, frame_id, frame_params_dict
         ):
-            self.init()
+            # self.init()
             return True
 
         return False
@@ -63,4 +63,4 @@ class FrameHandler:
 
     @property
     def active_frame_ids(self) -> List[str]:
-        return [id for id, frame in self.frames.items() if frame.is_visible]
+        return [id for id, frame in self.frames.items() if frame.is_open]
