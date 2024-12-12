@@ -274,8 +274,6 @@ class Feature:
 
         self.frames.open(frame_id)
 
-        print("OPEN: ", self.active_frame_ids)
-
         asyncio.create_task(
             self.dispatch_frame_event(
                 OutputEvent(
@@ -299,8 +297,6 @@ class Feature:
             raise ValueError(f"Frame '{frame_id}' is not open")
 
         self.frames.close(frame_id)
-
-        print("CLOSE: ", self.active_frame_ids)
 
         asyncio.create_task(
             self.dispatch_frame_event(
