@@ -3,17 +3,13 @@ from typing import List, Dict
 from vx_logger import Logger
 from .Feature import Feature
 from .FeatureLoader import FeatureLoader
-from .frame_view import PopupFrame
 
 
 class Features:
-    dict: Dict[str, Feature] = {}
-    popup_frame: PopupFrame = None
+    __dict: Dict[str, Feature] = {}
 
     @staticmethod
     def init():
-        Features.popup_frame = PopupFrame()
-
         for name in FeatureUtils.get_root_feature_names():
             try:
                 Features.load(name)
@@ -21,14 +17,14 @@ class Features:
                 pass
 
         Logger.log(
-            f"{'No' if len(Features.dict) == 0 else len(Features.dict)} features initialized"
+            f"{'No' if len(Features.__dict) == 0 else len(Features.__dict)} features initialized"
         )
 
     @staticmethod
     def load(entry: str, tty_path: str = None):
         name, feature = Feature.load(entry, tty_path)
 
-        Features.dict[name] = feature
+        Features.__dict[name] = feature
         Logger.log(f"[{name}]: feature loaded")
 
         return name, feature.is_started
@@ -43,7 +39,7 @@ class Features:
         if feature.is_started or feature.is_active:
             await feature.stop()
 
-        del Features.dict[name]
+        del Features.__dict[name]
         FeatureLoader(name).unload(for_remove)
         FeatureLoader.del_instance(name)
 
@@ -51,21 +47,18 @@ class Features:
 
     @staticmethod
     async def stop():
-        Features.popup_frame.hide()
-        Features.popup_frame = None
-
-        for feature in Features.dict.values():
+        for feature in Features.__dict.values():
             if feature.is_started:
-                await feature.stop()
+                await feature.stop(cleanup_frame=False)
 
     @staticmethod
     def names() -> List[str]:
-        return list(Features.dict.keys())
+        return list(Features.__dict.keys())
 
     @staticmethod
     def exists(name: str) -> bool:
-        return name in Features.dict
+        return name in Features.__dict
 
     @staticmethod
     def get(name: str) -> Feature | None:
-        return Features.dict.get(name)
+        return Features.__dict.get(name)

@@ -122,6 +122,10 @@ class ParamDataHandler:
         return bool(node)
 
     @staticmethod
+    def get_feature_names() -> list[str]:
+        return list(ParamDataHandler.__data_dict.keys())
+
+    @staticmethod
     def get_frame_ids(feature_name: str) -> list[str]:
         permission = get_permission(feature_name, ["frames"])
 

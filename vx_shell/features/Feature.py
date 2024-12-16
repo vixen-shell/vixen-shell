@@ -7,7 +7,7 @@ from vx_systray import SysTrayState
 from vx_gtk import Gtk
 from vx_logger import Logger
 from vx_types import LifeCycleHandler, LifeCycleCleanUpHandler, user_FrameParams_dict
-from .FrameHandler import FrameHandler
+from vx_gtk.FrameHandler import FrameHandler
 
 
 class OutputEvent(TypedDict):
@@ -78,7 +78,6 @@ class Feature:
         self.frames_websockets: list[WebSocket] = []
         self.systray_websockets: list[WebSocket] = []
         # -------------------------------------------- - - -
-        self.frames = FrameHandler(feature_name, self.dev_mode)
         self.is_active = False
         self.is_started = False
         # -------------------------------------------- - - -
@@ -229,28 +228,28 @@ class Feature:
             self.__start()
 
     @check_is_active(True)
-    async def stop(self):
+    async def stop(self, cleanup_frame: bool = True):
         if self.is_active:
             self.is_active = False
         else:
-            await self.__stop()
+            await self.__stop(cleanup_frame)
 
     @check_is_started(False)
     def __start(self):
+        FrameHandler.init_feature(self.feature_name, self.dev_mode)
         startup = self.handle_lifecycle("startup")
 
         if startup == True:
-            try:
-                self.frames.init()
-                self.is_started = True
-                Logger.log(f"[{self.feature_name}]: feature started")
-            except:
-                self.handle_lifecycle("cleanup")
+            self.is_started = True
+            Logger.log(f"[{self.feature_name}]: feature started")
 
     @check_is_started(True)
-    async def __stop(self) -> bool:
+    async def __stop(self, cleanup: bool = True) -> bool:
         await self.cleanup_websockets()
-        self.frames.cleanup()
+
+        if cleanup:
+            FrameHandler.cleanup(self.feature_name)
+
         self.handle_lifecycle("cleanup")
 
         self.is_started = False
@@ -272,7 +271,7 @@ class Feature:
         if frame_id in self.active_frame_ids:
             raise ValueError(f"Frame '{frame_id}' is already open")
 
-        self.frames.open(frame_id)
+        FrameHandler.open(self.feature_name, frame_id)
 
         asyncio.create_task(
             self.dispatch_frame_event(
@@ -296,7 +295,7 @@ class Feature:
         if not frame_id in self.active_frame_ids:
             raise ValueError(f"Frame '{frame_id}' is not open")
 
-        self.frames.close(frame_id)
+        FrameHandler.close(self.feature_name, frame_id)
 
         asyncio.create_task(
             self.dispatch_frame_event(
@@ -314,11 +313,11 @@ class Feature:
     def new_frame_from_template(
         self, frame_id: str, frame_params_dict: user_FrameParams_dict
     ) -> bool:
-        result = self.frames.new_frame_from_template(frame_id, frame_params_dict)
+        result = FrameHandler.new_frame_from_template(
+            self.feature_name, frame_id, frame_params_dict
+        )
 
         if result and self.is_started:
-            self.frames.init()
-
             asyncio.create_task(
                 self.dispatch_frame_event(
                     OutputEvent(
@@ -335,7 +334,7 @@ class Feature:
 
     @check_is_started(True)
     def remove_frame_from_template(self, frame_id: str) -> bool:
-        result = self.frames.remove_frame_from_template(frame_id)
+        result = FrameHandler.remove_frame_from_template(self.feature_name, frame_id)
 
         if result:
             asyncio.create_task(
@@ -355,12 +354,12 @@ class Feature:
     @property
     @check_is_started(True)
     def frame_ids(self):
-        return self.frames.frame_ids
+        return FrameHandler.frame_ids(self.feature_name)
 
     @property
     @check_is_started(True)
     def active_frame_ids(self):
-        return self.frames.active_frame_ids
+        return FrameHandler.active_frame_ids(self.feature_name)
 
     # ---------------------------------------------- - - -
     # POPUP MENU
@@ -368,8 +367,8 @@ class Feature:
 
     @check_is_started(True)
     def popup_context_menu(self, frame_id: str, menu: Gtk.Menu):
-        self.frames.popup_context_menu(frame_id, menu)
+        FrameHandler.popup_context_menu(self.feature_name, frame_id, menu)
 
     @check_is_started(True)
     def popup_dbus_menu(self, frame_id: str, service_name: str):
-        self.frames.popup_dbus_menu(frame_id, service_name)
+        FrameHandler.popup_dbus_menu(self.feature_name, frame_id, service_name)

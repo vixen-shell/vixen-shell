@@ -36,8 +36,6 @@ class VxConfig:
         "vx_ui_icons": "regular",
         "vx_ui_font_family": None,
         "vx_ui_font_family_monospace": None,
-        "vx_popup_frame": None,
-        "vx_popup_frame_callback_data": None,
     }
 
     @staticmethod

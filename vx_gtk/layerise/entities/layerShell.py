@@ -1,5 +1,5 @@
 from enum import Enum
-from vx_gtk import GtkLayerShell
+from ...Gtk_imports import GtkLayerShell
 
 
 class Levels(Enum):
