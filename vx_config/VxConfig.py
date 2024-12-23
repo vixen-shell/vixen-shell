@@ -1,5 +1,4 @@
-import subprocess, os, json, locale, asyncio
-
+import subprocess, os, json, locale
 from typing import Callable, TypedDict, Any, Literal, Optional
 from fastapi import WebSocket
 from vx_path import VxPath
@@ -40,8 +39,10 @@ class VxConfig:
 
     @staticmethod
     def dispatch_websocket_event(event: OutputEvent):
+        from vx_shell import AsyncLoop
+
         for websocket in VxConfig.websockets:
-            asyncio.create_task(websocket.send_json(event))
+            AsyncLoop.run_task(websocket.send_json(event))
 
     @staticmethod
     def gtk_fonts():

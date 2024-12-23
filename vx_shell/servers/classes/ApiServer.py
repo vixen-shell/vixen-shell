@@ -1,4 +1,5 @@
 import uvicorn, signal, asyncio
+from typing import Coroutine
 from threading import Thread, Event
 from fastapi import FastAPI
 from vx_gtk import GtkApp
@@ -7,9 +8,23 @@ from vx_logger import Logger
 from ..utils import api_logging_config
 
 
-def run_asyncio_loop(loop: asyncio.AbstractEventLoop):
-    asyncio.set_event_loop(loop)
-    loop.run_forever()
+class AsyncLoop:
+    loop = asyncio.new_event_loop()
+    is_running = False
+
+    def run():
+        if AsyncLoop.is_running:
+            raise ValueError(f"{AsyncLoop.__name__} already running")
+
+        def run_async_loop():
+            asyncio.set_event_loop(AsyncLoop.loop)
+            AsyncLoop.loop.run_forever()
+
+        Thread(target=run_async_loop, daemon=True).start()
+        AsyncLoop.is_running = True
+
+    def run_task(task: Coroutine):
+        asyncio.run_coroutine_threadsafe(task, AsyncLoop.loop)
 
 
 class ApiServer:
@@ -52,9 +67,8 @@ class ApiServer:
 
         ApiServer.__before_starting()
 
-        asyncio_loop = asyncio.new_event_loop()
-        Thread(target=run_asyncio_loop, args=(asyncio_loop,), daemon=True).start()
-        asyncio.run_coroutine_threadsafe(ApiServer.__start_uvicorn(api), asyncio_loop)
+        AsyncLoop.run()
+        AsyncLoop.run_task(ApiServer.__start_uvicorn(api))
 
         ApiServer.logger_is_ready.wait()
         GtkApp.run()

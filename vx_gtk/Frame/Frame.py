@@ -2,6 +2,7 @@ from vx_types import LifeCycleCleanUpHandler
 from vx_systray import SysTrayState
 from .frame_utils import FrameParams, handle_frame_startup, handle_frame_cleanup
 from ..Gtk_imports import Gtk, Gdk, GLib
+from ..GtkApplication import GtkApp
 
 
 class Frame(Gtk.Window):
@@ -16,6 +17,9 @@ class Frame(Gtk.Window):
         self.cleanup_handler: LifeCycleCleanUpHandler = None
         self.last_button_press_event: Gdk.EventButton = None
 
+        self.set_application(GtkApp)
+        self.set_default_size(800, 600)
+        self.set_title(self.params("name"))
         self.connect("destroy", lambda w: handle_frame_cleanup(self.cleanup_handler))
 
     def on_button_press_event(self, widget: Gtk.Widget, event: Gdk.EventButton):
@@ -39,9 +43,7 @@ class Frame(Gtk.Window):
         GLib.idle_add(process)
 
 
-def create_frame(
-    app: Gtk.Application, feature_name: str, frame_id: str, dev_mode: bool
-):
+def create_frame(feature_name: str, frame_id: str, dev_mode: bool):
     cleanup_handler = handle_frame_startup(feature_name, frame_id)
 
     if not cleanup_handler == False:
@@ -50,12 +52,11 @@ def create_frame(
         if frame_params.node_is_define("layer_frame"):
             from .LayerFrame import create_layer_frame
 
-            return create_layer_frame(
-                app, feature_name, frame_id, dev_mode, cleanup_handler
-            )
+            return create_layer_frame(feature_name, frame_id, dev_mode, cleanup_handler)
+
         else:
             from .WindowFrame import create_window_frame
 
             return create_window_frame(
-                app, feature_name, frame_id, dev_mode, cleanup_handler
+                feature_name, frame_id, dev_mode, cleanup_handler
             )

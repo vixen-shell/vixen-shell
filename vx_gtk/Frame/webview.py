@@ -1,6 +1,6 @@
 from vx_config import VxConfig
 from vx_logger import Logger
-from ..Gtk_imports import WebKit2
+from ..Gtk_imports import WebKit2, Gdk
 
 
 def get_front_port(dev_mode: bool):
@@ -24,7 +24,6 @@ def webview(
     route: str,
     frame_id: str,
     dev_mode: bool,
-    background_color,
 ):
     def on_decide_policy(webview, decision, decision_type):
         if isinstance(decision, WebKit2.NavigationPolicyDecision):
@@ -47,12 +46,16 @@ def webview(
 
     webview = WebKit2.WebView()
 
+    settings = webview.get_settings()
+    settings.set_enable_accelerated_2d_canvas(True)
+    settings.set_hardware_acceleration_policy(WebKit2.HardwareAccelerationPolicy.ALWAYS)
+
     if dev_mode:
         webview.get_settings().set_enable_developer_extras(True)
 
     webview.connect("context-menu", on_context_menu)
     webview.connect("decide-policy", on_decide_policy)
-    webview.set_background_color(background_color)
+    webview.set_background_color(Gdk.RGBA(0, 0, 0, 0))
 
     webview.load_uri(get_uri(feature_name, route, frame_id, dev_mode))
 

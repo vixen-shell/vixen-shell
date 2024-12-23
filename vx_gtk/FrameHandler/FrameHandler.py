@@ -1,10 +1,9 @@
-from typing import Dict
+from typing import Dict, Callable
 from threading import Event as ThreadEvent
 from vx_features import ParamDataHandler
 from vx_types import user_FrameParams_dict
 from .frame_handler_utils import FeatureFrameParams
 from ..Frame import Frame, create_frame
-from ..GtkApplication import GtkApp
 from ..Gtk_imports import Gtk, GLib
 
 
@@ -47,19 +46,25 @@ class FeatureFrameHandler:
     def is_open(self, frame_id: str):
         return frame_id in self.active_frame_ids
 
-    def open(self, frame_id: str):
+    def open(self, frame_id: str, after_open: Callable[[list[str]], None] = None):
         def init():
             if self.exists(frame_id) and not self.is_open(frame_id):
-                frame = create_frame(GtkApp, self.feature_name, frame_id, self.dev_mode)
+                frame = create_frame(self.feature_name, frame_id, self.dev_mode)
                 frame.connect("destroy", lambda w: self.frames.pop(frame_id))
                 self.frames[frame_id] = frame
 
+                if after_open:
+                    after_open(self.active_frame_ids)
+
         GLib.idle_add(init)
 
-    def close(self, frame_id: str):
+    def close(self, frame_id: str, after_close: Callable[[list[str]], None] = None):
         def process():
             if self.exists(frame_id) and self.is_open(frame_id):
                 self.frames[frame_id].destroy()
+
+                if after_close:
+                    after_close(self.active_frame_ids)
 
         GLib.idle_add(process)
 
@@ -127,12 +132,18 @@ class FrameHandler:
         return FrameHandler.__frames[feature_name].active_frame_ids
 
     @staticmethod
-    def open(feature_name: str, frame_id: str):
-        return FrameHandler.__frames[feature_name].open(frame_id)
+    def open(
+        feature_name: str, frame_id: str, after_open: Callable[[list[str]], None] = None
+    ):
+        return FrameHandler.__frames[feature_name].open(frame_id, after_open)
 
     @staticmethod
-    def close(feature_name: str, frame_id: str):
-        return FrameHandler.__frames[feature_name].close(frame_id)
+    def close(
+        feature_name: str,
+        frame_id: str,
+        after_close: Callable[[list[str]], None] = None,
+    ):
+        return FrameHandler.__frames[feature_name].close(frame_id, after_close)
 
     @staticmethod
     def new_frame_from_template(

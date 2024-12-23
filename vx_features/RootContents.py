@@ -56,6 +56,27 @@ class RootContents:
 
         return decorator
 
+    def undispatch(self, content_type: FeatureContentType, name: str):
+        try:
+            sub_content: rootcontent = getattr(self, content_type)
+        except AttributeError:
+            raise ValueError(f"Invalid content type: '{content_type}'")
+
+        if not name in sub_content.__dict__:
+            raise Exception(
+                f"{content_type.capitalize()} content " f"'{name}' is not dispatched"
+            )
+
+        sub_content.__dict__.pop(name)
+
+    def exists(self, content_type: FeatureContentType, name: str) -> bool:
+        try:
+            sub_content: rootcontent = getattr(self, content_type)
+        except AttributeError:
+            raise ValueError(f"Invalid content type: '{content_type}'")
+
+        return name in sub_content.__dict__
+
     def get(self, content_type: FeatureContentType, name: str) -> Callable:
         sub_content: rootcontent = getattr(self, content_type)
         return sub_content.__dict__[name]

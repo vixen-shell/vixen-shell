@@ -8,6 +8,7 @@ from vx_gtk import Gtk
 from vx_logger import Logger
 from vx_types import LifeCycleHandler, LifeCycleCleanUpHandler, user_FrameParams_dict
 from vx_gtk.FrameHandler import FrameHandler
+from .. import AsyncLoop
 
 
 class OutputEvent(TypedDict):
@@ -271,18 +272,20 @@ class Feature:
         if frame_id in self.active_frame_ids:
             raise ValueError(f"Frame '{frame_id}' is already open")
 
-        FrameHandler.open(self.feature_name, frame_id)
-
-        asyncio.create_task(
-            self.dispatch_frame_event(
-                OutputEvent(
-                    id="OPEN",
-                    data={
-                        "frame_id": frame_id,
-                        "active_frame_ids": self.active_frame_ids,
-                    },
+        FrameHandler.open(
+            self.feature_name,
+            frame_id,
+            after_open=lambda active_frame_ids: AsyncLoop.run_task(
+                self.dispatch_frame_event(
+                    OutputEvent(
+                        id="OPEN",
+                        data={
+                            "frame_id": frame_id,
+                            "active_frame_ids": active_frame_ids,
+                        },
+                    )
                 )
-            )
+            ),
         )
 
         return frame_id
@@ -295,18 +298,20 @@ class Feature:
         if not frame_id in self.active_frame_ids:
             raise ValueError(f"Frame '{frame_id}' is not open")
 
-        FrameHandler.close(self.feature_name, frame_id)
-
-        asyncio.create_task(
-            self.dispatch_frame_event(
-                OutputEvent(
-                    id="CLOSE",
-                    data={
-                        "frame_id": frame_id,
-                        "active_frame_ids": self.active_frame_ids,
-                    },
+        FrameHandler.close(
+            self.feature_name,
+            frame_id,
+            after_close=lambda active_frame_ids: AsyncLoop.run_task(
+                self.dispatch_frame_event(
+                    OutputEvent(
+                        id="CLOSE",
+                        data={
+                            "frame_id": frame_id,
+                            "active_frame_ids": active_frame_ids,
+                        },
+                    )
                 )
-            )
+            ),
         )
 
     # @check_is_started(True)

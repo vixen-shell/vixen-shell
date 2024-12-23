@@ -11,6 +11,14 @@ class AbsRootContents(ABC):
     ) -> Callable[[Callable], Callable]:
         pass
 
+    @abstractmethod
+    def undispatch(self, content_type: FeatureContentType, name: str) -> None:
+        pass
+
+    @abstractmethod
+    def exists(self, content_type: FeatureContentType, name: str) -> bool:
+        pass
+
 
 def get_root_contents_reference(root_contents):
     def restricted(contents_name: str = None):
@@ -43,5 +51,13 @@ def get_root_contents_reference(root_contents):
             self, content_type: FeatureContentType, name: str = None
         ) -> Callable[[Callable], Callable]:
             return root_contents.dispatch(content_type, name)
+
+        @restricted(root_contents.name)
+        def undispatch(self, content_type: FeatureContentType, name: str) -> None:
+            return root_contents.undispatch(content_type, name)
+
+        @restricted(root_contents.name)
+        def exists(self, content_type: FeatureContentType, name: str) -> bool:
+            return root_contents.exists(content_type, name)
 
     return RootContentsReference()

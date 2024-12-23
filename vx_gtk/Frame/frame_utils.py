@@ -65,12 +65,3 @@ def set_frame_as_transparent(frame: Gtk.Window):
     if rgba_visual:
         frame.set_visual(rgba_visual)
         frame.set_app_paintable(True)
-
-
-def get_frame_background_color(frame: Gtk.Window):
-    context = frame.get_style_context()
-    return context.get_background_color(Gtk.StateFlags.NORMAL)
-
-
-def get_color_transparent():
-    return Gdk.RGBA(0, 0, 0, 0)

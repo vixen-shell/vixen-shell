@@ -1,9 +1,9 @@
 from vx_types import LifeCycleCleanUpHandler
-from .frame_utils import set_frame_as_transparent, get_color_transparent
+from .frame_utils import set_frame_as_transparent
 from .webview import webview
 from .Frame import Frame
 from .layerise_frame import layerise_frame, set_layer_frame
-from ..Gtk_imports import Gtk, GLib, WebKit2
+from ..Gtk_imports import GLib, WebKit2
 
 
 class LayerFrame(Frame):
@@ -19,7 +19,6 @@ class LayerFrame(Frame):
             route=self.params("route"),
             frame_id=self.frame_id,
             dev_mode=self.dev_mode,
-            background_color=get_color_transparent(),
         )
         web_view.connect("button-press-event", self.on_button_press_event)
         web_view.connect("load_changed", self.on_load_changed)
@@ -61,14 +60,12 @@ class LayerFrame(Frame):
 
 
 def create_layer_frame(
-    app: Gtk.Application,
     feature_name: str,
     frame_id: str,
     dev_mode: bool,
     cleanup_handler: LifeCycleCleanUpHandler,
 ):
     frame = LayerFrame(feature_name, frame_id, dev_mode)
-    frame.set_application(app)
 
     if callable(cleanup_handler):
         frame.cleanup_handler = cleanup_handler

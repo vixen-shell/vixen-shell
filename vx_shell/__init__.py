@@ -6,6 +6,8 @@ Description       : vixen shell api library.
 License           : GPL3
 """
 
+from .servers import AsyncLoop
+
 
 def run_shell():
     from sys import path
