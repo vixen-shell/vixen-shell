@@ -1,8 +1,8 @@
-import uvicorn, signal, asyncio
+import uvicorn, signal, asyncio, os
 from typing import Coroutine
 from threading import Thread, Event
 from fastapi import FastAPI
-from vx_gtk import GtkApp
+from vx_gtk import GtkApp, Applications
 from vx_config import VxConfig
 from vx_logger import Logger
 from ..utils import api_logging_config
@@ -34,10 +34,11 @@ class ApiServer:
 
     @staticmethod
     def handle_signals(signum, frame):
-        ApiServer.stop()
+        ApiServer.__stop()
 
     @staticmethod
     def __before_starting():
+        Applications.init()
         signal.signal(signal.SIGTERM, ApiServer.handle_signals)
         signal.signal(signal.SIGHUP, ApiServer.handle_signals)
         signal.signal(signal.SIGINT, ApiServer.handle_signals)
@@ -74,10 +75,17 @@ class ApiServer:
         GtkApp.run()
 
     @staticmethod
-    def stop():
+    def __stop():
         if not ApiServer.server:
             raise ValueError(f"{ApiServer.__name__} is not running")
 
         ApiServer.server.should_exit = True
         ApiServer.server_is_down.wait()
         GtkApp.quit()
+
+    @staticmethod
+    def stop():
+        try:
+            os.kill(os.getpid(), signal.SIGTERM)
+        except Exception as e:
+            print(e)

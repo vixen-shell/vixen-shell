@@ -7,6 +7,8 @@ def show_message_dialog(
     title: str = None,
     details: str = None,
     level: Literal["INFO", "WARNING"] = "INFO",
+    width: int = -1,
+    height: int = -1,
 ):
     message_type = {"INFO": 0, "WARNING": 1}.get(level)
 
@@ -19,6 +21,8 @@ def show_message_dialog(
             text=text,
             title=title,
         )
+
+        dialog.set_size_request(width, height)
 
         if not title:
             dialog.set_decorated(False)
@@ -41,6 +45,8 @@ def show_confirm_dialog(
     cancel_callback: Callable[[], None] = None,
     title: str = None,
     details: str = None,
+    width: int = -1,
+    height: int = -1,
 ):
     def process():
         dialog = Gtk.MessageDialog(
@@ -51,6 +57,8 @@ def show_confirm_dialog(
             text=text,
             title=title,
         )
+
+        dialog.set_size_request(width, height)
 
         if not title:
             dialog.set_decorated(False)

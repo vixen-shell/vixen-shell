@@ -120,7 +120,12 @@ class AppDict(dict[str, Application]):
 
 
 class Applications:
-    __app_dict = AppDict()
+    __app_dict: AppDict = None
+
+    @staticmethod
+    def init():
+        if Applications.__app_dict is None:
+            Applications.__app_dict = AppDict()
 
     @staticmethod
     def items():

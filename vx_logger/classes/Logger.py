@@ -1,4 +1,4 @@
-import logging, traceback, os, sys
+import logging, traceback
 from typing import Literal
 from .Formatter import FormatterFilter, Formatter, DevFormatter
 from ..utils import Log, LogLevel, LogListener

@@ -22,6 +22,7 @@ class LayerFrame(Frame):
         )
         web_view.connect("button-press-event", self.on_button_press_event)
         web_view.connect("load_changed", self.on_load_changed)
+        web_view.show()
 
         self.add(web_view)
 
@@ -46,7 +47,7 @@ class LayerFrame(Frame):
         if load_event == WebKit2.LoadEvent.FINISHED and not self.is_visible():
             self.connect("show", self.fade_in)
             self.set_opacity(0)
-            self.show_all()
+            self.show()
 
     def fade_in(self, *args):
         def increase_opacity():
@@ -56,7 +57,7 @@ class LayerFrame(Frame):
                 return True
             return False
 
-        GLib.timeout_add(50, increase_opacity)
+        GLib.timeout_add(25, increase_opacity)
 
 
 def create_layer_frame(

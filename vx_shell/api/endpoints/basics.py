@@ -18,7 +18,7 @@ async def ping():
 
 @api.get("/shutdown", description="Close API")
 async def close():
-    ApiServer.server.should_exit = True
+    ApiServer.stop()
     return
 
 
